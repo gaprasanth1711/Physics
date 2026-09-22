@@ -245,8 +245,8 @@
           <button data-sim="lens" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
             <i data-lucide="focus" class="w-4 h-4 shrink-0 text-sky-400"></i>
             <div>
-              <div class="font-semibold leading-snug">Ray Optics Lens</div>
-              <div class="text-[10px] text-slate-400 hidden lg:block">Image formation · XII</div>
+              <div class="font-semibold leading-snug">Mirrors &amp; Lenses</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">All CBSE cases · XII</div>
             </div>
           </button>
 
@@ -1871,109 +1871,323 @@
        5e. GRADE-12 CBSE: RAY OPTICS (thin lens image)
        ========================================================== */
     const lensSim = {
-      name: "Ray Optics: Thin-Lens Image Lab",
-      f: 120, objDist: 300, lensType: 'convex',
+      name: "Ray Optics: Mirrors & Lenses · XII",
+      device: 'convexLens', // convexLens | concaveLens | concaveMirror | convexMirror
+      f: 120,
+      objDist: 300,
+      screenDist: 300,
+      autoScreen: true,
       init() { this.reset(); },
       reset() {},
-      update(dt) {},
-      image() {
-        const fEff = this.lensType === 'convex' ? this.f : -this.f;
-        const u = -this.objDist;
-        const v = 1 / (1 / fEff - 1 / u || 1e-6);
-        const m = v / u;
-        return { v, m, fEff };
+      isMirror() { return this.device === 'concaveMirror' || this.device === 'convexMirror'; },
+      signedF() {
+        const a = Math.abs(this.f);
+        return (this.device === 'convexLens' || this.device === 'concaveMirror') ? a : -a;
       },
+      img() {
+        const f = this.signedF();
+        const inf = this.objDist > 900;
+        if (this.isMirror()) {
+          const Do = inf ? 1e9 : this.objDist;
+          const di = 1 / (1 / f - 1 / Do);
+          return { v: di, m: -di / Do, inf };
+        }
+        const u = inf ? -1e9 : -this.objDist;
+        const v = 1 / (1 / f + 1 / u);
+        return { v, m: v / u, inf };
+      },
+      finite(v) { return isFinite(v) && Math.abs(v) < 1500; },
+      isReal(r) { return this.finite(r.v) && r.v > 0 && !r.inf; },
+      cases() {
+        if (this.device === 'convexLens') return [
+          ["Object at infinity", 4000], ["Beyond 2F", 360], ["At 2F", 240],
+          ["Between F and 2F", 170], ["At F", 120], ["Inside F (O–F)", 70]
+        ];
+        if (this.device === 'concaveMirror') return [
+          ["Object at infinity", 4000], ["Beyond C (2F)", 360], ["At C (2F)", 240],
+          ["Between F and C", 170], ["At F", 120], ["Inside F (P–F)", 70]
+        ];
+        if (this.device === 'concaveLens') return [["Object at infinity", 4000], ["Finite object", 300]];
+        return [["Object at infinity", 4000], ["Finite object", 300]];
+      },
+      deviceLabel() {
+        return { convexLens: 'Convex lens', concaveLens: 'Concave lens', concaveMirror: 'Concave mirror', convexMirror: 'Convex mirror' }[this.device];
+      },
+      update(dt) {},
       render() {
         const w = canvas.width / dpr, h = canvas.height / dpr;
-        const cx = w / 2, axisY = h / 2;
+        const cx = w / 2, axisY = h * 0.44;
+        const f = this.signedF(), mirror = this.isMirror();
+        const r = this.img();
+        const objH = 64;
+        const objX = cx - Math.min(this.objDist, 900);
+        // bench
+        ctx.strokeStyle = 'rgba(148,163,184,0.6)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(10, axisY + 150); ctx.lineTo(w - 10, axisY + 150); ctx.stroke();
+        for (let x = 20; x < w - 10; x += 26) {
+          ctx.beginPath(); ctx.moveTo(x, axisY + 150); ctx.lineTo(x - 6, axisY + 162); ctx.stroke();
+        }
+        // principal axis
         ctx.strokeStyle = 'rgba(148,163,184,0.5)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(0, axisY); ctx.lineTo(w, axisY); ctx.stroke();
-        // lens
+        // device
         ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
         ctx.beginPath();
-        if (this.lensType === 'convex') { ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 26, axisY, cx, axisY + 130); ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 26, axisY, cx, axisY + 130); }
-        else { ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 20, axisY, cx, axisY + 130); ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 20, axisY, cx, axisY + 130); }
-        ctx.stroke();
-        // focal points
-        ctx.fillStyle = '#f59e0b'; ctx.font = '10px JetBrains Mono';
-        for (const s of [-1, 1]) {
-          ctx.beginPath(); ctx.arc(cx + s * this.f, axisY, 3, 0, Math.PI * 2); ctx.fill();
-          ctx.fillText('F', cx + s * this.f - 3, axisY + 16);
-          ctx.beginPath(); ctx.arc(cx + s * 2 * this.f, axisY, 3, 0, Math.PI * 2); ctx.fill();
-          ctx.fillText('2F', cx + s * 2 * this.f - 6, axisY + 16);
+        if (this.device === 'convexLens') {
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 26, axisY, cx, axisY + 130);
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 26, axisY, cx, axisY + 130);
+        } else if (this.device === 'concaveLens') {
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 20, axisY, cx, axisY + 130);
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 20, axisY, cx, axisY + 130);
+        } else if (this.device === 'concaveMirror') {
+          ctx.arc(cx + 260, axisY, 260, Math.PI - 0.5, Math.PI + 0.5);
+        } else {
+          ctx.arc(cx - 260, axisY, 260, -0.5, 0.5);
         }
-        const { v, m } = this.image();
-        const objX = cx - this.objDist, objH = 70;
-        const imgX = cx + v, imgH = m * objH;
-        // object arrow
-        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(objX, axisY); ctx.lineTo(objX, axisY - objH); ctx.stroke();
-        ctx.fillStyle = '#22c55e';
-        ctx.beginPath(); ctx.moveTo(objX, axisY - objH - 8); ctx.lineTo(objX - 5, axisY - objH); ctx.lineTo(objX + 5, axisY - objH); ctx.fill();
-        // 3 principal rays from object tip
+        ctx.stroke();
+        if (mirror) { // hatch behind mirror + pole label
+          ctx.strokeStyle = 'rgba(148,163,184,0.7)'; ctx.lineWidth = 1.5;
+          for (let y = axisY - 120; y <= axisY + 120; y += 16) {
+            ctx.beginPath(); ctx.moveTo(cx + 4, y); ctx.lineTo(cx + 14, y + 8); ctx.stroke();
+          }
+          ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText('P', cx - 4, axisY + 146);
+        } else {
+          ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText('O', cx - 4, axisY + 146);
+        }
+        // F / 2F marks
+        ctx.font = '10px JetBrains Mono';
+        const mark = (x, label, virt) => {
+          ctx.fillStyle = virt ? '#c084fc' : '#f59e0b';
+          ctx.beginPath(); ctx.arc(x, axisY, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.fillText(label, x - 5, axisY + 16);
+          if (virt) { ctx.strokeStyle = 'rgba(192,132,252,0.5)'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(x, axisY - 120); ctx.lineTo(x, axisY + 120); ctx.stroke(); ctx.setLineDash([]); }
+        };
+        const fa = Math.abs(f);
+        if (!mirror) {
+          mark(cx - fa, 'F', f < 0); mark(cx + fa, 'F', f < 0);
+          mark(cx - 2 * fa, '2F', f < 0); mark(cx + 2 * fa, '2F', f < 0);
+        } else {
+          mark(cx - fa, 'F', f < 0); mark(cx - 2 * fa, mirror ? (this.device === 'concaveMirror' ? 'C' : '2F') : '2F', f < 0);
+        }
+        // object candle (realistic) or infinity label
         const tipY = axisY - objH;
-        const ray = (targets, dash) => {
-          ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 1.6;
+        const candle = (x, baseY, hgt, o) => {
+          o = o || {};
+          const alpha = o.alpha == null ? 1 : o.alpha;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          try { ctx.filter = o.blur ? `blur(${o.blur}px)` : 'none'; } catch (e) {}
+          const top = baseY - hgt;
+          ctx.fillStyle = o.color || '#22c55e';
+          ctx.fillRect(x - 6, top + 14, 12, hgt - 14); // wax
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(x - 1.5, top + 8, 3, 8); // wick
+          if (!o.noFlame) { // flame
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath(); ctx.ellipse(x, top + 2, 6, 10, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath(); ctx.ellipse(x, top + 4, 3, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+          }
+          try { ctx.filter = 'none'; } catch (e) {}
+          ctx.restore();
+        };
+        if (!r.inf) candle(objX, axisY, objH, {});
+        else {
+          ctx.fillStyle = '#94a3b8'; ctx.font = '12px JetBrains Mono';
+          ctx.fillText('Object at ∞ — parallel incident rays', 14, axisY - 110);
+        }
+        // image geometry
+        const imgX = mirror ? cx - r.v : cx + r.v;
+        const imgH = r.inf ? 0 : r.m * objH;
+        const imgTipY = axisY - imgH;
+        const ray = (pts, color, dash, width) => {
+          ctx.strokeStyle = color || '#f472b6'; ctx.lineWidth = width || 1.8;
           if (dash) ctx.setLineDash([5, 4]);
-          ctx.beginPath(); ctx.moveTo(objX, tipY);
-          for (const t of targets) ctx.lineTo(t[0], t[1]);
+          ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+          for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
           ctx.stroke(); ctx.setLineDash([]);
         };
-        const imgTipY = axisY - imgH;
-        const finite = isFinite(v) && Math.abs(v) < 2000;
-        // parallel -> focal
-        ray([[cx, tipY], [finite ? imgX : cx + 600, finite ? imgTipY : axisY + (axisY - tipY) * 2]], !finite);
-        // through centre (undeviated)
-        ray([[cx, axisY], [finite ? imgX : cx - 600, finite ? imgTipY : axisY + 60]], !finite);
-        // image arrow
-        if (finite && Math.abs(imgH) < 300) {
-          const real = v > 0;
-          ctx.strokeStyle = real ? '#38bdf8' : '#c084fc'; ctx.lineWidth = 3;
-          ctx.beginPath(); ctx.moveTo(imgX, axisY); ctx.lineTo(imgX, imgTipY); ctx.stroke();
-          ctx.fillStyle = real ? '#38bdf8' : '#c084fc'; ctx.font = '11px JetBrains Mono';
-          ctx.fillText(`${real ? 'Real' : 'Virtual'} ${imgH < 0 ? 'Inv' : 'Erect'} M=${Math.abs(m).toFixed(2)}`, Math.min(w - 210, imgX + 10), imgTipY - 8);
-        } else {
+        const startY = r.inf ? axisY - objH : tipY;
+        const startX = r.inf ? Math.max(14, objX) : objX;
+        if (r.inf) { // parallel bundle in, image at focal point
+          const focX = mirror ? cx - f : cx + f;
+          for (const dy of [0, 26, 52]) {
+            ray([[14, axisY - objH + dy], [cx, axisY - objH + dy]], '#f472b6', false, 1.4);
+            ray([[cx, axisY - objH + dy], [focX, axisY]], '#38bdf8', false, 1.4);
+          }
+          ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(focX, axisY, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText('Point image at F', focX + 10, axisY - 10);
+        } else if (!this.finite(r.v)) { // object at F: outgoing parallel
+          ray([[startX, startY], [cx, startY]], '#f472b6');
+          ray([[cx, startY], [mirror ? 14 : w - 14, startY]], '#38bdf8');
+          const c2 = mirror ? [cx, axisY] : [cx, axisY];
+          ray([[startX, startY], c2], '#f472b6');
+          ray([c2, mirror ? [14, axisY + (axisY - startY)] : [w - 14, axisY + (axisY - startY)]], '#38bdf8');
           ctx.fillStyle = '#f87171'; ctx.font = '11px JetBrains Mono';
-          ctx.fillText('Image at infinity (u ≈ F)', cx + 20, axisY - 110);
+          ctx.fillText('Image at infinity (u = F)', cx + 24, axisY - 110);
+        } else {
+          // ray 1: parallel -> focal / virtual-focal
+          const hy = startY;
+          if (!mirror) {
+            ray([[startX, hy], [cx, hy]], '#f472b6');
+            if (f > 0) ray([[cx, hy], [imgX, imgTipY]], '#38bdf8');
+            else { ray([[cx, hy], [cx + 320, hy + (hy - axisY) * 0.6]], '#38bdf8'); ray([[cx, hy], [cx + f, axisY]], '#c084fc', true); }
+          } else {
+            ray([[startX, hy], [cx, hy]], '#f472b6');
+            if (f > 0) ray([[cx, hy], [imgX, imgTipY]], '#38bdf8');
+            else { ray([[cx, hy], [cx - 320, hy + (hy - axisY) * 0.6]], '#38bdf8'); ray([[cx, hy], [cx - f, axisY]], '#c084fc', true); }
+          }
+          // ray 2: central through O / pole
+          if (!mirror) {
+            ray([[startX, startY], [imgX, imgTipY]], r.v > 0 ? '#38bdf8' : '#c084fc', r.v < 0);
+          } else {
+            const outX = imgX < cx ? imgX : cx - 320, outY = imgX < cx ? imgTipY : axisY + (axisY - startY) * 0.8;
+            ray([[startX, startY], [cx, axisY]], '#f472b6');
+            ray([[cx, axisY], [outX, outY]], '#38bdf8');
+            if (imgX > cx) ray([[cx, axisY], [imgX, imgTipY]], '#c084fc', true);
+          }
+          // ray 3: through near-F -> emerges parallel (converging devices only)
+          if (f > 0 && !r.inf) {
+            const denom = ((cx - f) - startX) || 1e-6;
+            const hyy = startY + (axisY - startY) * ((cx - startX) / denom);
+            ray([[startX, startY], [cx, hyy]], '#f472b6');
+            ray([[cx, hyy], [mirror ? 14 : w - 14, hyy]], '#38bdf8');
+          }
+          // image arrow / candle
+          if (Math.abs(imgH) < 320 && ((mirror && imgX < cx + 640) || (!mirror && imgX > cx - 640))) {
+            const real = this.isReal(r);
+            ctx.strokeStyle = real ? '#38bdf8' : '#c084fc'; ctx.lineWidth = 2.5;
+            ctx.setLineDash(real ? [] : [5, 4]);
+            ctx.beginPath(); ctx.moveTo(imgX, axisY); ctx.lineTo(imgX, imgTipY); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = real ? '#38bdf8' : '#c084fc'; ctx.font = '11px JetBrains Mono';
+            const kind = `${real ? 'Real' : 'Virtual'} ${imgH < 0 ? 'inverted' : 'erect'} |m|=${Math.abs(r.m).toFixed(2)}`;
+            ctx.fillText(kind, Math.min(Math.max(imgX + 10, 8), w - 190), imgTipY - 8);
+          }
+        }
+        // screen with real image focus
+        const real = this.isReal(r);
+        const sAuto = real ? Math.min(Math.max(r.v, 30), 560) : 300;
+        const s = this.autoScreen ? sAuto : this.screenDist;
+        const sx = mirror ? cx - s : cx + s;
+        if (this.showScreen && sx > 8 && sx < w - 8) {
+          ctx.fillStyle = 'rgba(241,245,249,0.95)';
+          ctx.fillRect(sx - 5, axisY - 120, 10, 200);
+          ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
+          ctx.strokeRect(sx - 5, axisY - 120, 10, 200);
+          ctx.strokeStyle = '#64748b';
+          ctx.beginPath(); ctx.moveTo(sx, axisY + 80); ctx.lineTo(sx, axisY + 150); ctx.stroke();
+          ctx.fillStyle = '#475569'; ctx.font = '10px JetBrains Mono';
+          ctx.fillText('SCREEN', sx - 22, axisY + 132);
+          const defocus = real ? Math.abs(s - r.v) : 400;
+          const focus = real ? Math.max(0, 1 - defocus / 300) : 0;
+          if (real) {
+            const sh = Math.min(Math.max(Math.abs(r.m) * objH, 4), 110);
+            const dir = (r.m < 0 ? -1 : 1);
+            const blur = Math.min(8, defocus * 0.06);
+            if (dir > 0) {
+              candle(sx, axisY, sh, { color: '#0284c7', alpha: 0.25 + focus * 0.75, blur, noFlame: blur > 3 });
+            } else {
+              // inverted: draw flipped below axis
+              ctx.save();
+              try { ctx.filter = blur ? `blur(${blur}px)` : 'none'; } catch (e) {}
+              ctx.globalAlpha = 0.25 + focus * 0.75;
+              ctx.translate(sx, axisY); ctx.scale(1, -1); ctx.translate(-sx, -axisY);
+              candle(sx, axisY, sh, { color: '#0284c7', alpha: 1, noFlame: blur > 3 });
+              ctx.restore();
+            }
+            ctx.fillStyle = focus > 0.75 ? '#16a34a' : '#d97706'; ctx.font = '11px JetBrains Mono';
+            ctx.fillText(`Focus ${(focus * 100).toFixed(0)}%`, sx - 30, axisY - 128);
+          } else {
+            ctx.fillStyle = '#94a3b8'; ctx.font = '10px JetBrains Mono';
+            ctx.fillText('no real', sx - 20, axisY - 6);
+            ctx.fillText('image', sx - 16, axisY + 8);
+          }
         }
         ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
-        ctx.fillText(`1/v − 1/u = 1/f · u=${this.objDist}px f=${this.lensType === 'convex' ? '' : '−'}${this.f}px`, 14, h - 14);
+        const dev = this.deviceLabel();
+        ctx.fillText(`${dev} · 1/f = 1/v − 1/u (lens) · mirror: 1/f = 1/v + 1/u`, 14, h - 14);
       },
       getMetrics() {
-        const { v, m } = this.image();
+        const r = this.img();
+        const nat = !this.finite(r.v) ? 'at ∞' : (!r.inf && r.v > 0 ? `Real ${r.m < 0 ? 'inverted' : 'erect'}` : 'Virtual erect');
+        const s = this.autoScreen ? (this.finite(r.v) && r.v > 0 && !r.inf ? r.v : NaN) : this.screenDist;
+        const focus = (this.finite(r.v) && r.v > 0 && !r.inf) ? Math.max(0, 1 - Math.abs(s - r.v) / 300) : 0;
         return [
-          { label: "Lens", val: `${this.lensType} f=${this.f}` },
-          { label: "Object u", val: `${this.objDist}px` },
-          { label: "Image v", val: `${isFinite(v) ? v.toFixed(0) + 'px' : '∞'}` },
-          { label: "Magn. m=v/u", val: `${isFinite(m) ? m.toFixed(2) : '∞'}` },
-          { label: "CBSE", val: "Ch-9 lens formula" }
+          { label: "Device", val: this.deviceLabel() },
+          { label: "Object u", val: r.inf ? "∞" : `${this.objDist | 0}px` },
+          { label: "Image v", val: !this.finite(r.v) ? "∞" : `${r.v.toFixed(0)}px` },
+          { label: "Magn. m", val: !isFinite(r.m) ? "∞" : r.m.toFixed(2) },
+          { label: "Nature", val: nat },
+          { label: "Screen focus", val: `${(focus * 100).toFixed(0)}%` }
         ];
       },
       presets: {
-        "Beyond 2F Real": { f: 120, objDist: 300, lensType: 'convex' },
-        "At F Infinity": { f: 120, objDist: 120, lensType: 'convex' },
-        "Concave Virtual": { f: 120, objDist: 260, lensType: 'concave' }
+        "Convex lens: beyond 2F": { device: 'convexLens', f: 120, objDist: 360 },
+        "Concave mirror: at C": { device: 'concaveMirror', f: 120, objDist: 240 },
+        "Concave lens demo": { device: 'concaveLens', f: 120, objDist: 300 },
+        "Convex mirror demo": { device: 'convexMirror', f: 120, objDist: 300 }
       },
+      refresh() { controlsPanel.innerHTML = this.buildControls(); this.bindControls(); },
       buildControls() {
+        const devBtn = (k, label) => `<button data-dev="${k}" class="rayDevBtn px-2.5 py-1.5 rounded-lg border text-xs font-medium transition ${this.device === k ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}">${label}</button>`;
+        const posOpts = this.cases().map(c => `<option value="${c[1]}" ${this.objDist === c[1] ? 'selected' : ''}>${c[0]}</option>`).join('');
         return `
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Object distance</span><span id="valOD" class="font-mono text-cyan-400">${this.objDist}px</span></div>
-            <input type="range" id="ctrlOD" min="60" max="520" value="${this.objDist}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Focal length</span><span id="valFL" class="font-mono text-cyan-400">${this.f}px</span></div>
-            <input type="range" id="ctrlFL" min="50" max="200" value="${this.f}" class="w-full"></div>
-            <div class="flex items-end"><button id="ctrlLT" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg border border-slate-700 transition">Lens: ${this.lensType.toUpperCase()}</button></div>
+          <div class="flex flex-wrap gap-1.5 mb-2.5">
+            ${devBtn('convexLens', 'Convex lens')}
+            ${devBtn('concaveLens', 'Concave lens')}
+            ${devBtn('concaveMirror', 'Concave mirror')}
+            ${devBtn('convexMirror', 'Convex mirror')}
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300"><span>Position case</span></div>
+              <select id="ctrlRayPos" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2 py-1 focus:outline-none focus:border-cyan-400">${posOpts}</select>
+            </div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Object dist.</span><span id="valRayObj" class="font-mono text-cyan-400">${this.objDist > 900 ? '∞' : this.objDist + 'px'}</span></div>
+            <input type="range" id="ctrlRayObj" min="60" max="520" value="${Math.min(this.objDist, 520)}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Focal |f|</span><span id="valRayF" class="font-mono text-cyan-400">${this.f}px</span></div>
+            <input type="range" id="ctrlRayF" min="50" max="200" value="${this.f}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Screen</span><span id="valRayScr" class="font-mono text-cyan-400">${this.autoScreen ? 'auto' : this.screenDist + 'px'}</span></div>
+            <div class="flex gap-1.5">
+              <input type="range" id="ctrlRayScr" min="40" max="560" value="${this.screenDist}" class="w-full" ${this.autoScreen ? 'disabled' : ''}>
+              <button id="ctrlRayAuto" class="px-2 py-1 rounded-lg border text-[11px] font-medium ${this.autoScreen ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}" title="Auto-follow screen">Auto</button>
+            </div></div>
           </div>`;
       },
       bindControls() {
-        document.getElementById('ctrlOD')?.addEventListener('input', (e) => { this.objDist = parseFloat(e.target.value); document.getElementById('valOD').textContent = `${this.objDist}px`; });
-        document.getElementById('ctrlFL')?.addEventListener('input', (e) => { this.f = parseFloat(e.target.value); document.getElementById('valFL').textContent = `${this.f}px`; });
-        document.getElementById('ctrlLT')?.addEventListener('click', (e) => { this.lensType = this.lensType === 'convex' ? 'concave' : 'convex'; e.target.textContent = `Lens: ${this.lensType.toUpperCase()}`; });
+        document.querySelectorAll('.rayDevBtn').forEach(b => b.addEventListener('click', () => {
+          this.device = b.dataset.dev;
+          this.objDist = this.device === 'convexLens' || this.device === 'concaveMirror' ? 300 : 300;
+          this.refresh();
+          showToast(`Switched to ${this.deviceLabel()}`, 'info');
+        }));
+        document.getElementById('ctrlRayPos')?.addEventListener('change', (e) => {
+          this.objDist = parseFloat(e.target.value);
+          this.refresh();
+        });
+        document.getElementById('ctrlRayObj')?.addEventListener('input', (e) => {
+          this.objDist = parseFloat(e.target.value);
+          document.getElementById('valRayObj').textContent = `${this.objDist}px`;
+        });
+        document.getElementById('ctrlRayF')?.addEventListener('input', (e) => {
+          this.f = parseFloat(e.target.value);
+          document.getElementById('valRayF').textContent = `${this.f}px`;
+        });
+        document.getElementById('ctrlRayScr')?.addEventListener('input', (e) => {
+          this.screenDist = parseFloat(e.target.value);
+          document.getElementById('valRayScr').textContent = `${this.screenDist}px`;
+        });
+        document.getElementById('ctrlRayAuto')?.addEventListener('click', (e) => {
+          this.autoScreen = !this.autoScreen;
+          this.refresh();
+        });
       }
     };
 
-    /* ==========================================================
-       5f. GRADE-12 CBSE: WAVE OPTICS YDSE (double-slit)
-       ========================================================== */
     const ydseSim = {
       name: "Wave Optics: Double-Slit (YDSE)",
       lambdaNm: 550, dUm: 250, D: 1.2,
@@ -4288,7 +4502,7 @@ const ohmsSim = {
       } else if (simKey === 'magnet') {
         hudHintText.textContent = "CBSE XII Magnetism: F = qvB bends charge into r = mv/qB circles.";
       } else if (simKey === 'lens') {
-        hudHintText.textContent = "CBSE XII Ray Optics: move object past F/2F, watch real/virtual image flip.";
+        hudHintText.textContent = "Pick a device, then a position case — move the screen to find sharp focus.";
       } else if (simKey === 'ydse') {
         hudHintText.textContent = "CBSE XII Wave Optics: change λ/d/D, fringe width β = λD/d updates live.";
       } else if (simKey === 'emi') {
