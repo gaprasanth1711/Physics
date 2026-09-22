@@ -1918,6 +1918,7 @@
         const w = canvas.width / dpr, h = canvas.height / dpr;
         const cx = w / 2, axisY = h * 0.44;
         const f = this.signedF(), mirror = this.isMirror();
+        const fa = Math.abs(f);
         const r = this.img();
         const objH = 64;
         const objX = cx - Math.min(this.objDist, 900);
@@ -1930,21 +1931,32 @@
         // principal axis
         ctx.strokeStyle = 'rgba(148,163,184,0.5)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(0, axisY); ctx.lineTo(w, axisY); ctx.stroke();
-        // device
+        // device (curvature exaggerated for visibility; rays use paraxial vertex optics)
+        const needMirrorCurve = () => {
+          const R = Math.min(320, Math.max(150, 1.4 * fa));
+          return { R, half: Math.asin(Math.min(0.9, 112 / R)) };
+        };
         ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
         ctx.beginPath();
         if (this.device === 'convexLens') {
-          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 26, axisY, cx, axisY + 130);
-          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 26, axisY, cx, axisY + 130);
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 36, axisY, cx, axisY + 130);
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 36, axisY, cx, axisY + 130);
         } else if (this.device === 'concaveLens') {
-          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 20, axisY, cx, axisY + 130);
-          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 20, axisY, cx, axisY + 130);
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 28, axisY, cx, axisY + 130);
+          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 28, axisY, cx, axisY + 130);
         } else if (this.device === 'concaveMirror') {
-          ctx.arc(cx + 260, axisY, 260, Math.PI - 0.5, Math.PI + 0.5);
+          const mc = needMirrorCurve();
+          ctx.arc(cx + mc.R, axisY, mc.R, Math.PI - mc.half, Math.PI + mc.half);
         } else {
-          ctx.arc(cx - 260, axisY, 260, -0.5, 0.5);
+          const mc = needMirrorCurve();
+          ctx.arc(cx - mc.R, axisY, mc.R, -mc.half, mc.half);
         }
         ctx.stroke();
+        if (mirror) { // mounting stand from mirror base to bench
+          ctx.strokeStyle = '#64748b'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(cx, axisY + 112); ctx.lineTo(cx, axisY + 150); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx - 26, axisY + 150); ctx.lineTo(cx + 26, axisY + 150); ctx.stroke();
+        }
         if (mirror) { // hatch behind mirror + pole label
           ctx.strokeStyle = 'rgba(148,163,184,0.7)'; ctx.lineWidth = 1.5;
           for (let y = axisY - 120; y <= axisY + 120; y += 16) {
@@ -1964,7 +1976,6 @@
           ctx.fillText(label, x - 5, axisY + 16);
           if (virt) { ctx.strokeStyle = 'rgba(192,132,252,0.5)'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(x, axisY - 120); ctx.lineTo(x, axisY + 120); ctx.stroke(); ctx.setLineDash([]); }
         };
-        const fa = Math.abs(f);
         if (!mirror) {
           mark(cx - fa, 'F', f < 0); mark(cx + fa, 'F', f < 0);
           mark(cx - 2 * fa, '2F', f < 0); mark(cx + 2 * fa, '2F', f < 0);
