@@ -77,6 +77,18 @@
     input[type=range] {
       accent-color: #38bdf8;
     }
+    /* View modes (Auto / Desktop / Mobile) + touch optimisation */
+    body.view-mobile main { flex-direction: column !important; max-width: 540px; margin-left: auto; margin-right: auto; border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08); }
+    body.view-mobile main > aside:first-child { width: 100% !important; }
+    body.view-mobile #canvasContainer { min-height: 430px; }
+    body.view-desktop main { flex-direction: row !important; }
+    body.view-desktop #simNavList { flex-direction: column !important; }
+    body.view-desktop main > aside:first-child { width: 16rem !important; min-width: 16rem; }
+    @media (pointer: coarse) {
+      #btnPlayPause, #btnStep, #btnReset, #btnClearTrails { min-height: 44px; min-width: 44px; }
+      input[type="range"] { height: 34px; }
+      .sim-nav-btn { min-height: 48px; }
+    }
   </style>
 </head>
 <body class="bg-space-950 text-slate-100 min-h-screen flex flex-col font-sans overflow-x-hidden selection:bg-cyan-500 selection:text-black">
@@ -96,6 +108,11 @@
 
     <!-- Top Action buttons -->
     <div class="flex items-center gap-2">
+      <select id="viewSelect" title="Layout: auto, desktop or mobile view" class="px-2 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/80 rounded-lg border border-slate-700/60 focus:outline-none focus:border-cyan-400">
+        <option value="auto" selected>Auto view</option>
+        <option value="desktop">Desktop view</option>
+        <option value="mobile">Mobile view</option>
+      </select>
       <button id="btnOpenEmbed" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700/60 transition">
         <i data-lucide="code-2" class="w-3.5 h-3.5 text-cyan-400"></i>
         <span class="hidden sm:inline">Embed / Export</span>
@@ -493,7 +510,12 @@
 
     // Responsive Canvas Resizing with DPR support
     let dpr = window.devicePixelRatio || 1;
+    function tunedDpr() {
+      const cap = (document.body && document.body.classList.contains('view-mobile')) ? 1.5 : 2;
+      return Math.min(window.devicePixelRatio || 1, cap);
+    }
     function resizeCanvas() {
+      dpr = tunedDpr();
       const rect = canvas.parentElement.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
@@ -4247,6 +4269,24 @@ const ohmsSim = {
     document.getElementById('speedSelect').addEventListener('change', (e) => {
       state.speed = parseFloat(e.target.value) || 1;
     });
+
+    // View mode (Auto / Desktop / Mobile) with persistence
+    function applyViewMode(mode) {
+      document.body.classList.remove('view-desktop', 'view-mobile');
+      if (mode === 'desktop' || mode === 'mobile') document.body.classList.add('view-' + mode);
+      try { localStorage.setItem('prasanth-view', mode); } catch (e) {}
+      resizeCanvas();
+    }
+    (function initViewMode() {
+      let saved = 'auto';
+      try { saved = localStorage.getItem('prasanth-view') || 'auto'; } catch (e) {}
+      const sel = document.getElementById('viewSelect');
+      if (sel) {
+        sel.value = saved;
+        sel.addEventListener('change', (e) => applyViewMode(e.target.value));
+      }
+      applyViewMode(saved);
+    })();
 
     // Control bar buttons
     playPauseBtn.addEventListener('click', () => {
