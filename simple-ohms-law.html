@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ohm's Law Lab - Simple (Grade 12 CBSE)</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f6ff; margin: 0; text-align: center; }
+  header { background: #1565c0; color: white; padding: 12px; font-size: 20px; font-weight: bold; }
+  header small { display: block; font-size: 12px; font-weight: normal; }
+  #stage { margin: 12px auto; background: white; border: 3px solid #1565c0; border-radius: 12px; max-width: 640px; }
+  canvas { width: 100%; height: 300px; display: block; }
+  #panel { max-width: 640px; margin: 0 auto 20px; background: white; border-radius: 12px; padding: 12px; border: 2px solid #ccc; }
+  .row { margin: 10px 0; font-size: 16px; }
+  input[type=range] { width: 70%; }
+  button { font-size: 16px; padding: 8px 18px; margin: 4px; border-radius: 8px; border: none; cursor: pointer; }
+  #btnPlay { background: #2e7d32; color: white; }
+  #btnReset { background: #757575; color: white; }
+  #readout { font-size: 18px; background: #fff9c4; border-radius: 8px; padding: 8px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>Ohm's Law Lab<small>Grade 12 CBSE · Current Electricity · V = IR · PhET-style simple</small></header>
+
+<div id="stage"><canvas id="c" width="640" height="300"></canvas></div>
+
+<div id="panel">
+  <div class="row">🔋 Voltage: <span id="vVal">12</span> V<br>
+    <input type="range" id="vSlider" min="1" max="24" step="1" value="12"></div>
+  <div class="row">🧱 Resistance: <span id="rVal">10</span> Ω<br>
+    <input type="range" id="rSlider" min="2" max="50" step="1" value="10"></div>
+  <div class="row">
+    <button id="btnPlay">⏸ Pause</button>
+    <button id="btnReset">↺ Reset</button>
+  </div>
+  <div id="readout">Current I = V ÷ R = <b id="iVal">1.20</b> A</div>
+</div>
+
+<script>
+  // SIMPLE STATE - change numbers here to experiment
+  let V = 12, R = 10, running = true;
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+
+  // CONTROLS
+  document.getElementById('vSlider').oninput = (e) => {
+    V = Number(e.target.value);
+    document.getElementById('vVal').textContent = V;
+    showCurrent();
+  };
+  document.getElementById('rSlider').oninput = (e) => {
+    R = Number(e.target.value);
+    document.getElementById('rVal').textContent = R;
+    showCurrent();
+  };
+  document.getElementById('btnPlay').onclick = (e) => {
+    running = !running;
+    e.target.textContent = running ? '⏸ Pause' : '▶ Play';
+  };
+  document.getElementById('btnReset').onclick = () => {
+    V = 12; R = 10;
+    document.getElementById('vSlider').value = V;
+    document.getElementById('rSlider').value = R;
+    document.getElementById('vVal').textContent = V;
+    document.getElementById('rVal').textContent = R;
+    showCurrent();
+  };
+
+  function showCurrent() {
+    document.getElementById('iVal').textContent = (V / R).toFixed(2);
+  }
+
+  // DRAW LOOP - one rectangle circuit + glowing bulb
+  function draw(t) {
+    const I = V / R;
+    ctx.clearRect(0, 0, 640, 300);
+    // wires
+    ctx.strokeStyle = '#1565c0'; ctx.lineWidth = 4;
+    ctx.strokeRect(120, 70, 400, 160);
+    // battery
+    ctx.fillStyle = '#fb8c00'; ctx.fillRect(112, 120, 16, 60);
+    ctx.fillStyle = '#333'; ctx.font = '14px Arial';
+    ctx.fillText(V + 'V', 105, 200);
+    // bulb brightness = power
+    const power = V * I, glow = Math.min(1, power / 60);
+    ctx.fillStyle = `rgba(255,193,7,${0.2 + glow * 0.8})`;
+    ctx.beginPath(); ctx.arc(320, 70, 26, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#333';
+    ctx.fillText('R=' + R + 'Ω', 300, 140);
+    ctx.fillText('I=' + I.toFixed(2) + 'A', 300, 250);
+    // moving dots = current
+    if (running) {
+      ctx.fillStyle = '#1565c0';
+      for (let i = 0; i < 10; i++) {
+        const p = ((t / 1000 * (0.3 + I * 0.3) + i / 10) % 1);
+        const per = 400 * 2 + 160 * 2;
+        const d = p * per;
+        let x, y;
+        if (d < 400) { x = 120 + d; y = 70; }
+        else if (d < 560) { x = 520; y = 70 + (d - 400); }
+        else if (d < 960) { x = 520 - (d - 560); y = 230; }
+        else { x = 120; y = 230 - (d - 960); }
+        ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  showCurrent();
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>
