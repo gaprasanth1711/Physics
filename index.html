@@ -115,6 +115,23 @@
       #hudSimTitle { font-size: 12px; }
       #dynamicControlsPanel { font-size: 13px; }
     }
+    /* Stacked Lab tab: readings below canvas (scrollable), overlay hidden */
+    @media (max-width: 1023px) {
+      body[data-mtab="lab"] #hudBox { display: none; }
+      body[data-mtab="lab"] #telePanel { display: block !important; }
+      body[data-mtab="lab"] #stageSection { overflow-y: auto; }
+      body[data-mtab="lab"] #canvasContainer { flex: none; height: 44vh; min-height: 300px; }
+      body[data-mtab="tutor"] #aiChatHistory { min-height: 0; }
+      body[data-mtab="tutor"] #aiDrawer > div { flex-shrink: 0; }
+      body[data-mtab="tutor"] #aiChatHistory { flex-shrink: 1; }
+    }
+    body.view-mobile[data-mtab="lab"] #hudBox { display: none; }
+    body.view-mobile[data-mtab="lab"] #telePanel { display: block !important; }
+    body.view-mobile[data-mtab="lab"] #stageSection { overflow-y: auto; }
+    body.view-mobile[data-mtab="lab"] #canvasContainer { flex: none; height: 44vh; min-height: 300px; }
+    body.view-mobile[data-mtab="tutor"] #aiChatHistory { min-height: 0; }
+    body.view-mobile[data-mtab="tutor"] #aiDrawer > div { flex-shrink: 0; }
+    body.view-mobile[data-mtab="tutor"] #aiChatHistory { flex-shrink: 1; }
     body.view-desktop main { flex-direction: row !important; }
     body.view-desktop #simNavList { flex-direction: column !important; }
     body.view-desktop main > aside:first-child { width: 16rem !important; min-width: 16rem; }
@@ -383,7 +400,7 @@
         <canvas id="simCanvas" class="w-full h-full cursor-crosshair"></canvas>
 
         <!-- Dynamic On-Canvas Telemetry HUD -->
-        <div class="absolute top-3 left-3 pointer-events-none glass-panel px-3 py-2 rounded-xl text-[11px] font-mono border border-white/10 space-y-1 shadow-lg max-w-[280px]">
+        <div id="hudBox" class="absolute top-3 left-3 pointer-events-none glass-panel px-3 py-2 rounded-xl text-[11px] font-mono border border-white/10 space-y-1 shadow-lg max-w-[280px]">
           <div class="text-cyan-400 font-bold flex items-center gap-1.5 border-b border-white/10 pb-1">
             <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
             <span id="hudSimTitle">Projectile Dynamics</span>
@@ -398,6 +415,12 @@
           <i data-lucide="mouse-pointer-click" class="w-3 h-3 text-cyan-400"></i>
           <span id="hudHintText">Click & drag on canvas to adjust trajectory vector or spawn objects</span>
         </div>
+      </div>
+
+      <!-- Readings below canvas (stacked layouts; scroll to see) -->
+      <div id="telePanel" class="hidden border-t border-slate-800/80 bg-space-900/60 px-3.5 py-2.5 shrink-0">
+        <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400 mb-1.5">Live readings — scroll down for more</div>
+        <div id="teleList" class="grid grid-cols-1 gap-x-4 gap-y-1 text-[12px] font-mono"></div>
       </div>
 
       <!-- Bottom Parameter Sliders & Physical Controls -->
@@ -4499,6 +4522,13 @@ const ohmsSim = {
           <span class="text-cyan-300 font-bold">${m.val}</span>
         </div>
       `).join('');
+      const tl = document.getElementById('teleList');
+      if (tl) tl.innerHTML = metrics.map(m => `
+        <div class="flex items-center justify-between gap-2 py-1 border-b border-white/5">
+          <span class="text-slate-400">${m.label}:</span>
+          <span class="text-cyan-300 font-bold text-right">${m.val}</span>
+        </div>
+      `).join('');
     }
 
     function gameLoop(time) {
@@ -4608,6 +4638,13 @@ Rules:
       const apiKey = ""; // Canvas provides key at runtime
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
 
+      if (!apiKey) {
+        const text = buildLocalAnswer(sim, userPrompt);
+        state.chatHistory.push({ role: 'user', parts: [{ text: userPrompt }] });
+        state.chatHistory.push({ role: 'model', parts: [{ text }] });
+        return text;
+      }
+
       const payload = {
         contents: [
           ...state.chatHistory,
@@ -4655,7 +4692,30 @@ Rules:
       }
     }
 
-    // Submit handler
+    // Offline tutor fallback (works with no API key): answers from live sim data + laws
+    const TUTOR_KNOWLEDGE = {
+      projectile: "**Projectile motion:** Range $R = v_0^2 \\sin 2\\theta / g$, max height $H = v_0^2 \\sin^2\\theta / 2g$. 45° gives max range without air drag; drag shortens and skews it.",
+      pendulum: "**Double pendulum:** highly sensitive chaos — tiny angle changes diverge fast. Watch kinetic/potential energy swap while total energy slowly decays through damping.",
+      orbit: "**Orbits:** $F = GMm/r^2$, circular speed $v = \\sqrt{GM/r}$. Drag on canvas to fling your own satellite and see trails trace the ellipse.",
+      optics: "**Snell's law:** $n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2$. Going denser→rarer past the critical angle gives total internal reflection.",
+      electro: "**Coulomb:** $F = k q_1 q_2 / r^2$, field $E = F/q$. Like charges repel, opposites attract — the arrow grid is the field direction.",
+      circuit: "**Circuits:** $V = IR$. Series adds $R_{eq} = R_1+R_2$; parallel $1/R_{eq} = 1/R_1+1/R_2$. Bulb brightness follows power $P = VI$.",
+      magnet: "**Lorentz force:** $F = qvB$ bends charge into circles of radius $r = mv/qB$. Stronger B or slower charge = tighter circle.",
+      lens: "**Thin lens:** $1/f = 1/v - 1/u$, magnification $m = v/u$. Object outside F gives real inverted image; inside F gives virtual erect.",
+      ydse: "**YDSE:** fringe width $\\beta = \\lambda D/d$. Longer wavelength or wider screen distance spreads fringes; wider slit gap squeezes them.",
+      emi: "**Faraday:** $\\mathcal{E} = -d\\Phi/dt$. Faster magnet motion = bigger spike; Lenz says the induced current opposes the change. Flip poles to reverse it.",
+      photo: "**Photoelectric:** $h\\nu = \\Phi_0 + K_{max}$, stopping voltage $eV_0 = K_{max}$. Frequency controls electron energy; intensity controls how many, not how fast.",
+      shm: "**SHM:** $F = -kx$, period $T = 2\\pi\\sqrt{m/k}$, total energy $E = \\frac{1}{2}kA^2$ sloshing between kinetic and potential. Damping shrinks amplitude.",
+      fric: "**Incline:** $N = mg\\cos\\theta$. Stays put while $mg\\sin\\theta \\le \\mu_s N$; slides with $f_k = \\mu_k N$ opposing motion once it slips.",
+      col: "**Collisions:** total momentum $p$ is always conserved. Restitution $e$ sets bounce: $e=1$ elastic (KE kept), $e=0$ sticky (max KE lost).",
+      wave: "**Standing waves:** $v = \\sqrt{T/\\mu}$, mode frequencies $f_n = nv/2L$. Nodes never move; antinodes swing widest. Two travelling waves superpose: $y = y_1+y_2$.",
+      ohms: "**Ohm's law:** $V = IR$, power $P = VI$. Double voltage at fixed R and current doubles; double R at fixed V and current halves."
+    };
+    function buildLocalAnswer(sim, query) {
+      const law = TUTOR_KNOWLEDGE[state.activeSim] || "Adjust the sliders and watch the live readings change.";
+      const metrics = sim.getMetrics ? sim.getMetrics().map(m => `* ${m.label}: **${m.val}**`).join('\n') : '';
+      return `**PRASANTH AI TUTOR (offline mode)** — answering from your live simulation since no AI key is set on this host.\n\nYou asked: "${query.length > 140 ? query.slice(0, 140) + '…' : query}"\n\n${law}\n\n**Live right now in ${sim.name}:**\n${metrics}\n\nTry this: change one slider, watch which reading moves, then ask me *why* it moved that way.`;
+    }
     aiChatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const query = aiUserInput.value.trim();
@@ -4679,7 +4739,7 @@ Rules:
         appendChatMessage('assistant', aiAnswer);
       } catch (err) {
         document.getElementById('aiLoadingBubble')?.remove();
-        appendChatMessage('assistant', "I encountered a transient network connection error while contacting the physics server. Please try submitting your question once more.");
+        appendChatMessage('assistant', buildLocalAnswer(simulations[state.activeSim], query));
       }
     });
 
