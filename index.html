@@ -146,6 +146,46 @@
               <div class="text-[10px] text-slate-400 hidden lg:block">Refraction & Snell's Law</div>
             </div>
           </button>
+
+          <button data-sim="electro" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="zap" class="w-4 h-4 shrink-0 text-yellow-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Electrostatics</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Coulomb field & dipole · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="circuit" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="plug-zap" class="w-4 h-4 shrink-0 text-orange-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Current Electricity</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Ohm's law & circuits · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="magnet" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="magnet" class="w-4 h-4 shrink-0 text-red-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Magnetic Lorentz</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">q in uniform B-field · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="lens" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="focus" class="w-4 h-4 shrink-0 text-sky-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Ray Optics Lens</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Image formation · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="ydse" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="waves" class="w-4 h-4 shrink-0 text-fuchsia-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Double-Slit YDSE</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Interference fringes · XII</div>
+            </div>
+          </button>
         </nav>
       </div>
 
@@ -1359,12 +1399,496 @@
       }
     };
 
+    /* ==========================================================
+       5b. GRADE-12 CBSE: ELECTROSTATICS (Coulomb field visualizer)
+       ========================================================== */
+    const electroSim = {
+      name: "Electrostatics: Point-Charge Field",
+      q1: 5, q2: -5, // micro-coulomb
+      separation: 220, // px between charges
+      testTrail: [],
+      init() { this.reset(); },
+      reset() { this.testTrail = []; },
+      update(dt) {
+        // animate a test probe orbiting mid-field for intuition
+        const t = performance.now() / 1000;
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const cx = w / 2, cy = h / 2;
+        const px = cx + Math.cos(t * 0.6) * (this.separation * 0.9);
+        const py = cy + Math.sin(t * 0.9) * (h * 0.28);
+        if (state.showTrails) {
+          this.testTrail.push({ x: px, y: py });
+          if (this.testTrail.length > 220) this.testTrail.shift();
+        }
+      },
+      fieldAt(x, y) {
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const c1 = { x: w / 2 - this.separation / 2, y: h / 2 };
+        const c2 = { x: w / 2 + this.separation / 2, y: h / 2 };
+        const k = 900; // scaled Coulomb constant for viz
+        function comp(q, c) {
+          const dx = x - c.x, dy = y - c.y;
+          const r2 = dx * dx + dy * dy + 400;
+          const r = Math.sqrt(r2);
+          const mag = k * q / r2;
+          return { fx: mag * dx / r, fy: mag * dy / r };
+        }
+        const a = comp(this.q1, c1), b = comp(this.q2, c2);
+        return { fx: a.fx + b.fx, fy: a.fy + b.fy, c1, c2 };
+      },
+      render() {
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const step = 46;
+        // field vector grid
+        for (let gx = step / 2; gx < w; gx += step) {
+          for (let gy = step / 2; gy < h; gy += step) {
+            const f = this.fieldAt(gx, gy);
+            const mag = Math.hypot(f.fx, f.fy) || 1;
+            const len = Math.min(16, 4 + mag * 0.35);
+            const ang = Math.atan2(f.fy, f.fx);
+            ctx.strokeStyle = 'rgba(56,189,248,0.55)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(gx, gy);
+            ctx.lineTo(gx + Math.cos(ang) * len, gy + Math.sin(ang) * len);
+            ctx.stroke();
+          }
+        }
+        const { c1, c2 } = this.fieldAt(w / 2, h / 2);
+        // test probe trail
+        if (state.showTrails && this.testTrail.length > 1) {
+          ctx.strokeStyle = 'rgba(52,211,153,0.7)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(this.testTrail[0].x, this.testTrail[0].y);
+          for (let p of this.testTrail) ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        }
+        // charges
+        const drawCharge = (c, q, col) => {
+          ctx.fillStyle = col;
+          ctx.shadowColor = col; ctx.shadowBlur = 14;
+          ctx.beginPath(); ctx.arc(c.x, c.y, 13, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter';
+          ctx.fillText((q >= 0 ? '+' : '') + q + 'µC', c.x - 20, c.y - 20);
+        };
+        drawCharge(c1, this.q1, this.q1 >= 0 ? '#ef4444' : '#38bdf8');
+        drawCharge(c2, this.q2, this.q2 >= 0 ? '#ef4444' : '#38bdf8');
+        ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+        const r_m = (this.separation / 90).toFixed(1);
+        const F = (9e9 * Math.abs(this.q1 * this.q2) * 1e-12 / Math.max(0.2, r_m * r_m));
+        ctx.fillText(`F = k|q1 q2|/r² ≈ ${F.toExponential(2)} N  (r ≈ ${r_m} m scaled)`, 14, h - 14);
+      },
+      getMetrics() {
+        return [
+          { label: "Charge q1", val: `${this.q1} µC` },
+          { label: "Charge q2", val: `${this.q2} µC` },
+          { label: "Law", val: "F = k q1 q2 / r²" },
+          { label: "Field", val: "E = F / q0" },
+          { label: "CBSE", val: "Ch-1 Electrostatics" }
+        ];
+      },
+      presets: {
+        "Electric Dipole": { q1: 5, q2: -5, separation: 220 },
+        "Like Repulsion": { q1: 6, q2: 6, separation: 240 },
+        "Unequal Pair": { q1: 8, q2: -3, separation: 200 }
+      },
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Charge q1 (µC)</span><span id="valQ1" class="font-mono text-cyan-400">${this.q1}</span></div>
+            <input type="range" id="ctrlQ1" min="-10" max="10" step="1" value="${this.q1}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Charge q2 (µC)</span><span id="valQ2" class="font-mono text-cyan-400">${this.q2}</span></div>
+            <input type="range" id="ctrlQ2" min="-10" max="10" step="1" value="${this.q2}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Separation</span><span id="valSep" class="font-mono text-cyan-400">${this.separation}px</span></div>
+            <input type="range" id="ctrlSep" min="120" max="340" value="${this.separation}" class="w-full"></div>
+          </div>`;
+      },
+      bindControls() {
+        document.getElementById('ctrlQ1')?.addEventListener('input', (e) => { this.q1 = parseFloat(e.target.value); document.getElementById('valQ1').textContent = this.q1; });
+        document.getElementById('ctrlQ2')?.addEventListener('input', (e) => { this.q2 = parseFloat(e.target.value); document.getElementById('valQ2').textContent = this.q2; });
+        document.getElementById('ctrlSep')?.addEventListener('input', (e) => { this.separation = parseFloat(e.target.value); document.getElementById('valSep').textContent = `${this.separation}px`; });
+      }
+    };
+
+    /* ==========================================================
+       5c. GRADE-12 CBSE: CURRENT ELECTRICITY (DC circuit)
+       ========================================================== */
+    const circuitSim = {
+      name: "Current Electricity: DC Circuit Lab",
+      V: 12, R1: 10, R2: 20, mode: 'series',
+      glow: 0,
+      init() { this.reset(); },
+      reset() { this.glow = 0; },
+      req() { return this.mode === 'series' ? this.R1 + this.R2 : (this.R1 * this.R2) / Math.max(1, this.R1 + this.R2); },
+      current() { return this.V / Math.max(0.5, this.req()); },
+      update(dt) { this.glow += ((this.current() * this.current() * this.req()) / 60 - this.glow) * Math.min(1, dt * 3); },
+      render() {
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const cx = w / 2, cy = h / 2, rw = Math.min(360, w * 0.6), rh = 130;
+        const I = this.current();
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
+        ctx.strokeRect(cx - rw / 2, cy - rh / 2, rw, rh);
+        // battery (left edge)
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(cx - rw / 2 - 8, cy - 30, 16, 60);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter';
+        ctx.fillText(`${this.V}V`, cx - rw / 2 - 14, cy + 48);
+        // resistors as glowing bulbs proportional to power share
+        const P1 = this.mode === 'series' ? I * I * this.R1 : (this.V * this.V) / Math.max(1, this.R1);
+        const P2 = this.mode === 'series' ? I * I * this.R2 : (this.V * this.V) / Math.max(1, this.R2);
+        const bulb = (x, y, P, label) => {
+          const b = Math.min(1, P / 40);
+          ctx.fillStyle = `rgba(245,158,11,${0.15 + b * 0.75})`;
+          ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 8 + b * 22;
+          ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#fff'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText(label, x - 24, y + 36);
+        };
+        if (this.mode === 'series') {
+          bulb(cx - 60, cy - rh / 2, P1, `R1 ${this.R1}Ω`);
+          bulb(cx + 60, cy - rh / 2, P2, `R2 ${this.R2}Ω`);
+          ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText('SERIES: R_eq = R1 + R2', cx - 90, cy + rh / 2 + 22);
+        } else {
+          bulb(cx - 60, cy - rh / 2, P1, `R1 ${this.R1}Ω`);
+          bulb(cx - 60, cy + rh / 2, P2, `R2 ${this.R2}Ω`);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.beginPath(); ctx.moveTo(cx - 60, cy - rh / 2 + 20); ctx.lineTo(cx - 60, cy + rh / 2 - 20); ctx.stroke();
+          ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText('PARALLEL: 1/Req = 1/R1 + 1/R2', cx - 110, cy + rh / 2 + 22);
+        }
+        // flowing charge dots
+        const t = performance.now() / 1000;
+        ctx.fillStyle = '#22d3ee';
+        for (let i = 0; i < 14; i++) {
+          const p = ((t * (0.4 + I * 0.35) + i / 14) % 1);
+          const per = rw * 2 + rh * 2;
+          let d = p * per, x, y;
+          if (d < rw) { x = cx - rw / 2 + d; y = cy - rh / 2; }
+          else if (d < rw + rh) { x = cx + rw / 2; y = cy - rh / 2 + (d - rw); }
+          else if (d < 2 * rw + rh) { x = cx + rw / 2 - (d - rw - rh); y = cy + rh / 2; }
+          else { x = cx - rw / 2; y = cy + rh / 2 - (d - 2 * rw - rh); }
+          ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+        }
+      },
+      getMetrics() {
+        const I = this.current();
+        return [
+          { label: "EMF V", val: `${this.V} V` },
+          { label: "R_eq", val: `${this.req().toFixed(1)} Ω (${this.mode})` },
+          { label: "Current I=V/R", val: `${I.toFixed(2)} A` },
+          { label: "Power P=VI", val: `${(this.V * I).toFixed(1)} W` },
+          { label: "CBSE", val: "Ch-3 Ohm + combo" }
+        ];
+      },
+      presets: {
+        "12V Series Demo": { V: 12, R1: 10, R2: 20, mode: 'series' },
+        "Parallel Bright": { V: 9, R1: 10, R2: 10, mode: 'parallel' },
+        "High Resistance": { V: 12, R1: 47, R2: 33, mode: 'series' }
+      },
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Battery V</span><span id="valCV" class="font-mono text-cyan-400">${this.V}V</span></div>
+            <input type="range" id="ctrlCV" min="1.5" max="24" step="0.5" value="${this.V}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>R1 Ω</span><span id="valR1" class="font-mono text-cyan-400">${this.R1}</span></div>
+            <input type="range" id="ctrlR1" min="2" max="100" value="${this.R1}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>R2 Ω</span><span id="valR2" class="font-mono text-cyan-400">${this.R2}</span></div>
+            <input type="range" id="ctrlR2" min="2" max="100" value="${this.R2}" class="w-full"></div>
+            <div class="flex items-end"><button id="ctrlMode" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg border border-slate-700 transition">Mode: ${this.mode.toUpperCase()}</button></div>
+          </div>`;
+      },
+      bindControls() {
+        document.getElementById('ctrlCV')?.addEventListener('input', (e) => { this.V = parseFloat(e.target.value); document.getElementById('valCV').textContent = `${this.V}V`; });
+        document.getElementById('ctrlR1')?.addEventListener('input', (e) => { this.R1 = parseFloat(e.target.value); document.getElementById('valR1').textContent = this.R1; });
+        document.getElementById('ctrlR2')?.addEventListener('input', (e) => { this.R2 = parseFloat(e.target.value); document.getElementById('valR2').textContent = this.R2; });
+        document.getElementById('ctrlMode')?.addEventListener('click', (e) => { this.mode = this.mode === 'series' ? 'parallel' : 'series'; e.target.textContent = `Mode: ${this.mode.toUpperCase()}`; });
+      }
+    };
+
+    /* ==========================================================
+       5d. GRADE-12 CBSE: MAGNETIC LORENTZ FORCE (q in B)
+       ========================================================== */
+    const magnetSim = {
+      name: "Magnetism: Charge in Uniform B-Field",
+      v: 160, B: 2.0, qm: 1.0, angleDeg: 90,
+      x: 0, y: 0, vx: 0, vy: 0, trail: [],
+      init() { this.reset(); },
+      reset() {
+        const rad = (this.angleDeg * Math.PI) / 180;
+        this.x = 0; this.y = 0;
+        this.vx = this.v * Math.cos(rad); this.vy = -this.v * Math.sin(rad);
+        this.trail = [];
+      },
+      update(dt) {
+        // B into page (-z): a = (q/m)(v × B) => ax = qm*vy*B? sign for electron-style viz
+        const ax = this.qm * this.B * this.vy;
+        const ay = -this.qm * this.B * this.vx;
+        this.vx += ax * dt; this.vy += ay * dt;
+        this.x += this.vx * dt; this.y += this.vy * dt;
+        if (state.showTrails) {
+          this.trail.push({ x: this.x, y: this.y });
+          if (this.trail.length > 600) this.trail.shift();
+        }
+        if (Math.hypot(this.x, this.y) > 1200) this.reset();
+      },
+      render() {
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const cx = w / 2, cy = h / 2;
+        // B-field crosses
+        ctx.fillStyle = 'rgba(239,68,68,0.5)'; ctx.font = '10px JetBrains Mono';
+        for (let x = 20; x < w; x += 34) for (let y = 20; y < h; y += 34) {
+          ctx.fillText('×', x, y);
+        }
+        ctx.fillStyle = '#fca5a5'; ctx.font = '11px JetBrains Mono';
+        ctx.fillText(`B into page = ${this.B.toFixed(1)} T`, 14, 22);
+        // trail mapped to screen
+        if (this.trail.length > 1) {
+          ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(cx + this.trail[0].x, cy + this.trail[0].y);
+          for (let p of this.trail) ctx.lineTo(cx + p.x, cy + p.y);
+          ctx.stroke();
+        }
+        const px = cx + this.x, py = cy + this.y;
+        ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        if (state.showVectors) {
+          ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + this.vx * 0.25, py + this.vy * 0.25); ctx.stroke();
+        }
+        const r = this.v / Math.max(0.1, Math.abs(this.qm * this.B));
+        ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+        ctx.fillText(`r = mv/qB ≈ ${r.toFixed(0)} px · T = 2πm/qB`, 14, h - 14);
+      },
+      getMetrics() {
+        const r = this.v / Math.max(0.1, Math.abs(this.qm * this.B));
+        return [
+          { label: "Speed v", val: `${this.v} m/s` },
+          { label: "B field", val: `${this.B.toFixed(1)} T` },
+          { label: "q/m scale", val: `${this.qm.toFixed(1)}` },
+          { label: "Radius r", val: `${r.toFixed(0)} px` },
+          { label: "CBSE", val: "Ch-4 Lorentz F=qvB" }
+        ];
+      },
+      presets: {
+        "Tight Cyclotron": { v: 160, B: 3.0, qm: 1.2, angleDeg: 90 },
+        "Wide Orbit": { v: 200, B: 1.0, qm: 0.8, angleDeg: 90 },
+        "Helix Angle 60°": { v: 170, B: 2.0, qm: 1.0, angleDeg: 60 }
+      },
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Speed v</span><span id="valMV" class="font-mono text-cyan-400">${this.v}</span></div>
+            <input type="range" id="ctrlMV" min="60" max="320" value="${this.v}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>B field (T)</span><span id="valMB" class="font-mono text-cyan-400">${this.B}</span></div>
+            <input type="range" id="ctrlMB" min="0.5" max="5" step="0.1" value="${this.B}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>q/m scale</span><span id="valMQ" class="font-mono text-cyan-400">${this.qm}</span></div>
+            <input type="range" id="ctrlMQ" min="0.3" max="2" step="0.1" value="${this.qm}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Launch angle</span><span id="valMA" class="font-mono text-cyan-400">${this.angleDeg}°</span></div>
+            <input type="range" id="ctrlMA" min="10" max="90" value="${this.angleDeg}" class="w-full"></div>
+          </div>`;
+      },
+      bindControls() {
+        const re = () => this.reset();
+        document.getElementById('ctrlMV')?.addEventListener('input', (e) => { this.v = parseFloat(e.target.value); document.getElementById('valMV').textContent = this.v; re(); });
+        document.getElementById('ctrlMB')?.addEventListener('input', (e) => { this.B = parseFloat(e.target.value); document.getElementById('valMB').textContent = this.B; });
+        document.getElementById('ctrlMQ')?.addEventListener('input', (e) => { this.qm = parseFloat(e.target.value); document.getElementById('valMQ').textContent = this.qm; });
+        document.getElementById('ctrlMA')?.addEventListener('input', (e) => { this.angleDeg = parseFloat(e.target.value); document.getElementById('valMA').textContent = `${this.angleDeg}°`; re(); });
+      }
+    };
+
+    /* ==========================================================
+       5e. GRADE-12 CBSE: RAY OPTICS (thin lens image)
+       ========================================================== */
+    const lensSim = {
+      name: "Ray Optics: Thin-Lens Image Lab",
+      f: 120, objDist: 300, lensType: 'convex',
+      init() { this.reset(); },
+      reset() {},
+      update(dt) {},
+      image() {
+        const fEff = this.lensType === 'convex' ? this.f : -this.f;
+        const u = -this.objDist;
+        const v = 1 / (1 / fEff - 1 / u || 1e-6);
+        const m = v / u;
+        return { v, m, fEff };
+      },
+      render() {
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const cx = w / 2, axisY = h / 2;
+        ctx.strokeStyle = 'rgba(148,163,184,0.5)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(0, axisY); ctx.lineTo(w, axisY); ctx.stroke();
+        // lens
+        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
+        ctx.beginPath();
+        if (this.lensType === 'convex') { ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 26, axisY, cx, axisY + 130); ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 26, axisY, cx, axisY + 130); }
+        else { ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 20, axisY, cx, axisY + 130); ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 20, axisY, cx, axisY + 130); }
+        ctx.stroke();
+        // focal points
+        ctx.fillStyle = '#f59e0b'; ctx.font = '10px JetBrains Mono';
+        for (const s of [-1, 1]) {
+          ctx.beginPath(); ctx.arc(cx + s * this.f, axisY, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.fillText('F', cx + s * this.f - 3, axisY + 16);
+          ctx.beginPath(); ctx.arc(cx + s * 2 * this.f, axisY, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.fillText('2F', cx + s * 2 * this.f - 6, axisY + 16);
+        }
+        const { v, m } = this.image();
+        const objX = cx - this.objDist, objH = 70;
+        const imgX = cx + v, imgH = m * objH;
+        // object arrow
+        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(objX, axisY); ctx.lineTo(objX, axisY - objH); ctx.stroke();
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath(); ctx.moveTo(objX, axisY - objH - 8); ctx.lineTo(objX - 5, axisY - objH); ctx.lineTo(objX + 5, axisY - objH); ctx.fill();
+        // 3 principal rays from object tip
+        const tipY = axisY - objH;
+        const ray = (targets, dash) => {
+          ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 1.6;
+          if (dash) ctx.setLineDash([5, 4]);
+          ctx.beginPath(); ctx.moveTo(objX, tipY);
+          for (const t of targets) ctx.lineTo(t[0], t[1]);
+          ctx.stroke(); ctx.setLineDash([]);
+        };
+        const imgTipY = axisY - imgH;
+        const finite = isFinite(v) && Math.abs(v) < 2000;
+        // parallel -> focal
+        ray([[cx, tipY], [finite ? imgX : cx + 600, finite ? imgTipY : axisY + (axisY - tipY) * 2]], !finite);
+        // through centre (undeviated)
+        ray([[cx, axisY], [finite ? imgX : cx - 600, finite ? imgTipY : axisY + 60]], !finite);
+        // image arrow
+        if (finite && Math.abs(imgH) < 300) {
+          const real = v > 0;
+          ctx.strokeStyle = real ? '#38bdf8' : '#c084fc'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(imgX, axisY); ctx.lineTo(imgX, imgTipY); ctx.stroke();
+          ctx.fillStyle = real ? '#38bdf8' : '#c084fc'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText(`${real ? 'Real' : 'Virtual'} ${imgH < 0 ? 'Inv' : 'Erect'} M=${Math.abs(m).toFixed(2)}`, Math.min(w - 210, imgX + 10), imgTipY - 8);
+        } else {
+          ctx.fillStyle = '#f87171'; ctx.font = '11px JetBrains Mono';
+          ctx.fillText('Image at infinity (u ≈ F)', cx + 20, axisY - 110);
+        }
+        ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+        ctx.fillText(`1/v − 1/u = 1/f · u=${this.objDist}px f=${this.lensType === 'convex' ? '' : '−'}${this.f}px`, 14, h - 14);
+      },
+      getMetrics() {
+        const { v, m } = this.image();
+        return [
+          { label: "Lens", val: `${this.lensType} f=${this.f}` },
+          { label: "Object u", val: `${this.objDist}px` },
+          { label: "Image v", val: `${isFinite(v) ? v.toFixed(0) + 'px' : '∞'}` },
+          { label: "Magn. m=v/u", val: `${isFinite(m) ? m.toFixed(2) : '∞'}` },
+          { label: "CBSE", val: "Ch-9 lens formula" }
+        ];
+      },
+      presets: {
+        "Beyond 2F Real": { f: 120, objDist: 300, lensType: 'convex' },
+        "At F Infinity": { f: 120, objDist: 120, lensType: 'convex' },
+        "Concave Virtual": { f: 120, objDist: 260, lensType: 'concave' }
+      },
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Object distance</span><span id="valOD" class="font-mono text-cyan-400">${this.objDist}px</span></div>
+            <input type="range" id="ctrlOD" min="60" max="520" value="${this.objDist}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Focal length</span><span id="valFL" class="font-mono text-cyan-400">${this.f}px</span></div>
+            <input type="range" id="ctrlFL" min="50" max="200" value="${this.f}" class="w-full"></div>
+            <div class="flex items-end"><button id="ctrlLT" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg border border-slate-700 transition">Lens: ${this.lensType.toUpperCase()}</button></div>
+          </div>`;
+      },
+      bindControls() {
+        document.getElementById('ctrlOD')?.addEventListener('input', (e) => { this.objDist = parseFloat(e.target.value); document.getElementById('valOD').textContent = `${this.objDist}px`; });
+        document.getElementById('ctrlFL')?.addEventListener('input', (e) => { this.f = parseFloat(e.target.value); document.getElementById('valFL').textContent = `${this.f}px`; });
+        document.getElementById('ctrlLT')?.addEventListener('click', (e) => { this.lensType = this.lensType === 'convex' ? 'concave' : 'convex'; e.target.textContent = `Lens: ${this.lensType.toUpperCase()}`; });
+      }
+    };
+
+    /* ==========================================================
+       5f. GRADE-12 CBSE: WAVE OPTICS YDSE (double-slit)
+       ========================================================== */
+    const ydseSim = {
+      name: "Wave Optics: Double-Slit (YDSE)",
+      lambdaNm: 550, dUm: 250, D: 1.2,
+      init() { this.reset(); },
+      reset() {},
+      update(dt) {},
+      beta() { return (this.lambdaNm * 1e-9 * this.D) / Math.max(50, this.dUm * 1e-6) * 1000; }, // mm
+      render() {
+        const w = canvas.width / dpr, h = canvas.height / dpr;
+        const slitX = w * 0.22, screenX = w * 0.82;
+        // slits
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(slitX - 4, h * 0.15, 8, h * 0.7);
+        const gapPx = 46;
+        ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 10;
+        ctx.fillRect(slitX - 4, h / 2 - gapPx / 2 - 3, 8, 6);
+        ctx.fillRect(slitX - 4, h / 2 + gapPx / 2 - 3, 8, 6);
+        ctx.shadowBlur = 0;
+        // source ray
+        ctx.strokeStyle = 'rgba(34,211,238,0.6)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(20, h / 2); ctx.lineTo(slitX, h / 2 - gapPx / 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(20, h / 2); ctx.lineTo(slitX, h / 2 + gapPx / 2); ctx.stroke();
+        // interference pattern on screen (I = 4I0 cos²(π d y / λD))
+        const betaPx = 26 + (this.lambdaNm - 380) * 0.06 - (this.dUm - 100) * 0.04;
+        for (let y = h * 0.15; y < h * 0.85; y += 2) {
+          const dy = (y - h / 2) / Math.max(8, betaPx);
+          const inten = Math.pow(Math.cos(Math.PI * dy / 2), 2);
+          const hue = 190 + (this.lambdaNm - 550) * 0.25;
+          ctx.fillStyle = `hsla(${hue},95%,${25 + inten * 45}%,${0.25 + inten * 0.75})`;
+          ctx.fillRect(screenX, y, 34, 2);
+        }
+        ctx.fillStyle = '#e2e8f0'; ctx.fillRect(screenX + 34, h * 0.15, 3, h * 0.7);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
+        ctx.fillText(`λ=${this.lambdaNm}nm d=${this.dUm}µm D=${this.D.toFixed(1)}m`, 14, 22);
+        ctx.fillText(`β = λD/d ≈ ${this.beta().toFixed(2)} mm`, 14, h - 14);
+        ctx.fillText('SCREEN', screenX - 6, h * 0.12);
+      },
+      getMetrics() {
+        return [
+          { label: "Wavelength λ", val: `${this.lambdaNm} nm` },
+          { label: "Slit d", val: `${this.dUm} µm` },
+          { label: "Screen D", val: `${this.D.toFixed(1)} m` },
+          { label: "Fringe β=λD/d", val: `${this.beta().toFixed(2)} mm` },
+          { label: "CBSE", val: "Ch-10 YDSE" }
+        ];
+      },
+      presets: {
+        "Green 550nm": { lambdaNm: 550, dUm: 250, D: 1.2 },
+        "Red Wide": { lambdaNm: 650, dUm: 200, D: 1.5 },
+        "Blue Fine": { lambdaNm: 450, dUm: 350, D: 1.0 }
+      },
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Wavelength (nm)</span><span id="valWL" class="font-mono text-cyan-400">${this.lambdaNm}</span></div>
+            <input type="range" id="ctrlWL" min="380" max="700" value="${this.lambdaNm}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Slit d (µm)</span><span id="valSD" class="font-mono text-cyan-400">${this.dUm}</span></div>
+            <input type="range" id="ctrlSD" min="100" max="500" value="${this.dUm}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Screen D (m)</span><span id="valSC" class="font-mono text-cyan-400">${this.D}</span></div>
+            <input type="range" id="ctrlSC" min="0.5" max="2" step="0.1" value="${this.D}" class="w-full"></div>
+          </div>`;
+      },
+      bindControls() {
+        document.getElementById('ctrlWL')?.addEventListener('input', (e) => { this.lambdaNm = parseFloat(e.target.value); document.getElementById('valWL').textContent = this.lambdaNm; });
+        document.getElementById('ctrlSD')?.addEventListener('input', (e) => { this.dUm = parseFloat(e.target.value); document.getElementById('valSD').textContent = this.dUm; });
+        document.getElementById('ctrlSC')?.addEventListener('input', (e) => { this.D = parseFloat(e.target.value); document.getElementById('valSC').textContent = this.D; });
+      }
+    };
+
     // Registry of simulations
     const simulations = {
       projectile: projectileSim,
       pendulum: pendulumSim,
       orbit: orbitSim,
-      optics: opticsSim
+      optics: opticsSim,
+      electro: electroSim,
+      circuit: circuitSim,
+      magnet: magnetSim,
+      lens: lensSim,
+      ydse: ydseSim
     };
 
     /* ==========================================================
@@ -1402,6 +1926,16 @@
         hudHintText.textContent = "Click & drag on canvas to fling a satellite with initial velocity vector!";
       } else if (simKey === 'projectile') {
         hudHintText.textContent = "Adjust launch angle & velocity, then hit Launch to hit the target!";
+      } else if (simKey === 'electro') {
+        hudHintText.textContent = "CBSE XII Electrostatics: vary q1/q2 to see Coulomb field vectors reshape.";
+      } else if (simKey === 'circuit') {
+        hudHintText.textContent = "CBSE XII Current Electricity: toggle series/parallel, watch I = V/Req.";
+      } else if (simKey === 'magnet') {
+        hudHintText.textContent = "CBSE XII Magnetism: F = qvB bends charge into r = mv/qB circles.";
+      } else if (simKey === 'lens') {
+        hudHintText.textContent = "CBSE XII Ray Optics: move object past F/2F, watch real/virtual image flip.";
+      } else if (simKey === 'ydse') {
+        hudHintText.textContent = "CBSE XII Wave Optics: change λ/d/D, fringe width β = λD/d updates live.";
       } else {
         hudHintText.textContent = "Use real-time sliders below or ask Gemini Tutor to explain the behavior.";
       }
@@ -1477,6 +2011,7 @@
     document.getElementById('btnClearTrails').addEventListener('click', () => {
       const sim = simulations[state.activeSim];
       if (sim.trail) sim.trail = [];
+      if (sim.testTrail) sim.testTrail = [];
       if (sim.bodies) sim.bodies.forEach(b => b.trail = []);
       showToast("Canvas trails cleared", "info");
     });
