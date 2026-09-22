@@ -1931,10 +1931,12 @@
         // principal axis
         ctx.strokeStyle = 'rgba(148,163,184,0.5)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(0, axisY); ctx.lineTo(w, axisY); ctx.stroke();
-        // device (curvature exaggerated for visibility; rays use paraxial vertex optics)
+        // device: TRUE geometry R = 2f so the drawn curve, F and C markers all agree.
+        // Concave mirror = dish opening toward the object (like a spoon's inside):
+        // vertex rightmost, centre of curvature C in front. Convex = bulge toward object.
         const needMirrorCurve = () => {
-          const R = Math.min(320, Math.max(150, 1.4 * fa));
-          return { R, half: Math.asin(Math.min(0.9, 112 / R)) };
+          const R = 2 * Math.max(50, fa);
+          return { R, half: Math.asin(Math.min(0.9, 100 / R)) };
         };
         ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
         ctx.beginPath();
@@ -1946,20 +1948,20 @@
           ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 28, axisY, cx, axisY + 130);
         } else if (this.device === 'concaveMirror') {
           const mc = needMirrorCurve();
-          ctx.arc(cx + mc.R, axisY, mc.R, Math.PI - mc.half, Math.PI + mc.half);
+          ctx.arc(cx - mc.R, axisY, mc.R, -mc.half, mc.half);
         } else {
           const mc = needMirrorCurve();
-          ctx.arc(cx - mc.R, axisY, mc.R, -mc.half, mc.half);
+          ctx.arc(cx + mc.R, axisY, mc.R, Math.PI - mc.half, Math.PI + mc.half);
         }
         ctx.stroke();
         if (mirror) { // mounting stand from mirror base to bench
           ctx.strokeStyle = '#64748b'; ctx.lineWidth = 4;
-          ctx.beginPath(); ctx.moveTo(cx, axisY + 112); ctx.lineTo(cx, axisY + 150); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(cx, axisY + 100); ctx.lineTo(cx, axisY + 150); ctx.stroke();
           ctx.beginPath(); ctx.moveTo(cx - 26, axisY + 150); ctx.lineTo(cx + 26, axisY + 150); ctx.stroke();
         }
-        if (mirror) { // hatch behind mirror + pole label
+        if (mirror) { // hatching behind the silvered face + mounting stand
           ctx.strokeStyle = 'rgba(148,163,184,0.7)'; ctx.lineWidth = 1.5;
-          for (let y = axisY - 120; y <= axisY + 120; y += 16) {
+          for (let y = axisY - 100; y <= axisY + 100; y += 16) {
             ctx.beginPath(); ctx.moveTo(cx + 4, y); ctx.lineTo(cx + 14, y + 8); ctx.stroke();
           }
           ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
