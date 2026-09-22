@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhysicaLab AI - Interactive Physics Simulations Hub</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- KaTeX for rendered math equations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              400: '#38bdf8',
+              500: '#0284c7',
+              600: '#0369a1',
+              900: '#0c4a6e',
+            },
+            space: {
+              800: '#0f172a',
+              900: '#090d16',
+              950: '#05070d'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    /* Custom glassmorphism and scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.45);
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-panel-glow {
+      box-shadow: 0 0 25px -5px rgba(14, 165, 233, 0.15);
+    }
+    .neon-border {
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    canvas {
+      touch-action: none;
+      image-rendering: auto;
+    }
+    input[type=range] {
+      accent-color: #38bdf8;
+    }
+  </style>
+</head>
+<body class="bg-space-950 text-slate-100 min-h-screen flex flex-col font-sans overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+
+  <header class="border-b border-slate-800/80 bg-space-900/90 backdrop-blur-md sticky top-0 z-40 px-4 py-2.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+        <i data-lucide="atom" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base md:text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-400">
+          PhysicaLab AI
+        </h1>
+        <p class="text-[10px] text-slate-400 font-mono tracking-wide uppercase">Interactive Physics & Simulation Lab</p>
+      </div>
+    </div>
+
+    <!-- Top Action buttons -->
+    <div class="flex items-center gap-2">
+      <button id="btnOpenEmbed" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700/60 transition">
+        <i data-lucide="code-2" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span class="hidden sm:inline">Embed / Export</span>
+      </button>
+      <button id="btnToggleAiDrawer" class="relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg shadow-md shadow-cyan-500/20 transition">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 animate-pulse"></i>
+        <span>Gemini AI Tutor</span>
+        <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping absolute -top-0.5 -right-0.5"></span>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+
+    <!-- Left Sidebar: Simulations Switcher -->
+    <aside class="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-space-900/60 p-3 flex lg:flex-col justify-between shrink-0 overflow-x-auto lg:overflow-y-auto">
+      <div>
+        <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-2 hidden lg:block">Simulations Hub</div>
+        <nav class="flex lg:flex-col gap-1.5 min-w-max lg:min-w-0" id="simNavList">
+          <button data-sim="projectile" class="sim-nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+            <i data-lucide="crosshair" class="w-4 h-4 shrink-0 text-cyan-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Projectile Motion</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Ballistics, drag & gravity</div>
+            </div>
+          </button>
+
+          <button data-sim="pendulum" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="activity" class="w-4 h-4 shrink-0 text-purple-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Double Pendulum</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Chaos theory & dynamics</div>
+            </div>
+          </button>
+
+          <button data-sim="orbit" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="orbit" class="w-4 h-4 shrink-0 text-amber-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Orbital Mechanics</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">N-body gravity sandbox</div>
+            </div>
+          </button>
+
+          <button data-sim="optics" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="sun" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Wave & Optics</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Refraction & Snell's Law</div>
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Quick AI Lab Actions in sidebar -->
+      <div class="hidden lg:block mt-6 pt-4 border-t border-slate-800/80">
+        <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-1">Active Simulation AI</div>
+        <div class="space-y-2">
+          <button id="btnAiExplain" class="w-full text-left px-3 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-xs text-slate-200 border border-slate-700/50 flex items-center gap-2 group transition">
+            <i data-lucide="book-open" class="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform"></i>
+            <span>Explain Current State</span>
+          </button>
+          <button id="btnAiChallenge" class="w-full text-left px-3 py-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 text-xs text-slate-200 border border-slate-700/50 flex items-center gap-2 group transition">
+            <i data-lucide="flame" class="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform"></i>
+            <span>Challenge Me (Quiz)</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Stage: Canvas & Simulation Environment -->
+    <section class="flex-1 flex flex-col min-w-0 bg-space-950 relative overflow-hidden">
+      
+      <!-- Top Simulation Control Bar -->
+      <div class="p-3 bg-space-900/40 border-b border-slate-800/70 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <button id="btnPlayPause" class="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition shadow">
+            <i data-lucide="play" id="iconPlayPause" class="w-3.5 h-3.5"></i>
+            <span id="textPlayPause">Launch / Play</span>
+          </button>
+          <button id="btnStep" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition" title="Step One Frame">
+            <i data-lucide="step-forward" class="w-4 h-4"></i>
+          </button>
+          <button id="btnReset" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition" title="Reset Simulation">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+          </button>
+          <button id="btnClearTrails" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition" title="Clear Canvas Trails">
+            <i data-lucide="eraser" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Presets drop-down -->
+        <div class="flex items-center gap-2">
+          <label class="text-slate-400 font-mono text-[11px]">PRESET:</label>
+          <select id="simPresetsSelect" class="bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-cyan-400">
+            <!-- Populated dynamically per simulation -->
+          </select>
+        </div>
+
+        <!-- Live Vector / Grid Toggles -->
+        <div class="flex items-center gap-3 text-[11px] text-slate-300 font-medium">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="toggleVectors" checked class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+            <span>Vectors</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="toggleGrid" checked class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+            <span>Grid</span>
+          </label>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="toggleTrails" checked class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+            <span>Trails</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="relative flex-1 bg-gradient-to-b from-space-950 to-slate-950 flex items-center justify-center overflow-hidden" id="canvasContainer">
+        <canvas id="simCanvas" class="w-full h-full cursor-crosshair"></canvas>
+
+        <!-- Dynamic On-Canvas Telemetry HUD -->
+        <div class="absolute top-3 left-3 pointer-events-none glass-panel px-3 py-2 rounded-xl text-[11px] font-mono border border-white/10 space-y-1 shadow-lg max-w-[280px]">
+          <div class="text-cyan-400 font-bold flex items-center gap-1.5 border-b border-white/10 pb-1">
+            <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
+            <span id="hudSimTitle">Projectile Dynamics</span>
+          </div>
+          <div id="hudMetrics" class="text-slate-300 space-y-0.5">
+            <!-- Dynamic stats filled by engine -->
+          </div>
+        </div>
+
+        <!-- Floating Hint or Mode Indicator -->
+        <div id="hudHint" class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-sm border border-slate-800 px-3 py-1.5 rounded-lg text-[11px] text-slate-400 flex items-center gap-2 pointer-events-none">
+          <i data-lucide="mouse-pointer-click" class="w-3 h-3 text-cyan-400"></i>
+          <span id="hudHintText">Click & drag on canvas to adjust trajectory vector or spawn objects</span>
+        </div>
+      </div>
+
+      <!-- Bottom Parameter Sliders & Physical Controls -->
+      <div class="p-3.5 bg-space-900/80 border-t border-slate-800/80 max-h-56 overflow-y-auto" id="dynamicControlsPanel">
+        <!-- Controls rendered dynamically according to active simulation -->
+      </div>
+    </section>
+
+    <aside id="aiDrawer" class="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-800/90 bg-space-900/95 flex flex-col transition-all duration-300 shrink-0 z-30">
+      <div class="p-3.5 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400">
+            <i data-lucide="bot" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h2 class="text-xs font-semibold text-white">Gemini Physics Mentor</h2>
+            <div class="text-[10px] text-cyan-400 font-mono flex items-center gap-1">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              gemini-3-flash-preview
+            </div>
+          </div>
+        </div>
+        <button id="btnCloseAiDrawer" class="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 lg:hidden">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Quick prompts pill carousel -->
+      <div class="px-3 pt-2.5 pb-1.5 flex gap-1.5 overflow-x-auto text-[11px]">
+        <button class="ai-quick-btn shrink-0 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/50 hover:text-cyan-300 border border-slate-700/60 text-slate-300 transition" data-prompt="Explain the core physics formulas and laws governing this current simulation.">
+          📐 Formulas
+        </button>
+        <button class="ai-quick-btn shrink-0 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/50 hover:text-cyan-300 border border-slate-700/60 text-slate-300 transition" data-prompt="What interesting experiment or parameter tweak should I try right now?">
+          🧪 Suggest Experiment
+        </button>
+        <button class="ai-quick-btn shrink-0 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/50 hover:text-cyan-300 border border-slate-700/60 text-slate-300 transition" data-prompt="Give me a real-world engineering or astrophysics application of this phenomenon.">
+          🚀 Real-world Use
+        </button>
+      </div>
+
+      <!-- AI Chat History container -->
+      <div id="aiChatHistory" class="flex-1 p-3.5 space-y-3 overflow-y-auto text-xs min-h-[220px]">
+        <div class="flex gap-2.5 items-start">
+          <div class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 mt-0.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          </div>
+          <div class="glass-panel p-3 rounded-xl border border-white/10 text-slate-200 leading-relaxed shadow-sm">
+            Hello! I am your AI Physics Lab Assistant. Launch any simulation, adjust parameters like gravity or refractive index, and ask me to derive equations, explain chaotic motions, or test your comprehension with a quiz!
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Chat Input Box -->
+      <div class="p-3 border-t border-slate-800 bg-space-950/80">
+        <form id="aiChatForm" class="flex items-center gap-2">
+          <input type="text" id="aiUserInput" placeholder="Ask about this simulation or physics..." 
+                 class="flex-1 bg-slate-900 text-slate-200 border border-slate-700/80 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-400 placeholder:text-slate-500" autocomplete="off" />
+          <button type="submit" id="btnSendAi" class="h-8 w-8 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center shrink-0 transition disabled:opacity-50">
+            <i data-lucide="arrow-up" class="w-4 h-4"></i>
+          </button>
+        </form>
+      </div>
+    </aside>
+
+  </main>
+
+  <div id="embedModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-space-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="code" class="w-5 h-5 text-cyan-400"></i>
+          <h3 class="font-semibold text-sm text-white">Embed Simulation Hub to Your Website</h3>
+        </div>
+        <button id="btnCloseEmbed" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      
+      <p class="text-xs text-slate-300 leading-relaxed">
+        You can embed this interactive laboratory widget into any CMS (WordPress, Webflow, React, HTML) using an iframe or direct HTML paste:
+      </p>
+
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-mono text-slate-400">IFRAME SNIPPET</label>
+        <div class="relative">
+          <textarea id="embedIframeText" readonly class="w-full bg-space-950 text-cyan-300 font-mono text-[11px] p-3 rounded-xl border border-slate-800 h-20 resize-none focus:outline-none"></textarea>
+          <button id="btnCopyEmbed" class="absolute top-2 right-2 px-2.5 py-1 text-[10px] font-medium bg-cyan-600 hover:bg-cyan-500 text-white rounded-md transition flex items-center gap-1">
+            <i data-lucide="copy" class="w-3 h-3"></i>
+            <span>Copy</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 text-[11px] text-slate-400 flex items-center gap-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+        <span>Mobile-ready, zero heavy dependencies, responsive canvas layout.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    /* ==========================================================
+       1. GLOBAL STATE & SIMULATION REGISTRATION
+       ========================================================== */
+    const state = {
+      activeSim: 'projectile',
+      isRunning: true,
+      lastTime: performance.now(),
+      fps: 60,
+      showVectors: true,
+      showGrid: true,
+      showTrails: true,
+      // Gemini Chat history
+      chatHistory: []
+    };
+
+    // DOM Elements
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const hudSimTitle = document.getElementById('hudSimTitle');
+    const hudMetrics = document.getElementById('hudMetrics');
+    const hudHintText = document.getElementById('hudHintText');
+    const controlsPanel = document.getElementById('dynamicControlsPanel');
+    const presetsSelect = document.getElementById('simPresetsSelect');
+    const playPauseBtn = document.getElementById('btnPlayPause');
+    const playPauseText = document.getElementById('textPlayPause');
+    const playPauseIcon = document.getElementById('iconPlayPause');
+
+    // Helper: Toast Message
+    function showToast(text, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `px-3 py-2 rounded-xl text-xs font-medium border shadow-lg transition-all transform duration-300 translate-y-2 opacity-0 pointer-events-auto flex items-center gap-2 ${
+        type === 'success' ? 'bg-emerald-950 border-emerald-500/50 text-emerald-200' : 'bg-slate-900 border-cyan-500/50 text-cyan-200'
+      }`;
+      toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check' : 'info'}" class="w-3.5 h-3.5"></i> <span>${text}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    // Responsive Canvas Resizing with DPR support
+    let dpr = window.devicePixelRatio || 1;
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      if (simulations[state.activeSim]?.onResize) {
+        simulations[state.activeSim].onResize();
+      }
+    });
+
+    /* ==========================================================
+       2. SIMULATION 1: PROJECTILE MOTION ENGINE
+       ========================================================== */
+    const projectileSim = {
+      name: "Projectile Ballistics",
+      // Parameters
+      v0: 32, // Initial speed m/s
+      angleDeg: 45,
+      gravity: 9.81, // m/s^2
+      dragCoeff: 0.005, // air drag
+      mass: 1.0, // kg
+      targetDistance: 75, // m
+      
+      // State
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      time: 0,
+      maxHeight: 0,
+      range: 0,
+      flightTime: 0,
+      hasLanded: false,
+      isFlying: false,
+      trail: [],
+      targetHit: false,
+      scale: 7, // px per meter
+      originX: 60,
+      originY: 0,
+
+      init() {
+        this.reset();
+      },
+
+      reset() {
+        this.originY = (canvas.height / dpr) - 50;
+        this.x = 0;
+        this.y = 0;
+        const rad = (this.angleDeg * Math.PI) / 180;
+        this.vx = this.v0 * Math.cos(rad);
+        this.vy = this.v0 * Math.sin(rad);
+        this.time = 0;
+        this.maxHeight = 0;
+        this.range = 0;
+        this.flightTime = 0;
+        this.hasLanded = false;
+        this.isFlying = false;
+        this.trail = [];
+        this.targetHit = false;
+      },
+
+      launch() {
+        this.reset();
+        this.isFlying = true;
+      },
+
+      update(dt) {
+        if (!this.isFlying || this.hasLanded) return;
+        
+        // Numerical Integration (Euler-Cromer) with quadratic drag
+        const v = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const dragF = 0.5 * this.dragCoeff * v * v;
+        const ax = -(dragF * (this.vx / (v || 1))) / this.mass;
+        const ay = -this.gravity - (dragF * (this.vy / (v || 1))) / this.mass;
+
+        this.vx += ax * dt;
+        this.vy += ay * dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.time += dt;
+
+        if (this.y > this.maxHeight) this.maxHeight = this.y;
+
+        // Add trail point
+        if (state.showTrails && this.trail.length < 1200) {
+          this.trail.push({ x: this.x, y: this.y });
+        }
+
+        // Check ground impact
+        if (this.y <= 0 && this.time > 0.05) {
+          this.y = 0;
+          this.hasLanded = true;
+          this.isFlying = false;
+          this.range = this.x;
+          this.flightTime = this.time;
+
+          // Target hit detection (within 3m radius)
+          if (Math.abs(this.x - this.targetDistance) < 3.5) {
+            this.targetHit = true;
+            showToast("Bullseye! Target successfully hit!", "success");
+          }
+        }
+      },
+
+      render() {
+        const h = canvas.height / dpr;
+        const w = canvas.width / dpr;
+        this.originY = h - 60;
+
+        // Ground line
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, this.originY);
+        ctx.lineTo(w, this.originY);
+        ctx.stroke();
+
+        // Target
+        const targetScreenX = this.originX + this.targetDistance * this.scale;
+        ctx.fillStyle = this.targetHit ? '#10b981' : '#ef4444';
+        ctx.fillRect(targetScreenX - 8, this.originY - 24, 16, 24);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(targetScreenX, this.originY - 14, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cannon barrel orientation
+        const rad = (this.angleDeg * Math.PI) / 180;
+        const cannonLen = 35;
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(this.originX, this.originY);
+        ctx.lineTo(this.originX + Math.cos(rad) * cannonLen, this.originY - Math.sin(rad) * cannonLen);
+        ctx.stroke();
+
+        // Cannon base
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.originX, this.originY, 14, Math.PI, 0);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw trajectory trace
+        if (state.showTrails && this.trail.length > 1) {
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(this.originX + this.trail[0].x * this.scale, this.originY - this.trail[0].y * this.scale);
+          for (let p of this.trail) {
+            ctx.lineTo(this.originX + p.x * this.scale, this.originY - p.y * this.scale);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // Projectile ball
+        const currentPx = this.originX + this.x * this.scale;
+        const currentPy = this.originY - this.y * this.scale;
+        ctx.fillStyle = '#f59e0b';
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(currentPx, currentPy, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Velocity vectors overlay
+        if (state.showVectors && (this.isFlying || !this.hasLanded)) {
+          const vScale = 0.8;
+          // Vx (Red)
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(currentPx, currentPy);
+          ctx.lineTo(currentPx + this.vx * vScale, currentPy);
+          ctx.stroke();
+
+          // Vy (Green)
+          ctx.strokeStyle = '#22c55e';
+          ctx.beginPath();
+          ctx.moveTo(currentPx, currentPy);
+          ctx.lineTo(currentPx, currentPy - this.vy * vScale);
+          ctx.stroke();
+
+          // V resultant (Cyan)
+          ctx.strokeStyle = '#06b6d4';
+          ctx.beginPath();
+          ctx.moveTo(currentPx, currentPy);
+          ctx.lineTo(currentPx + this.vx * vScale, currentPy - this.vy * vScale);
+          ctx.stroke();
+        }
+      },
+
+      getMetrics() {
+        return [
+          { label: "Flight Time", val: `${this.time.toFixed(2)} s` },
+          { label: "Current Range", val: `${this.x.toFixed(1)} m` },
+          { label: "Max Altitude", val: `${this.maxHeight.toFixed(1)} m` },
+          { label: "Velocity V", val: `${Math.hypot(this.vx, this.vy).toFixed(1)} m/s` },
+          { label: "Gravity (g)", val: `${this.gravity.toFixed(2)} m/s²` },
+          { label: "Target Distance", val: `${this.targetDistance} m` }
+        ];
+      },
+
+      presets: {
+        "Earth Standard": { angleDeg: 45, v0: 32, gravity: 9.81, dragCoeff: 0.005 },
+        "Moon Vacuum (No Air)": { angleDeg: 45, v0: 25, gravity: 1.62, dragCoeff: 0.0 },
+        "Mars High Drag": { angleDeg: 55, v0: 35, gravity: 3.72, dragCoeff: 0.02 },
+        "45° Max Range Test": { angleDeg: 45, v0: 30, gravity: 9.81, dragCoeff: 0.0 }
+      },
+
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Launch Angle</span>
+                <span id="valAngle" class="font-mono text-cyan-400">${this.angleDeg}°</span>
+              </div>
+              <input type="range" id="ctrlAngle" min="5" max="85" value="${this.angleDeg}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Initial Velocity</span>
+                <span id="valV0" class="font-mono text-cyan-400">${this.v0} m/s</span>
+              </div>
+              <input type="range" id="ctrlV0" min="10" max="60" value="${this.v0}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Gravity</span>
+                <span id="valGrav" class="font-mono text-cyan-400">${this.gravity} m/s²</span>
+              </div>
+              <input type="range" id="ctrlGrav" min="1.0" max="25" step="0.1" value="${this.gravity}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Air Resistance</span>
+                <span id="valDrag" class="font-mono text-cyan-400">${this.dragCoeff}</span>
+              </div>
+              <input type="range" id="ctrlDrag" min="0" max="0.04" step="0.002" value="${this.dragCoeff}" class="w-full">
+            </div>
+          </div>
+        `;
+      },
+
+      bindControls() {
+        document.getElementById('ctrlAngle')?.addEventListener('input', (e) => {
+          this.angleDeg = parseFloat(e.target.value);
+          document.getElementById('valAngle').textContent = `${this.angleDeg}°`;
+          if (!this.isFlying) this.reset();
+        });
+        document.getElementById('ctrlV0')?.addEventListener('input', (e) => {
+          this.v0 = parseFloat(e.target.value);
+          document.getElementById('valV0').textContent = `${this.v0} m/s`;
+          if (!this.isFlying) this.reset();
+        });
+        document.getElementById('ctrlGrav')?.addEventListener('input', (e) => {
+          this.gravity = parseFloat(e.target.value);
+          document.getElementById('valGrav').textContent = `${this.gravity} m/s²`;
+        });
+        document.getElementById('ctrlDrag')?.addEventListener('input', (e) => {
+          this.dragCoeff = parseFloat(e.target.value);
+          document.getElementById('valDrag').textContent = `${this.dragCoeff}`;
+        });
+      }
+    };
+
+    /* ==========================================================
+       3. SIMULATION 2: DOUBLE PENDULUM (CHAOS THEORY)
+       ========================================================== */
+    const pendulumSim = {
+      name: "Double Pendulum Dynamics",
+      // Physical parameters
+      l1: 130, // Length of rod 1
+      l2: 120, // Length of rod 2
+      m1: 15,  // Mass 1
+      m2: 12,  // Mass 2
+      g: 9.81,
+
+      // State variables: theta1, theta2, omega1, omega2
+      th1: Math.PI / 2,
+      th2: Math.PI / 2,
+      w1: 0,
+      w2: 0,
+
+      trail: [],
+      maxTrail: 450,
+      damping: 0.9999, // slight air drag
+
+      init() {
+        this.reset();
+      },
+
+      reset() {
+        this.th1 = Math.PI / 2;
+        this.th2 = Math.PI / 2;
+        this.w1 = 0;
+        this.w2 = 0;
+        this.trail = [];
+      },
+
+      // Runge-Kutta 4th Order (RK4) integrator for accurate chaotic mechanics
+      derivatives(th1, th2, w1, w2) {
+        const delta = th1 - th2;
+        const g = this.g;
+        const m1 = this.m1;
+        const m2 = this.m2;
+        const l1 = this.l1;
+        const l2 = this.l2;
+
+        const den1 = l1 * (2 * m1 + m2 - m2 * Math.cos(2 * th1 - 2 * th2));
+        const num1 = -g * (2 * m1 + m2) * Math.sin(th1) - m2 * g * Math.sin(th1 - 2 * th2) - 2 * Math.sin(delta) * m2 * (w2 * w2 * l2 + w1 * w1 * l1 * Math.cos(delta));
+        const alpha1 = num1 / den1;
+
+        const den2 = l2 * (2 * m1 + m2 - m2 * Math.cos(2 * th1 - 2 * th2));
+        const num2 = 2 * Math.sin(delta) * (w1 * w1 * l1 * (m1 + m2) + g * (m1 + m2) * Math.cos(th1) + w2 * w2 * l2 * m2 * Math.cos(delta));
+        const alpha2 = num2 / den2;
+
+        return { dTh1: w1, dTh2: w2, dW1: alpha1, dW2: alpha2 };
+      },
+
+      update(dt) {
+        // RK4 Integration
+        const subSteps = 5;
+        const sdt = (dt * 15) / subSteps; // normalized speed factor
+
+        for (let s = 0; s < subSteps; s++) {
+          const k1 = this.derivatives(this.th1, this.th2, this.w1, this.w2);
+
+          const k2 = this.derivatives(
+            this.th1 + 0.5 * sdt * k1.dTh1,
+            this.th2 + 0.5 * sdt * k2.dTh2,
+            this.w1 + 0.5 * sdt * k1.dW1,
+            this.w2 + 0.5 * sdt * k1.dW2
+          );
+
+          const k3 = this.derivatives(
+            this.th1 + 0.5 * sdt * k2.dTh1,
+            this.th2 + 0.5 * sdt * k2.dTh2,
+            this.w1 + 0.5 * sdt * k2.dW1,
+            this.w2 + 0.5 * sdt * k2.dW2
+          );
+
+          const k4 = this.derivatives(
+            this.th1 + sdt * k3.dTh1,
+            this.th2 + sdt * k3.dTh2,
+            this.w1 + sdt * k3.dW1,
+            this.w2 + sdt * k3.dW2
+          );
+
+          this.th1 += (sdt / 6) * (k1.dTh1 + 2 * k2.dTh1 + 2 * k3.dTh1 + k4.dTh1);
+          this.th2 += (sdt / 6) * (k1.dTh2 + 2 * k2.dTh2 + 2 * k3.dTh2 + k4.dTh2);
+          this.w1 += (sdt / 6) * (k1.dW1 + 2 * k2.dW1 + 2 * k3.dW1 + k4.dW1);
+          this.w2 += (sdt / 6) * (k1.dW2 + 2 * k2.dW2 + 2 * k3.dW2 + k4.dW2);
+
+          this.w1 *= this.damping;
+          this.w2 *= this.damping;
+        }
+
+        // Calculate positions
+        const originX = (canvas.width / dpr) / 2;
+        const originY = (canvas.height / dpr) / 3;
+
+        const x1 = originX + this.l1 * Math.sin(this.th1);
+        const y1 = originY + this.l1 * Math.cos(this.th1);
+        const x2 = x1 + this.l2 * Math.sin(this.th2);
+        const y2 = y1 + this.l2 * Math.cos(this.th2);
+
+        if (state.showTrails) {
+          this.trail.push({ x: x2, y: y2 });
+          if (this.trail.length > this.maxTrail) this.trail.shift();
+        }
+      },
+
+      render() {
+        const originX = (canvas.width / dpr) / 2;
+        const originY = (canvas.height / dpr) / 3;
+
+        const x1 = originX + this.l1 * Math.sin(this.th1);
+        const y1 = originY + this.l1 * Math.cos(this.th1);
+        const x2 = x1 + this.l2 * Math.sin(this.th2);
+        const y2 = y1 + this.l2 * Math.cos(this.th2);
+
+        // Rainbow chaotic trajectory trail
+        if (state.showTrails && this.trail.length > 2) {
+          for (let i = 1; i < this.trail.length; i++) {
+            const p0 = this.trail[i - 1];
+            const p1 = this.trail[i];
+            const hue = (i * 2.5) % 360;
+            const alpha = i / this.trail.length;
+            ctx.strokeStyle = `hsla(${hue}, 90%, 60%, ${alpha})`;
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.stroke();
+          }
+        }
+
+        // Pivot anchor
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(originX, originY, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rod 1
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(originX, originY);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+
+        // Bob 1
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(x1, y1, 6 + this.m1 * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rod 2
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        // Bob 2 (chaotic tip)
+        ctx.fillStyle = '#ec4899';
+        ctx.shadowColor = '#ec4899';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(x2, y2, 6 + this.m2 * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      },
+
+      getMetrics() {
+        // Energy calculations (Kinetic + Potential)
+        const v1 = this.l1 * this.w1;
+        const v2 = Math.hypot(
+          this.l1 * this.w1 * Math.cos(this.th1) + this.l2 * this.w2 * Math.cos(this.th2),
+          this.l1 * this.w1 * Math.sin(this.th1) + this.l2 * this.w2 * Math.sin(this.th2)
+        );
+        const ke = 0.5 * this.m1 * v1 * v1 + 0.5 * this.m2 * v2 * v2;
+        const pe = -(this.m1 + this.m2) * this.g * this.l1 * Math.cos(this.th1) - this.m2 * this.g * this.l2 * Math.cos(this.th2);
+        const totalE = ke + pe;
+
+        return [
+          { label: "Angle θ1", val: `${((this.th1 * 180) / Math.PI % 360).toFixed(1)}°` },
+          { label: "Angle θ2", val: `${((this.th2 * 180) / Math.PI % 360).toFixed(1)}°` },
+          { label: "Kinetic E", val: `${(ke / 100).toFixed(2)} J` },
+          { label: "Potential E", val: `${(pe / 100).toFixed(2)} J` },
+          { label: "Total Energy", val: `${(totalE / 100).toFixed(2)} J` },
+          { label: "Lyapunov State", val: "Chaotic Sensitive" }
+        ];
+      },
+
+      presets: {
+        "High Chaos Flip": { th1: Math.PI * 0.95, th2: Math.PI * 0.9, l1: 130, l2: 120 },
+        "Right Angle Launch": { th1: Math.PI / 2, th2: Math.PI / 2, l1: 120, l2: 120 },
+        "Harmonic Near-Linear": { th1: 0.15, th2: 0.15, l1: 130, l2: 110 },
+        "Heavy Second Bob": { th1: Math.PI / 2, th2: Math.PI / 4, m1: 8, m2: 25 }
+      },
+
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Rod 1 Length</span>
+                <span id="valL1" class="font-mono text-cyan-400">${this.l1}</span>
+              </div>
+              <input type="range" id="ctrlL1" min="60" max="180" value="${this.l1}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Rod 2 Length</span>
+                <span id="valL2" class="font-mono text-cyan-400">${this.l2}</span>
+              </div>
+              <input type="range" id="ctrlL2" min="60" max="180" value="${this.l2}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Mass 1</span>
+                <span id="valM1" class="font-mono text-cyan-400">${this.m1} kg</span>
+              </div>
+              <input type="range" id="ctrlM1" min="5" max="30" value="${this.m1}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Mass 2</span>
+                <span id="valM2" class="font-mono text-cyan-400">${this.m2} kg</span>
+              </div>
+              <input type="range" id="ctrlM2" min="5" max="30" value="${this.m2}" class="w-full">
+            </div>
+          </div>
+        `;
+      },
+
+      bindControls() {
+        document.getElementById('ctrlL1')?.addEventListener('input', (e) => {
+          this.l1 = parseFloat(e.target.value);
+          document.getElementById('valL1').textContent = this.l1;
+        });
+        document.getElementById('ctrlL2')?.addEventListener('input', (e) => {
+          this.l2 = parseFloat(e.target.value);
+          document.getElementById('valL2').textContent = this.l2;
+        });
+        document.getElementById('ctrlM1')?.addEventListener('input', (e) => {
+          this.m1 = parseFloat(e.target.value);
+          document.getElementById('valM1').textContent = `${this.m1} kg`;
+        });
+        document.getElementById('ctrlM2')?.addEventListener('input', (e) => {
+          this.m2 = parseFloat(e.target.value);
+          document.getElementById('valM2').textContent = `${this.m2} kg`;
+        });
+      }
+    };
+
+    /* ==========================================================
+       4. SIMULATION 3: ORBITAL MECHANICS & N-BODY SANDBOX
+       ========================================================== */
+    const orbitSim = {
+      name: "Orbital Mechanics & N-Body Gravity",
+      G: 1200, // Gravitational constant scaled for sandbox
+      bodies: [],
+      dragStart: null,
+
+      init() {
+        this.reset();
+      },
+
+      reset() {
+        const cx = (canvas.width / dpr) / 2;
+        const cy = (canvas.height / dpr) / 2;
+
+        this.bodies = [
+          // Central Star
+          { x: cx, y: cy, vx: 0, vy: 0, mass: 600, radius: 18, color: '#fbbf24', fixed: true, trail: [] },
+          // Inner Planet
+          { x: cx, y: cy - 110, vx: 2.3, vy: 0, mass: 8, radius: 5, color: '#38bdf8', fixed: false, trail: [] },
+          // Outer Gas Giant
+          { x: cx, y: cy + 190, vx: -1.8, vy: 0, mass: 25, radius: 8, color: '#c084fc', fixed: false, trail: [] },
+          // Eccentric Satellite / Comet
+          { x: cx - 250, y: cy, vx: 0, vy: 1.4, mass: 3, radius: 4, color: '#34d399', fixed: false, trail: [] }
+        ];
+      },
+
+      update(dt) {
+        const num = this.bodies.length;
+
+        // Gravitational pair-wise interaction F = G*m1*m2 / r^2
+        for (let i = 0; i < num; i++) {
+          const b1 = this.bodies[i];
+          if (b1.fixed) continue;
+
+          let fx = 0;
+          let fy = 0;
+
+          for (let j = 0; j < num; j++) {
+            if (i === j) continue;
+            const b2 = this.bodies[j];
+            const dx = b2.x - b1.x;
+            const dy = b2.y - b1.y;
+            const distSq = dx * dx + dy * dy + 100; // Softening parameter to prevent infinity
+            const dist = Math.sqrt(distSq);
+            const force = (this.G * b1.mass * b2.mass) / distSq;
+
+            fx += force * (dx / dist);
+            fy += force * (dy / dist);
+          }
+
+          // a = F / m
+          b1.vx += (fx / b1.mass) * dt;
+          b1.vy += (fy / b1.mass) * dt;
+
+          b1.x += b1.vx * dt * 45;
+          b1.y += b1.vy * dt * 45;
+
+          // Trail logging
+          if (state.showTrails) {
+            b1.trail.push({ x: b1.x, y: b1.y });
+            if (b1.trail.length > 280) b1.trail.shift();
+          }
+        }
+      },
+
+      render() {
+        // Draw trails
+        if (state.showTrails) {
+          for (let b of this.bodies) {
+            if (b.trail.length > 2) {
+              ctx.strokeStyle = b.color;
+              ctx.lineWidth = 1.2;
+              ctx.globalAlpha = 0.45;
+              ctx.beginPath();
+              ctx.moveTo(b.trail[0].x, b.trail[0].y);
+              for (let p of b.trail) {
+                ctx.lineTo(p.x, p.y);
+              }
+              ctx.stroke();
+              ctx.globalAlpha = 1.0;
+            }
+          }
+        }
+
+        // Draw bodies
+        for (let b of this.bodies) {
+          ctx.fillStyle = b.color;
+          if (b.fixed) {
+            // Sun glow
+            ctx.shadowColor = b.color;
+            ctx.shadowBlur = 24;
+          }
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Vector visualizer
+          if (state.showVectors && !b.fixed) {
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(b.x, b.y);
+            ctx.lineTo(b.x + b.vx * 15, b.y + b.vy * 15);
+            ctx.stroke();
+          }
+        }
+
+        // Mouse sling vector indicator if dragging
+        if (this.dragStart) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(this.dragStart.x, this.dragStart.y);
+          ctx.lineTo(this.dragStart.currX, this.dragStart.currY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(this.dragStart.x, this.dragStart.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      },
+
+      getMetrics() {
+        return [
+          { label: "Active Bodies", val: `${this.bodies.length}` },
+          { label: "Central Mass", val: `${this.bodies[0]?.mass || 0} M☉` },
+          { label: "G Constant", val: `${this.G}` },
+          { label: "Spawn Mode", val: "Drag to fling satellite" }
+        ];
+      },
+
+      presets: {
+        "Sun & Inner Planets": { G: 1200 },
+        "Binary Stars System": {
+          setup: (sim) => {
+            const cx = (canvas.width / dpr) / 2;
+            const cy = (canvas.height / dpr) / 2;
+            sim.bodies = [
+              { x: cx - 60, y: cy, vx: 0, vy: -1.2, mass: 350, radius: 14, color: '#f59e0b', fixed: false, trail: [] },
+              { x: cx + 60, y: cy, vx: 0, vy: 1.2, mass: 350, radius: 14, color: '#06b6d4', fixed: false, trail: [] },
+              { x: cx, y: cy + 170, vx: -2.0, vy: 0, mass: 5, radius: 4, color: '#ec4899', fixed: false, trail: [] }
+            ];
+          }
+        },
+        "Hyperbolic Comet Flyby": {
+          setup: (sim) => {
+            const cx = (canvas.width / dpr) / 2;
+            const cy = (canvas.height / dpr) / 2;
+            sim.bodies = [
+              { x: cx, y: cy, vx: 0, vy: 0, mass: 800, radius: 20, color: '#fbbf24', fixed: true, trail: [] },
+              { x: cx - 350, y: cy - 120, vx: 2.8, vy: 0.4, mass: 2, radius: 4, color: '#38bdf8', fixed: false, trail: [] }
+            ];
+          }
+        }
+      },
+
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Gravity Constant G</span>
+                <span id="valG" class="font-mono text-cyan-400">${this.G}</span>
+              </div>
+              <input type="range" id="ctrlG" min="300" max="3000" step="50" value="${this.G}" class="w-full">
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnSpawnSatellite" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-medium rounded-lg border border-slate-700 transition">
+                + Spawn Random Satellite
+              </button>
+            </div>
+            <div class="flex items-center gap-2 col-span-2 text-slate-400 text-[11px]">
+              <i data-lucide="info" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+              <span>Click and drag anywhere on the canvas to slingshot your own custom planet into orbit!</span>
+            </div>
+          </div>
+        `;
+      },
+
+      bindControls() {
+        document.getElementById('ctrlG')?.addEventListener('input', (e) => {
+          this.G = parseFloat(e.target.value);
+          document.getElementById('valG').textContent = this.G;
+        });
+        document.getElementById('btnSpawnSatellite')?.addEventListener('click', () => {
+          const cx = (canvas.width / dpr) / 2;
+          const cy = (canvas.height / dpr) / 2;
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 90 + Math.random() * 180;
+          const v = Math.sqrt((this.G * this.bodies[0].mass) / dist) * (0.8 + Math.random() * 0.4) * 0.05;
+          
+          this.bodies.push({
+            x: cx + Math.cos(angle) * dist,
+            y: cy + Math.sin(angle) * dist,
+            vx: -Math.sin(angle) * v * 20,
+            vy: Math.cos(angle) * v * 20,
+            mass: 3 + Math.random() * 8,
+            radius: 3 + Math.random() * 4,
+            color: `hsl(${Math.random() * 360}, 80%, 65%)`,
+            fixed: false,
+            trail: []
+          });
+          showToast("New planet seeded in gravitational field!", "info");
+        });
+      },
+
+      onMouseDown(x, y) {
+        this.dragStart = { x, y, currX: x, currY: y };
+      },
+      onMouseMove(x, y) {
+        if (this.dragStart) {
+          this.dragStart.currX = x;
+          this.dragStart.currY = y;
+        }
+      },
+      onMouseUp(x, y) {
+        if (this.dragStart) {
+          const vx = (this.dragStart.x - x) * 0.05;
+          const vy = (this.dragStart.y - y) * 0.05;
+          this.bodies.push({
+            x: this.dragStart.x,
+            y: this.dragStart.y,
+            vx: vx,
+            vy: vy,
+            mass: 6,
+            radius: 5,
+            color: '#f43f5e',
+            fixed: false,
+            trail: []
+          });
+          this.dragStart = null;
+          showToast("Orbital satellite launched!", "success");
+        }
+      }
+    };
+
+    /* ==========================================================
+       5. SIMULATION 4: OPTICS & WAVE REFRACTION (SNELL'S LAW)
+       ========================================================== */
+    const opticsSim = {
+      name: "Wave Optics & Snell's Law Refraction",
+      // Refraction parameters
+      n1: 1.0, // Medium 1 index (e.g., Air = 1.0)
+      n2: 1.5, // Medium 2 index (e.g., Glass = 1.5, Water = 1.33)
+      incidentAngleDeg: 40,
+      wavelength: 550, // nm (laser color)
+      numRays: 5,
+
+      init() {
+        this.reset();
+      },
+
+      reset() {
+        // Nothing heavy to reset
+      },
+
+      update(dt) {
+        // Continuous wave ray calculations
+      },
+
+      render() {
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+        const midY = h / 2;
+
+        // Medium 1 (Top)
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, w, midY);
+
+        // Medium 2 (Bottom - glass/water tinted)
+        ctx.fillStyle = 'rgba(14, 165, 233, 0.12)';
+        ctx.fillRect(0, midY, w, h - midY);
+
+        // Interface Boundary Line
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, midY);
+        ctx.lineTo(w, midY);
+        ctx.stroke();
+
+        // Labels
+        ctx.font = '11px JetBrains Mono';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(`Medium 1 (n₁ = ${this.n1.toFixed(2)})`, 15, midY - 15);
+        ctx.fillText(`Medium 2 (n₂ = ${this.n2.toFixed(2)})`, 15, midY + 25);
+
+        // Normal Line (Dashed)
+        const hitX = w / 2;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(hitX, 40);
+        ctx.lineTo(hitX, h - 40);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Calculate Snell's Law: n1 * sin(θ1) = n2 * sin(θ2)
+        const theta1Rad = (this.incidentAngleDeg * Math.PI) / 180;
+        const sinTheta2 = (this.n1 / this.n2) * Math.sin(theta1Rad);
+        const isTIR = Math.abs(sinTheta2) > 1.0; // Total Internal Reflection
+
+        // Color mapped to wavelength
+        const rayColor = '#22d3ee';
+
+        // Draw Incident Ray
+        const rayLen = 220;
+        const startX = hitX - rayLen * Math.sin(theta1Rad);
+        const startY = midY - rayLen * Math.cos(theta1Rad);
+
+        ctx.strokeStyle = rayColor;
+        ctx.shadowColor = rayColor;
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(hitX, midY);
+        ctx.stroke();
+
+        // Reflected Ray (Law of Reflection θ_reflect = θ_incident)
+        const reflectEndX = hitX + rayLen * Math.sin(theta1Rad);
+        const reflectEndY = midY - rayLen * Math.cos(theta1Rad);
+        ctx.strokeStyle = isTIR ? rayColor : 'rgba(34, 211, 238, 0.4)';
+        ctx.lineWidth = isTIR ? 3 : 1.5;
+        ctx.beginPath();
+        ctx.moveTo(hitX, midY);
+        ctx.lineTo(reflectEndX, reflectEndY);
+        ctx.stroke();
+
+        // Refracted Ray (if not TIR)
+        if (!isTIR) {
+          const theta2Rad = Math.asin(sinTheta2);
+          const refractEndX = hitX + rayLen * Math.sin(theta2Rad);
+          const refractEndY = midY + rayLen * Math.cos(theta2Rad);
+
+          ctx.strokeStyle = rayColor;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(hitX, midY);
+          ctx.lineTo(refractEndX, refractEndY);
+          ctx.stroke();
+
+          // Angle arc markers
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(hitX, midY, 40, Math.PI / 2 - theta2Rad, Math.PI / 2);
+          ctx.stroke();
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillText(`θ₂: ${((theta2Rad * 180) / Math.PI).toFixed(1)}°`, hitX + 10, midY + 55);
+        } else {
+          // Total Internal Reflection announcement
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#f43f5e';
+          ctx.font = 'bold 12px Inter';
+          ctx.fillText('⚡ TOTAL INTERNAL REFLECTION', hitX + 20, midY - 50);
+        }
+
+        // Angle Arc for θ1
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(hitX, midY, 45, -Math.PI / 2, -Math.PI / 2 + theta1Rad);
+        ctx.stroke();
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText(`θ₁: ${this.incidentAngleDeg}°`, hitX - 65, midY - 50);
+      },
+
+      getMetrics() {
+        const theta1Rad = (this.incidentAngleDeg * Math.PI) / 180;
+        const sinTheta2 = (this.n1 / this.n2) * Math.sin(theta1Rad);
+        const isTIR = Math.abs(sinTheta2) > 1.0;
+        const theta2Deg = isTIR ? "N/A (TIR)" : `${((Math.asin(sinTheta2) * 180) / Math.PI).toFixed(1)}°`;
+        const critAngle = this.n1 > this.n2 ? `${((Math.asin(this.n2 / this.n1) * 180) / Math.PI).toFixed(1)}°` : "None (n₁ < n₂)";
+
+        return [
+          { label: "Incident Angle θ₁", val: `${this.incidentAngleDeg}°` },
+          { label: "Refraction Angle θ₂", val: theta2Deg },
+          { label: "Refractive n₁", val: this.n1.toFixed(2) },
+          { label: "Refractive n₂", val: this.n2.toFixed(2) },
+          { label: "Critical Angle θc", val: critAngle },
+          { label: "State", val: isTIR ? "Total Internal Reflection" : "Refracted Ray" }
+        ];
+      },
+
+      presets: {
+        "Air to Glass (n=1.0 → 1.5)": { n1: 1.0, n2: 1.5, incidentAngleDeg: 40 },
+        "Air to Diamond (n=1.0 → 2.42)": { n1: 1.0, n2: 2.42, incidentAngleDeg: 35 },
+        "Total Internal Reflection (Glass to Air)": { n1: 1.55, n2: 1.0, incidentAngleDeg: 52 },
+        "Zero Deviation (Equal Indices)": { n1: 1.33, n2: 1.33, incidentAngleDeg: 45 }
+      },
+
+      buildControls() {
+        return `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Incident Angle (θ₁)</span>
+                <span id="valOptAngle" class="font-mono text-cyan-400">${this.incidentAngleDeg}°</span>
+              </div>
+              <input type="range" id="ctrlOptAngle" min="0" max="85" value="${this.incidentAngleDeg}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Medium 1 Index (n₁)</span>
+                <span id="valN1" class="font-mono text-cyan-400">${this.n1.toFixed(2)}</span>
+              </div>
+              <input type="range" id="ctrlN1" min="1.0" max="2.6" step="0.05" value="${this.n1}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300">
+                <span>Medium 2 Index (n₂)</span>
+                <span id="valN2" class="font-mono text-cyan-400">${this.n2.toFixed(2)}</span>
+              </div>
+              <input type="range" id="ctrlN2" min="1.0" max="2.6" step="0.05" value="${this.n2}" class="w-full">
+            </div>
+            <div class="flex items-center text-[11px] text-slate-400 bg-slate-800/40 p-2 rounded-lg border border-slate-700/40">
+              <span>Formula: <code>n₁·sin(θ₁) = n₂·sin(θ₂)</code></span>
+            </div>
+          </div>
+        `;
+      },
+
+      bindControls() {
+        document.getElementById('ctrlOptAngle')?.addEventListener('input', (e) => {
+          this.incidentAngleDeg = parseFloat(e.target.value);
+          document.getElementById('valOptAngle').textContent = `${this.incidentAngleDeg}°`;
+        });
+        document.getElementById('ctrlN1')?.addEventListener('input', (e) => {
+          this.n1 = parseFloat(e.target.value);
+          document.getElementById('valN1').textContent = this.n1.toFixed(2);
+        });
+        document.getElementById('ctrlN2')?.addEventListener('input', (e) => {
+          this.n2 = parseFloat(e.target.value);
+          document.getElementById('valN2').textContent = this.n2.toFixed(2);
+        });
+      }
+    };
+
+    // Registry of simulations
+    const simulations = {
+      projectile: projectileSim,
+      pendulum: pendulumSim,
+      orbit: orbitSim,
+      optics: opticsSim
+    };
+
+    /* ==========================================================
+       6. UI CONTROLLER & SIMULATION SWITCHER
+       ========================================================== */
+    function switchSimulation(simKey) {
+      if (!simulations[simKey]) return;
+      state.activeSim = simKey;
+      const sim = simulations[simKey];
+      sim.init();
+
+      // Update Nav buttons styling
+      document.querySelectorAll('.sim-nav-btn').forEach(btn => {
+        if (btn.dataset.sim === simKey) {
+          btn.className = "sim-nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left bg-cyan-500/15 text-cyan-300 border border-cyan-500/30";
+        } else {
+          btn.className = "sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent";
+        }
+      });
+
+      // Update Header Title
+      hudSimTitle.textContent = sim.name;
+
+      // Update Presets dropdown
+      presetsSelect.innerHTML = Object.keys(sim.presets || {})
+        .map(p => `<option value="${p}">${p}</option>`)
+        .join('');
+
+      // Build & Bind Dynamic Controls
+      controlsPanel.innerHTML = sim.buildControls ? sim.buildControls() : '';
+      if (sim.bindControls) sim.bindControls();
+
+      // Update contextual hint
+      if (simKey === 'orbit') {
+        hudHintText.textContent = "Click & drag on canvas to fling a satellite with initial velocity vector!";
+      } else if (simKey === 'projectile') {
+        hudHintText.textContent = "Adjust launch angle & velocity, then hit Launch to hit the target!";
+      } else {
+        hudHintText.textContent = "Use real-time sliders below or ask Gemini Tutor to explain the behavior.";
+      }
+
+      showToast(`Switched to ${sim.name}`, 'info');
+      lucide.createIcons();
+    }
+
+    // Apply Presets
+    presetsSelect.addEventListener('change', (e) => {
+      const presetKey = e.target.value;
+      const sim = simulations[state.activeSim];
+      const preset = sim?.presets?.[presetKey];
+      if (preset) {
+        if (typeof preset.setup === 'function') {
+          preset.setup(sim);
+        } else {
+          Object.assign(sim, preset);
+        }
+        // Refresh controls UI values
+        controlsPanel.innerHTML = sim.buildControls();
+        sim.bindControls();
+        sim.reset();
+        showToast(`Loaded preset: ${presetKey}`, 'success');
+      }
+    });
+
+    // Sidebar button clicks
+    document.getElementById('simNavList').addEventListener('click', (e) => {
+      const btn = e.target.closest('.sim-nav-btn');
+      if (btn && btn.dataset.sim) {
+        switchSimulation(btn.dataset.sim);
+      }
+    });
+
+    // Control bar buttons
+    playPauseBtn.addEventListener('click', () => {
+      if (state.activeSim === 'projectile' && !projectileSim.isFlying) {
+        projectileSim.launch();
+        state.isRunning = true;
+      } else {
+        state.isRunning = !state.isRunning;
+      }
+      updatePlayPauseButton();
+    });
+
+    function updatePlayPauseButton() {
+      if (state.isRunning) {
+        playPauseText.textContent = "Pause";
+        playPauseIcon.setAttribute('data-lucide', 'pause');
+        playPauseBtn.classList.replace('bg-cyan-600', 'bg-amber-600');
+        playPauseBtn.classList.replace('hover:bg-cyan-500', 'hover:bg-amber-500');
+      } else {
+        playPauseText.textContent = "Resume";
+        playPauseIcon.setAttribute('data-lucide', 'play');
+        playPauseBtn.classList.replace('bg-amber-600', 'bg-cyan-600');
+        playPauseBtn.classList.replace('hover:bg-amber-500', 'hover:bg-cyan-500');
+      }
+      lucide.createIcons();
+    }
+
+    document.getElementById('btnStep').addEventListener('click', () => {
+      state.isRunning = false;
+      updatePlayPauseButton();
+      simulations[state.activeSim].update(0.016);
+    });
+
+    document.getElementById('btnReset').addEventListener('click', () => {
+      simulations[state.activeSim].reset();
+      showToast("Simulation state reset", "info");
+    });
+
+    document.getElementById('btnClearTrails').addEventListener('click', () => {
+      const sim = simulations[state.activeSim];
+      if (sim.trail) sim.trail = [];
+      if (sim.bodies) sim.bodies.forEach(b => b.trail = []);
+      showToast("Canvas trails cleared", "info");
+    });
+
+    // Toggles
+    document.getElementById('toggleVectors').addEventListener('change', (e) => state.showVectors = e.target.checked);
+    document.getElementById('toggleGrid').addEventListener('change', (e) => state.showGrid = e.target.checked);
+    document.getElementById('toggleTrails').addEventListener('change', (e) => state.showTrails = e.target.checked);
+
+    // Canvas Pointer Events
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left);
+      const y = (e.clientY - rect.top);
+      if (simulations[state.activeSim].onMouseDown) {
+        simulations[state.activeSim].onMouseDown(x, y);
+      }
+    });
+    window.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left);
+      const y = (e.clientY - rect.top);
+      if (simulations[state.activeSim].onMouseMove) {
+        simulations[state.activeSim].onMouseMove(x, y);
+      }
+    });
+    window.addEventListener('mouseup', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left);
+      const y = (e.clientY - rect.top);
+      if (simulations[state.activeSim].onMouseUp) {
+        simulations[state.activeSim].onMouseUp(x, y);
+      }
+    });
+
+    // Touch Support for Mobile
+    canvas.addEventListener('touchstart', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = (touch.clientX - rect.left);
+      const y = (touch.clientY - rect.top);
+      if (simulations[state.activeSim].onMouseDown) {
+        simulations[state.activeSim].onMouseDown(x, y);
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('touchmove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = (touch.clientX - rect.left);
+      const y = (touch.clientY - rect.top);
+      if (simulations[state.activeSim].onMouseMove) {
+        simulations[state.activeSim].onMouseMove(x, y);
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('touchend', (e) => {
+      if (simulations[state.activeSim].onMouseUp) {
+        simulations[state.activeSim].onMouseUp(0, 0);
+      }
+    });
+
+    /* ==========================================================
+       7. MAIN ANIMATION LOOP & HUD UPDATE
+       ========================================================== */
+    function drawGrid(w, h) {
+      if (!state.showGrid) return;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+      ctx.lineWidth = 1;
+      const step = 40;
+      ctx.beginPath();
+      for (let x = 0; x < w; x += step) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+      }
+      for (let y = 0; y < h; y += step) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+      }
+      ctx.stroke();
+    }
+
+    function renderHUD(metrics) {
+      if (!metrics) return;
+      hudMetrics.innerHTML = metrics.map(m => `
+        <div class="flex items-center justify-between gap-4">
+          <span class="text-slate-400">${m.label}:</span>
+          <span class="text-cyan-300 font-bold">${m.val}</span>
+        </div>
+      `).join('');
+    }
+
+    function gameLoop(time) {
+      const dt = Math.min((time - state.lastTime) / 1000, 0.05); // cap at 20fps step
+      state.lastTime = time;
+
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      // Clear Canvas
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw subtle background grid
+      drawGrid(w, h);
+
+      const sim = simulations[state.activeSim];
+      if (sim) {
+        if (state.isRunning) {
+          sim.update(dt);
+        }
+        sim.render();
+        renderHUD(sim.getMetrics());
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    /* ==========================================================
+       8. GEMINI AI INTEGRATION (gemini-3-flash-preview)
+       ========================================================== */
+    const aiDrawer = document.getElementById('aiDrawer');
+    const btnToggleAiDrawer = document.getElementById('btnToggleAiDrawer');
+    const btnCloseAiDrawer = document.getElementById('btnCloseAiDrawer');
+    const aiChatForm = document.getElementById('aiChatForm');
+    const aiUserInput = document.getElementById('aiUserInput');
+    const aiChatHistory = document.getElementById('aiChatHistory');
+
+    btnToggleAiDrawer.addEventListener('click', () => {
+      aiDrawer.classList.toggle('hidden');
+    });
+    btnCloseAiDrawer.addEventListener('click', () => {
+      aiDrawer.classList.add('hidden');
+    });
+
+    // Helper: Append Chat Message bubble
+    function appendChatMessage(role, text) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `flex gap-2.5 items-start ${role === 'user' ? 'flex-row-reverse' : ''}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = `w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+        role === 'user' ? 'bg-cyan-600 text-white' : 'bg-cyan-500/20 text-cyan-400'
+      }`;
+      avatar.innerHTML = `<i data-lucide="${role === 'user' ? 'user' : 'sparkles'}" class="w-3.5 h-3.5"></i>`;
+
+      const content = document.createElement('div');
+      content.className = `glass-panel p-3 rounded-xl border border-white/10 text-slate-200 leading-relaxed max-w-[85%] ${
+        role === 'user' ? 'bg-cyan-950/40 text-cyan-100' : ''
+      }`;
+      
+      // Auto-render math or text safely
+      content.innerHTML = formatMarkdownAndMath(text);
+
+      msgDiv.appendChild(avatar);
+      msgDiv.appendChild(content);
+      aiChatHistory.appendChild(msgDiv);
+      aiChatHistory.scrollTop = aiChatHistory.scrollHeight;
+      
+      lucide.createIcons();
+      if (window.renderMathInElement) {
+        window.renderMathInElement(content, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // Lightweight markdown/formatting parser
+    function formatMarkdownAndMath(txt) {
+      return txt
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code class="bg-slate-800 text-cyan-300 px-1 py-0.5 rounded">$1</code>')
+        .replace(/\n\n/g, '<br/><br/>')
+        .replace(/\n/g, '<br/>');
+    }
+
+    // Call Gemini API with Exponential Backoff
+    async function callGemini(userPrompt) {
+      const sim = simulations[state.activeSim];
+      const metrics = sim.getMetrics ? sim.getMetrics().map(m => `${m.label}: ${m.val}`).join(', ') : '';
+
+      // Detailed System Instruction establishing the AI Physics Mentor role
+      const systemInstruction = `You are a world-class, engaging Physics Professor and Laboratory Assistant. 
+The student is currently interacting with the "${sim.name}" simulation in real-time.
+Current simulation telemetry parameters: [${metrics}].
+
+Rules:
+1. Provide accurate, clear, and intuitive explanations with math formulas using standard LaTeX notation ($...$ or $$...$$).
+2. Connect abstract equations to visual intuition (e.g. why the double pendulum is non-linear, how air drag bends projectile parabolas, or how Snell's law minimizes travel time via Fermat's principle).
+3. Keep responses structured, concise, and pedagogical. Bullet points are encouraged when explaining steps.`;
+
+      // API setup
+      const apiKey = ""; // Canvas provides key at runtime
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [
+          ...state.chatHistory,
+          { role: 'user', parts: [{ text: userPrompt }] }
+        ],
+        systemInstruction: {
+          parts: [{ text: systemInstruction }]
+        }
+      };
+
+      // Exponential Backoff Retries
+      let attempt = 0;
+      const maxRetries = 3;
+      let delay = 1000;
+
+      while (attempt < maxRetries) {
+        try {
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const result = await response.json();
+          const candidate = result.candidates?.[0];
+          const text = candidate?.content?.parts?.[0]?.text;
+
+          if (text) {
+            // Update history
+            state.chatHistory.push({ role: 'user', parts: [{ text: userPrompt }] });
+            state.chatHistory.push({ role: 'model', parts: [{ text }] });
+            return text;
+          }
+          throw new Error("Empty candidate");
+        } catch (err) {
+          attempt++;
+          if (attempt >= maxRetries) throw err;
+          await new Promise(r => setTimeout(r, delay));
+          delay *= 2;
+        }
+      }
+    }
+
+    // Submit handler
+    aiChatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = aiUserInput.value.trim();
+      if (!query) return;
+
+      aiUserInput.value = '';
+      appendChatMessage('user', query);
+
+      // Loading bubble
+      const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'aiLoadingBubble';
+      loadingDiv.className = 'flex gap-2 items-center text-slate-400 text-xs italic';
+      loadingDiv.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-cyan-400"></i> Formulating physics breakdown...`;
+      aiChatHistory.appendChild(loadingDiv);
+      aiChatHistory.scrollTop = aiChatHistory.scrollHeight;
+      lucide.createIcons();
+
+      try {
+        const aiAnswer = await callGemini(query);
+        document.getElementById('aiLoadingBubble')?.remove();
+        appendChatMessage('assistant', aiAnswer);
+      } catch (err) {
+        document.getElementById('aiLoadingBubble')?.remove();
+        appendChatMessage('assistant', "I encountered a transient network connection error while contacting the physics server. Please try submitting your question once more.");
+      }
+    });
+
+    // Preset button hooks
+    document.getElementById('btnAiExplain').addEventListener('click', () => {
+      aiDrawer.classList.remove('hidden');
+      const sim = simulations[state.activeSim];
+      const prompt = `Can you provide a deep-dive explanation of the physical laws currently at play in ${sim.name}? Break down the relevant equations and what is happening visually.`;
+      aiUserInput.value = prompt;
+      aiChatForm.dispatchEvent(new Event('submit'));
+    });
+
+    document.getElementById('btnAiChallenge').addEventListener('click', () => {
+      aiDrawer.classList.remove('hidden');
+      const sim = simulations[state.activeSim];
+      const prompt = `Give me a quick conceptual quiz or calculation challenge based on this active simulation (${sim.name}). Give me 1 scenario-based question to test my understanding!`;
+      aiUserInput.value = prompt;
+      aiChatForm.dispatchEvent(new Event('submit'));
+    });
+
+    // Quick Prompt Pills
+    document.querySelectorAll('.ai-quick-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        aiDrawer.classList.remove('hidden');
+        aiUserInput.value = btn.dataset.prompt;
+        aiChatForm.dispatchEvent(new Event('submit'));
+      });
+    });
+
+    /* ==========================================================
+       9. EMBED / EXPORT MODAL MANAGEMENT
+       ========================================================== */
+    const embedModal = document.getElementById('embedModal');
+    const btnOpenEmbed = document.getElementById('btnOpenEmbed');
+    const btnCloseEmbed = document.getElementById('btnCloseEmbed');
+    const embedIframeText = document.getElementById('embedIframeText');
+    const btnCopyEmbed = document.getElementById('btnCopyEmbed');
+
+    btnOpenEmbed.addEventListener('click', () => {
+      embedIframeText.value = `<iframe \n  src="${window.location.href}" \n  width="100%" \n  height="720px" \n  style="border: none; border-radius: 16px; overflow: hidden;" \n  title="PhysicaLab AI Interactive Simulations">\n</iframe>`;
+      embedModal.classList.remove('hidden');
+    });
+
+    btnCloseEmbed.addEventListener('click', () => {
+      embedModal.classList.add('hidden');
+    });
+
+    btnCopyEmbed.addEventListener('click', () => {
+      embedIframeText.select();
+      document.execCommand('copy');
+      showToast("Embed code copied to clipboard!", "success");
+    });
+
+    /* ==========================================================
+       10. APPLICATION BOOTSTRAP
+       ========================================================== */
+    window.onload = function() {
+      resizeCanvas();
+      switchSimulation('projectile');
+      lucide.createIcons();
+      requestAnimationFrame(gameLoop);
+    };
+  </script>
+</body>
+</html>
