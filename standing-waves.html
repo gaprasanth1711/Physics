@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standing Waves on a Stretched String — Class 11 CBSE</title>
+<style>
+  :root {
+    --ink: #0f172a; --muted: #475569; --line: #cbd5e1;
+    --green: #16a34a; --amber: #d97706; --red: #dc2626; --blue: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; background: #eef2f7; color: var(--ink); margin: 0; }
+  header { background: #1e3a8a; color: #fff; padding: 10px 16px; }
+  header h1 { font-size: 18px; margin: 0; }
+  header p { font-size: 12px; margin: 2px 0 0; opacity: 0.9; }
+  #wrap { display: flex; flex-wrap: wrap; gap: 12px; padding: 12px; max-width: 1180px; margin: 0 auto; }
+  #stageBox { flex: 1 1 640px; background: #fff; border: 2px solid var(--line); border-radius: 12px; overflow: hidden; position: relative; }
+  canvas { display: block; width: 100%; height: 520px; background: #f8fafc; cursor: grab; }
+  #panel { flex: 0 1 300px; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 12px; position: sticky; top: 12px; align-self: flex-start; }
+  #panel h2 { font-size: 14px; margin: 0 0 8px; }
+  .ctl { margin: 10px 0; font-size: 13px; }
+  .ctl label { display: flex; justify-content: space-between; font-weight: bold; }
+  .badge { background: #dbeafe; color: #1e3a8a; border-radius: 6px; padding: 0 6px; font-weight: normal; }
+  input[type=range] { width: 100%; }
+  select, button { font-size: 13px; }
+  .chk { display: flex; gap: 8px; flex-wrap: wrap; font-size: 13px; margin: 8px 0; }
+  #telemetry { background: #f1f5f9; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  #telemetry b { color: #1e3a8a; }
+  #playbar { display: flex; gap: 8px; align-items: center; justify-content: center; padding: 10px; background: #fff; border-top: 2px solid var(--line); flex-wrap: wrap; }
+  #playbar button, #playbar select { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: #f8fafc; cursor: pointer; font-size: 14px; }
+  #btnPlay { background: var(--green); color: #fff; border: none; min-width: 110px; }
+  #btnReset { background: #64748b; color: #fff; border: none; }
+  #hint { font-size: 12px; color: var(--muted); padding: 8px 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Standing Waves on a Stretched String</h1>
+  <p>Class 11 CBSE · v=&radic;(T/&mu;) · f<sub>n</sub>=nv/(2L) · &lambda;=2L/n · SI units · fixed ends at x=0 and x=L</p>
+</header>
+<div id="wrap">
+  <div id="stageBox">
+    <canvas id="cv" width="900" height="520"></canvas>
+    <div id="playbar">
+      <button id="btnPlay">⏸ Pause</button>
+      <button id="btnStep">Step +Δt</button>
+      <select id="selSpeed">
+        <option value="0.25">0.25×</option>
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1.0×</option>
+        <option value="2">2.0×</option>
+      </select>
+      <button id="btnReset">↺ Reset</button>
+    </div>
+    <div id="hint">Resonant mode n on a string fixed at both ends. Change tension, density or mode and watch nodes, antinodes and the envelope. Toggle the two travelling components to see y = y1 + y2.</div>
+  </div>
+  <div id="panel">
+    <h2>Control Panel</h2>
+    <div class="ctl">
+      <label>Tension T <span class="badge" id="bT">100 N</span></label>
+      <input type="range" id="sT" min="10" max="200" step="1" value="100">
+    </div>
+    <div class="ctl">
+      <label>Linear density &mu; <span class="badge" id="bMu">1.0 g/m</span></label>
+      <input type="range" id="sMu" min="0.2" max="2" step="0.1" value="1">
+    </div>
+    <div class="ctl">
+      <label>Mode n <span class="badge" id="bN">1</span></label>
+      <input type="range" id="sN" min="1" max="5" step="1" value="1">
+    </div>
+    <div class="ctl">
+      <label>Amplitude A <span class="badge" id="bA">3.0 cm</span></label>
+      <input type="range" id="sA" min="1" max="5" step="0.5" value="3">
+    </div>
+    <div class="ctl">
+      <label>Scenario preset</label>
+      <select id="selPreset">
+        <option value="fund">Fundamental</option>
+        <option value="second">2nd harmonic</option>
+        <option value="third">3rd harmonic</option>
+        <option value="high">High-tension thin string</option>
+      </select>
+    </div>
+    <div class="chk">
+      <label><input type="checkbox" id="cGrid" checked> Grid</label>
+      <label><input type="checkbox" id="cTrav"> Travelling components</label>
+      <label><input type="checkbox" id="cNodes" checked> Nodes/antinodes</label>
+      <label><input type="checkbox" id="cEnv" checked> Envelope</label>
+    </div>
+    <div id="telemetry">—</div>
+  </div>
+</div>
+<script>
+'use strict';
+/* Standing waves on a stretched string, fixed-step phase integration. */
+const DT = 0.0166;
+const L = 1.2;                 // m, fixed string length
+const AMP_PX_PER_M = 2200;     // transverse display scale (exaggerated)
+const TWO_PI = Math.PI * 2;
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let DPR = 1;
+function fitCanvas() {
+  DPR = window.devicePixelRatio || 1;
+  const r = cv.getBoundingClientRect();
+  cv.width = Math.max(300, Math.round(r.width * DPR));
+  cv.height = Math.round(520 * DPR);
+}
+window.addEventListener('resize', fitCanvas);
+
+const S = {
+  running: true, speed: 1, acc: 0, last: performance.now(),
+  t: 0, phi: 0,
+  T: 100, muG: 1.0, n: 1, Acm: 3.0,
+  showGrid: true, showTrav: false, showNodes: true, showEnv: true
+};
+
+function muKg() { return S.muG / 1000; }
+function ampM() { return S.Acm / 100; }
+function waveV() { return Math.sqrt(S.T / muKg()); }
+function freqN() { return S.n * waveV() / (2 * L); }
+function lambdaN() { return 2 * L / S.n; }
+function omegaN() { return TWO_PI * freqN(); }
+function kN() { return S.n * Math.PI / L; }
+function vmax() { return ampM() * omegaN(); }
+
+function stepPhysics(dt) {
+  S.t += dt;
+  const om = omegaN();            // recomputed from live T, mu, n
+  S.phi = (S.phi + om * dt) % TWO_PI;
+}
+
+function standY(x) {
+  return ampM() * Math.sin(S.n * Math.PI * x / L) * Math.cos(S.phi);
+}
+function trav1Y(x) {
+  return (ampM() / 2) * Math.sin(kN() * x - S.phi);
+}
+function trav2Y(x) {
+  return (ampM() / 2) * Math.sin(kN() * x + S.phi);
+}
+
+/* ---- coordinates ---- */
+function W() { return cv.width / DPR; }
+function H() { return cv.height / DPR; }
+function strX0() { return W() * 0.08; }
+function strX1() { return W() * 0.92; }
+function axisY() { return H() * 0.46; }
+function xToPx(x) { return strX0() + (x / L) * (strX1() - strX0()); }
+function yToPx(y) { return axisY() - y * AMP_PX_PER_M; }
+
+/* ---- render ---- */
+function drawGrid() {
+  if (!S.showGrid) return;
+  ctx.save(); ctx.scale(DPR, DPR);
+  ctx.strokeStyle = 'rgba(15,23,42,0.07)'; ctx.lineWidth = 1;
+  for (let x = 0; x < W(); x += 26) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H()); ctx.stroke(); }
+  for (let y = 0; y < H(); y += 26) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W(), y); ctx.stroke(); }
+  ctx.restore();
+}
+function drawBase() {
+  ctx.save(); ctx.scale(DPR, DPR);
+  const x0 = strX0(), x1 = strX1(), y = axisY();
+  // equilibrium line
+  ctx.strokeStyle = 'rgba(15,23,42,0.28)'; ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+  ctx.setLineDash([]);
+  // clamps
+  ctx.fillStyle = '#475569';
+  ctx.fillRect(x0 - 16, y - 46, 16, 92);
+  ctx.fillRect(x1, y - 46, 16, 92);
+  ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
+  ctx.strokeRect(x0 - 16, y - 46, 16, 92);
+  ctx.strokeRect(x1, y - 46, 16, 92);
+  ctx.fillStyle = '#0f172a'; ctx.font = '12px Arial';
+  ctx.fillText('x = 0 (fixed)', x0 - 16, y + 64);
+  ctx.fillText('x = L = 1.2 m (fixed)', x1 - 148, y + 64);
+  ctx.fillStyle = '#475569'; ctx.font = '12px Arial';
+  ctx.fillText('equilibrium (y = 0)', (x0 + x1) / 2 - 62, y + 22);
+  ctx.restore();
+}
+function tracePath(fn, style, width, dash) {
+  ctx.save(); ctx.scale(DPR, DPR);
+  ctx.strokeStyle = style; ctx.lineWidth = width;
+  if (dash) ctx.setLineDash(dash); else ctx.setLineDash([]);
+  ctx.beginPath();
+  const N = 240;
+  for (let i = 0; i <= N; i++) {
+    const x = L * i / N;
+    const px = xToPx(x), py = yToPx(fn(x));
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+function drawEnvelope() {
+  if (!S.showEnv) return;
+  const A = ampM(), n = S.n;
+  tracePath((x) => A * Math.sin(n * Math.PI * x / L), '#94a3b8', 1.5, [7, 5]);
+  tracePath((x) => -A * Math.sin(n * Math.PI * x / L), '#94a3b8', 1.5, [7, 5]);
+}
+function drawTrav() {
+  if (!S.showTrav) return;
+  tracePath(trav1Y, '#16a34a', 1.5, [6, 4]);
+  tracePath(trav2Y, '#d97706', 1.5, [6, 4]);
+  ctx.save(); ctx.scale(DPR, DPR);
+  ctx.font = '12px Arial';
+  ctx.fillStyle = '#16a34a';
+  ctx.fillText('y1 = (A/2)·sin(kx−ωt)', 12, 20);
+  ctx.fillStyle = '#d97706';
+  ctx.fillText('y2 = (A/2)·sin(kx+ωt)', 12, 36);
+  ctx.restore();
+}
+function drawStanding() {
+  tracePath(standY, '#2563eb', 3, null);
+}
+function drawNodes() {
+  if (!S.showNodes) return;
+  ctx.save(); ctx.scale(DPR, DPR);
+  // nodes: fixed zeros at xm = m*L/n
+  for (let m = 0; m <= S.n; m++) {
+    const x = m * L / S.n;
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath(); ctx.arc(xToPx(x), axisY(), 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(xToPx(x), axisY(), 5, 0, Math.PI * 2); ctx.stroke();
+  }
+  // antinodes: peak positions, track instantaneous displacement
+  for (let m = 0; m < S.n; m++) {
+    const x = (2 * m + 1) * L / (2 * S.n);
+    const y = standY(x);
+    ctx.fillStyle = '#16a34a';
+    ctx.beginPath(); ctx.arc(xToPx(x), yToPx(y), 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(xToPx(x), yToPx(y), 5, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.font = '12px Arial';
+  ctx.fillStyle = '#dc2626';
+  ctx.fillText('● node (y ≡ 0)', 12, H() - 66);
+  ctx.fillStyle = '#16a34a';
+  ctx.fillText('● antinode (max swing ±A)', 12, H() - 50);
+  ctx.restore();
+}
+function drawLabels() {
+  ctx.save(); ctx.scale(DPR, DPR);
+  ctx.fillStyle = '#0f172a'; ctx.font = 'bold 13px Arial';
+  ctx.fillText('Standing wave  y(x,t) = A·sin(nπx/L)·cos(φ),   n = ' + S.n, 12, H() - 30);
+  ctx.fillStyle = '#475569'; ctx.font = '12px Arial';
+  ctx.fillText('t = ' + S.t.toFixed(2) + ' s   φ = ' + S.phi.toFixed(2) + ' rad', 12, H() - 12);
+  ctx.fillStyle = '#1e3a8a'; ctx.font = '12px Arial';
+  const info = 'L = 1.2 m · λ = ' + lambdaN().toFixed(2) + ' m · f = ' + freqN().toFixed(1) + ' Hz';
+  ctx.fillText(info, W() - ctx.measureText(info).width - 12, H() - 12);
+  ctx.restore();
+}
+function telemetry() {
+  const el = document.getElementById('telemetry');
+  el.innerHTML =
+    't = <b>' + S.t.toFixed(2) + ' s</b> · φ = <b>' + S.phi.toFixed(2) + ' rad</b><br>' +
+    'T = <b>' + S.T.toFixed(0) + ' N</b> · μ = <b>' + S.muG.toFixed(1) + ' g/m</b> · n = <b>' + S.n + '</b><br>' +
+    'v = √(T/μ) = <b>' + waveV().toFixed(1) + ' m/s</b><br>' +
+    'f<sub>' + S.n + '</sub> = nv/(2L) = <b>' + freqN().toFixed(2) + ' Hz</b><br>' +
+    'λ = 2L/n = <b>' + lambdaN().toFixed(3) + ' m</b><br>' +
+    'v<sub>max</sub>(antinode) = Aω = <b>' + vmax().toFixed(2) + ' m/s</b>';
+}
+function frame(now) {
+  let fdt = Math.min(0.1, (now - S.last) / 1000);
+  S.last = now;
+  if (S.running) {
+    S.acc += fdt * S.speed;
+    let n = 0;
+    while (S.acc >= DT && n < 8) { stepPhysics(DT); S.acc -= DT; n++; }
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  drawGrid(); drawBase(); drawEnvelope(); drawTrav(); drawStanding(); drawNodes(); drawLabels();
+  telemetry();
+  requestAnimationFrame(frame);
+}
+
+/* ---- UI wiring ---- */
+const $ = (id) => document.getElementById(id);
+function refreshBadges() {
+  $('bT').textContent = S.T.toFixed(0) + ' N';
+  $('bMu').textContent = S.muG.toFixed(1) + ' g/m';
+  $('bN').textContent = S.n;
+  $('bA').textContent = S.Acm.toFixed(1) + ' cm';
+}
+$('sT').oninput = (e) => { S.T = +e.target.value; refreshBadges(); };
+$('sMu').oninput = (e) => { S.muG = +e.target.value; refreshBadges(); };
+$('sN').oninput = (e) => { S.n = Math.round(+e.target.value); refreshBadges(); };
+$('sA').oninput = (e) => { S.Acm = +e.target.value; refreshBadges(); };
+$('cGrid').onchange = (e) => { S.showGrid = e.target.checked; };
+$('cTrav').onchange = (e) => { S.showTrav = e.target.checked; };
+$('cNodes').onchange = (e) => { S.showNodes = e.target.checked; };
+$('cEnv').onchange = (e) => { S.showEnv = e.target.checked; };
+function applyPreset(v) {
+  if (v === 'fund') { S.T = 80; S.muG = 1.0; S.n = 1; S.Acm = 3.0; }
+  if (v === 'second') { S.T = 80; S.muG = 1.0; S.n = 2; S.Acm = 3.0; }
+  if (v === 'third') { S.T = 80; S.muG = 1.0; S.n = 3; S.Acm = 3.0; }
+  if (v === 'high') { S.T = 180; S.muG = 0.3; S.n = 4; S.Acm = 2.0; }
+  $('sT').value = S.T; $('sMu').value = S.muG; $('sN').value = S.n; $('sA').value = S.Acm;
+  refreshBadges();
+  S.t = 0; S.phi = 0; S.acc = 0;
+}
+$('selPreset').onchange = (e) => { applyPreset(e.target.value); };
+$('btnPlay').onclick = (e) => {
+  S.running = !S.running;
+  e.target.textContent = S.running ? '⏸ Pause' : '▶ Play';
+};
+$('btnStep').onclick = () => { S.running = false; $('btnPlay').textContent = '▶ Play'; stepPhysics(DT); };
+$('selSpeed').onchange = (e) => { S.speed = +e.target.value; };
+$('btnReset').onclick = () => {
+  S.t = 0; S.phi = 0; S.acc = 0;
+  S.running = true; $('btnPlay').textContent = '⏸ Pause';
+};
+
+fitCanvas();
+refreshBadges();
+requestAnimationFrame((t) => { S.last = t; requestAnimationFrame(frame); });
+</script>
+</body>
+</html>
