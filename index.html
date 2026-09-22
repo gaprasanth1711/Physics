@@ -85,6 +85,36 @@
     #aiDrawer { min-height: 0; }
     @media (max-width: 1023px) { #aiDrawer { max-height: 40vh; } }
     body.view-mobile #aiDrawer { max-height: 40vh; }
+    /* Mobile tab bar + one-panel-per-screen stacked layouts */
+    #mobileTabs { display: none; }
+    .mtab-btn { color: #94a3b8; min-height: 48px; }
+    .mtab-btn.tab-active { color: #67e8f9; background: rgba(6,182,214,0.12); }
+    @media (max-width: 1023px) {
+      #mobileTabs { display: grid; }
+      body[data-mtab="sims"] #stageSection, body[data-mtab="sims"] #aiDrawer { display: none; }
+      body[data-mtab="lab"] #simSidebar, body[data-mtab="lab"] #aiDrawer, body[data-mtab="lab"] #dynamicControlsPanel { display: none; }
+      body[data-mtab="tune"] #simSidebar, body[data-mtab="tune"] #aiDrawer, body[data-mtab="tune"] #canvasContainer, body[data-mtab="tune"] #simControlBar { display: none; }
+      body[data-mtab="tutor"] #simSidebar, body[data-mtab="tutor"] #stageSection { display: none; }
+      body[data-mtab="sims"] #simSidebar { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+      body[data-mtab="sims"] #simNavList { flex-direction: column; overflow-y: auto; }
+      body[data-mtab="tune"] #dynamicControlsPanel { flex: 1 1 auto; min-height: 0; max-height: none; }
+      body[data-mtab="tutor"] #aiDrawer { flex: 1 1 auto; min-height: 0; max-height: none; }
+    }
+    body.view-mobile #mobileTabs { display: grid !important; }
+    body.view-mobile[data-mtab="sims"] #stageSection, body.view-mobile[data-mtab="sims"] #aiDrawer { display: none; }
+    body.view-mobile[data-mtab="lab"] #simSidebar, body.view-mobile[data-mtab="lab"] #aiDrawer, body.view-mobile[data-mtab="lab"] #dynamicControlsPanel { display: none; }
+    body.view-mobile[data-mtab="tune"] #simSidebar, body.view-mobile[data-mtab="tune"] #aiDrawer, body.view-mobile[data-mtab="tune"] #canvasContainer, body.view-mobile[data-mtab="tune"] #simControlBar { display: none; }
+    body.view-mobile[data-mtab="tutor"] #simSidebar, body.view-mobile[data-mtab="tutor"] #stageSection { display: none; }
+    body.view-mobile[data-mtab="sims"] #simSidebar { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+    body.view-mobile[data-mtab="sims"] #simNavList { flex-direction: column; overflow-y: auto; }
+    body.view-mobile[data-mtab="tune"] #dynamicControlsPanel { flex: 1 1 auto; min-height: 0; max-height: none; }
+    body.view-mobile[data-mtab="tutor"] #aiDrawer { flex: 1 1 auto; min-height: 0; max-height: none; }
+    /* Readability on small screens */
+    @media (max-width: 640px) {
+      #hudMetrics { font-size: 12px; }
+      #hudSimTitle { font-size: 12px; }
+      #dynamicControlsPanel { font-size: 13px; }
+    }
     body.view-desktop main { flex-direction: row !important; }
     body.view-desktop #simNavList { flex-direction: column !important; }
     body.view-desktop main > aside:first-child { width: 16rem !important; min-width: 16rem; }
@@ -132,7 +162,7 @@
   <main class="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden relative">
 
     <!-- Left Sidebar: Simulations Switcher -->
-    <aside class="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-space-900/60 p-3 flex lg:flex-col justify-between shrink-0 overflow-x-auto lg:overflow-y-auto">
+    <aside id="simSidebar" class="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-space-900/60 p-3 flex lg:flex-col justify-between shrink-0 overflow-x-auto lg:overflow-y-auto">
       <div>
         <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-2 hidden lg:block">Simulations Hub</div>
         <div class="px-1 mb-2">
@@ -286,10 +316,10 @@
     </aside>
 
     <!-- Center Stage: Canvas & Simulation Environment -->
-    <section class="flex-1 min-h-0 flex flex-col min-w-0 bg-space-950 relative overflow-hidden">
+    <section id="stageSection" class="flex-1 min-h-0 flex flex-col min-w-0 bg-space-950 relative overflow-hidden">
       
       <!-- Top Simulation Control Bar -->
-      <div class="p-3 bg-space-900/40 border-b border-slate-800/70 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div id="simControlBar" class="p-3 bg-space-900/40 border-b border-slate-800/70 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2">
           <button id="btnPlayPause" class="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition shadow">
             <i data-lucide="play" id="iconPlayPause" class="w-3.5 h-3.5"></i>
@@ -426,6 +456,14 @@
     </aside>
 
   </main>
+
+  <!-- Mobile tab bar: one panel per screen in stacked layouts -->
+  <nav id="mobileTabs" class="shrink-0 border-t border-slate-800/90 bg-space-900/95 px-2 py-1.5 grid grid-cols-4 gap-1">
+    <button data-mtab="lab" class="mtab-btn tab-active flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[11px] font-medium"><i data-lucide="flask-conical" class="w-4 h-4"></i><span>Lab</span></button>
+    <button data-mtab="sims" class="mtab-btn flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[11px] font-medium"><i data-lucide="layout-grid" class="w-4 h-4"></i><span>Sims</span></button>
+    <button data-mtab="tune" class="mtab-btn flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[11px] font-medium"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i><span>Tune</span></button>
+    <button data-mtab="tutor" class="mtab-btn flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[11px] font-medium"><i data-lucide="bot" class="w-4 h-4"></i><span>Tutor</span></button>
+  </nav>
 
   <div id="embedModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-space-900 border border-slate-700 rounded-2xl max-w-xl w-full p-5 shadow-2xl space-y-4">
@@ -4231,6 +4269,7 @@ const ohmsSim = {
       }
 
       showToast(`Switched to ${sim.name}`, 'info');
+      if ((window.matchMedia && window.matchMedia('(max-width:1023px)').matches) || document.body.classList.contains('view-mobile')) setMtab('lab');
       lucide.createIcons();
     }
 
@@ -4273,6 +4312,21 @@ const ohmsSim = {
     document.getElementById('speedSelect').addEventListener('change', (e) => {
       state.speed = parseFloat(e.target.value) || 1;
     });
+
+    // Mobile tabs: one panel per screen in stacked layouts
+    function setMtab(tab) {
+      document.body.dataset.mtab = tab;
+      document.querySelectorAll('#mobileTabs .mtab-btn').forEach(b => {
+        b.classList.toggle('tab-active', b.dataset.mtab === tab);
+      });
+      resizeCanvas();
+      if (simulations[state.activeSim]?.onResize) simulations[state.activeSim].onResize();
+      lucide.createIcons();
+    }
+    document.querySelectorAll('#mobileTabs .mtab-btn').forEach(b => {
+      b.addEventListener('click', () => setMtab(b.dataset.mtab));
+    });
+    if (!document.body.dataset.mtab) document.body.dataset.mtab = 'lab';
 
     // View mode (Auto / Desktop / Mobile) with persistence
     function applyViewMode(mode) {
