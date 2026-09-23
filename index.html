@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRASANTH AI - Interactive Physics Simulations Hub</title>
+  <title>PRASANTH PHYSICS SIMULATIONS - Interactive Physics Simulations Hub</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -151,7 +151,7 @@
       </div>
       <div>
         <h1 class="font-bold text-base md:text-lg tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-400">
-          PRASANTH AI
+          PRASANTH PHYSICS SIMULATIONS
         </h1>
         <p class="text-[10px] text-slate-400 font-mono tracking-wide uppercase">Interactive Physics & Simulation Lab</p>
       </div>
@@ -170,7 +170,7 @@
       </button>
       <button id="btnToggleAiDrawer" class="relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-lg shadow-md shadow-cyan-500/20 transition">
         <i data-lucide="sparkles" class="w-3.5 h-3.5 animate-pulse"></i>
-        <span>PRASANTH AI TUTOR</span>
+        <span>PRASANTH PHYSICS SIMULATIONS TUTOR</span>
         <span class="h-2 w-2 rounded-full bg-emerald-400 animate-ping absolute -top-0.5 -right-0.5"></span>
       </button>
     </div>
@@ -436,10 +436,10 @@
             <i data-lucide="bot" class="w-4 h-4"></i>
           </div>
           <div>
-            <h2 class="text-xs font-semibold text-white">PRASANTH AI TUTOR</h2>
+            <h2 class="text-xs font-semibold text-white">PRASANTH PHYSICS SIMULATIONS TUTOR</h2>
             <div class="text-[10px] text-cyan-400 font-mono flex items-center gap-1">
               <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              prasanth-ai-tutor
+              prasanth-physics-simulations-tutor
             </div>
           </div>
         </div>
@@ -1899,13 +1899,15 @@
       finite(v) { return isFinite(v) && Math.abs(v) < 1500; },
       isReal(r) { return this.finite(r.v) && r.v > 0 && !r.inf; },
       cases() {
+        const fa = Math.max(50, Math.abs(this.f));
+        const R = (m) => Math.round(m * fa / 10) * 10;
         if (this.device === 'convexLens') return [
-          ["Object at infinity", 4000], ["Beyond 2F", 360], ["At 2F", 240],
-          ["Between F and 2F", 170], ["At F", 120], ["Inside F (O–F)", 70]
+          ["Object at infinity", 4000], ["Beyond 2F", R(3)], ["At 2F", R(2)],
+          ["Between F and 2F", R(1.4)], ["At F", R(1)], ["Inside F (O–F)", R(0.6)]
         ];
         if (this.device === 'concaveMirror') return [
-          ["Object at infinity", 4000], ["Beyond C (2F)", 360], ["At C (2F)", 240],
-          ["Between F and C", 170], ["At F", 120], ["Inside F (P–F)", 70]
+          ["Object at infinity", 4000], ["Beyond C (2F)", R(3)], ["At C (2F)", R(2)],
+          ["Between F and C", R(1.4)], ["At F", R(1)], ["Inside F (P–F)", R(0.6)]
         ];
         if (this.device === 'concaveLens') return [["Object at infinity", 4000], ["Finite object", 300]];
         return [["Object at infinity", 4000], ["Finite object", 300]];
@@ -1944,8 +1946,9 @@
           ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 36, axisY, cx, axisY + 130);
           ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 36, axisY, cx, axisY + 130);
         } else if (this.device === 'concaveLens') {
-          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx - 28, axisY, cx, axisY + 130);
-          ctx.moveTo(cx, axisY - 130); ctx.quadraticCurveTo(cx + 28, axisY, cx, axisY + 130);
+          // thin centre, thick edges: edges at ±18, bow inward to centre
+          ctx.moveTo(cx - 18, axisY - 130); ctx.quadraticCurveTo(cx + 18, axisY, cx - 18, axisY + 130);
+          ctx.moveTo(cx + 18, axisY - 130); ctx.quadraticCurveTo(cx - 18, axisY, cx + 18, axisY + 130);
         } else if (this.device === 'concaveMirror') {
           const mc = needMirrorCurve();
           ctx.arc(cx - mc.R, axisY, mc.R, -mc.half, mc.half);
@@ -2122,17 +2125,19 @@
         }
         ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
         const dev = this.deviceLabel();
-        ctx.fillText(`${dev} · 1/f = 1/v − 1/u (lens) · mirror: 1/f = 1/v + 1/u`, 14, h - 14);
+        ctx.fillText(`${dev} · magnitudes (cm): 1/f = 1/do + 1/di, m = -di/do`, 14, h - 14);
       },
       getMetrics() {
         const r = this.img();
         const nat = !this.finite(r.v) ? 'at ∞' : (!r.inf && r.v > 0 ? `Real ${r.m < 0 ? 'inverted' : 'erect'}` : 'Virtual erect');
         const s = this.autoScreen ? (this.finite(r.v) && r.v > 0 && !r.inf ? r.v : NaN) : this.screenDist;
         const focus = (this.finite(r.v) && r.v > 0 && !r.inf) ? Math.max(0, 1 - Math.abs(s - r.v) / 300) : 0;
+        const toCm = (px) => (px / 20).toFixed(1) + 'cm';
         return [
           { label: "Device", val: this.deviceLabel() },
-          { label: "Object u", val: r.inf ? "∞" : `${this.objDist | 0}px` },
-          { label: "Image v", val: !this.finite(r.v) ? "∞" : `${r.v.toFixed(0)}px` },
+          { label: "Object u", val: r.inf ? "∞" : toCm(this.objDist) },
+          { label: "Focal |f|", val: toCm(this.f) },
+          { label: "Image v", val: !this.finite(r.v) ? "∞" : toCm(r.v) },
           { label: "Magn. m", val: !isFinite(r.m) ? "∞" : r.m.toFixed(2) },
           { label: "Nature", val: nat },
           { label: "Screen focus", val: `${(focus * 100).toFixed(0)}%` }
@@ -2160,13 +2165,13 @@
               <div class="flex justify-between mb-1 text-slate-300"><span>Position case</span></div>
               <select id="ctrlRayPos" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2 py-1 focus:outline-none focus:border-cyan-400">${posOpts}</select>
             </div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Object dist.</span><span id="valRayObj" class="font-mono text-cyan-400">${this.objDist > 900 ? '∞' : this.objDist + 'px'}</span></div>
-            <input type="range" id="ctrlRayObj" min="60" max="520" value="${Math.min(this.objDist, 520)}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Focal |f|</span><span id="valRayF" class="font-mono text-cyan-400">${this.f}px</span></div>
-            <input type="range" id="ctrlRayF" min="50" max="200" value="${this.f}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Screen</span><span id="valRayScr" class="font-mono text-cyan-400">${this.autoScreen ? 'auto' : this.screenDist + 'px'}</span></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Object dist.</span><span id="valRayObj" class="font-mono text-cyan-400">${this.objDist > 900 ? '∞' : (this.objDist/20).toFixed(1) + 'cm'}</span></div>
+            <input type="range" id="ctrlRayObj" min="60" max="520" step="10" value="${Math.min(this.objDist, 520)}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Focal |f|</span><span id="valRayF" class="font-mono text-cyan-400">${(this.f/20).toFixed(1)}cm</span></div>
+            <input type="range" id="ctrlRayF" min="50" max="200" step="10" value="${this.f}" class="w-full"></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Screen</span><span id="valRayScr" class="font-mono text-cyan-400">${this.autoScreen ? 'auto' : (this.screenDist/20).toFixed(1) + 'cm'}</span></div>
             <div class="flex gap-1.5">
-              <input type="range" id="ctrlRayScr" min="40" max="560" value="${this.screenDist}" class="w-full" ${this.autoScreen ? 'disabled' : ''}>
+              <input type="range" id="ctrlRayScr" min="40" max="560" step="10" value="${this.screenDist}" class="w-full" ${this.autoScreen ? 'disabled' : ''}>
               <button id="ctrlRayAuto" class="px-2 py-1 rounded-lg border text-[11px] font-medium ${this.autoScreen ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}" title="Auto-follow screen">Auto</button>
             </div></div>
           </div>`;
@@ -2184,15 +2189,15 @@
         });
         document.getElementById('ctrlRayObj')?.addEventListener('input', (e) => {
           this.objDist = parseFloat(e.target.value);
-          document.getElementById('valRayObj').textContent = `${this.objDist}px`;
+          document.getElementById('valRayObj').textContent = `${(this.objDist/20).toFixed(1)}cm`;
         });
         document.getElementById('ctrlRayF')?.addEventListener('input', (e) => {
           this.f = parseFloat(e.target.value);
-          document.getElementById('valRayF').textContent = `${this.f}px`;
+          document.getElementById('valRayF').textContent = `${(this.f/20).toFixed(1)}cm`;
         });
         document.getElementById('ctrlRayScr')?.addEventListener('input', (e) => {
           this.screenDist = parseFloat(e.target.value);
-          document.getElementById('valRayScr').textContent = `${this.screenDist}px`;
+          document.getElementById('valRayScr').textContent = `${(this.screenDist/20).toFixed(1)}cm`;
         });
         document.getElementById('ctrlRayAuto')?.addEventListener('click', (e) => {
           this.autoScreen = !this.autoScreen;
@@ -4533,7 +4538,7 @@ const ohmsSim = {
       } else if (simKey === 'ohms') {
         hudHintText.textContent = "Slide voltage and resistance — bulb brightness follows power P = VI.";
       } else {
-        hudHintText.textContent = "Use real-time sliders below or ask PRASANTH AI TUTOR to explain the behavior.";
+        hudHintText.textContent = "Use real-time sliders below or ask PRASANTH PHYSICS SIMULATIONS TUTOR to explain the behavior.";
       }
 
       showToast(`Switched to ${sim.name}`, 'info');
@@ -4941,7 +4946,7 @@ Rules:
     function buildLocalAnswer(sim, query) {
       const law = TUTOR_KNOWLEDGE[state.activeSim] || "Adjust the sliders and watch the live readings change.";
       const metrics = sim.getMetrics ? sim.getMetrics().map(m => `* ${m.label}: **${m.val}**`).join('\n') : '';
-      return `**PRASANTH AI TUTOR (offline mode)** — answering from your live simulation since no AI key is set on this host.\n\nYou asked: "${query.length > 140 ? query.slice(0, 140) + '…' : query}"\n\n${law}\n\n**Live right now in ${sim.name}:**\n${metrics}\n\nTry this: change one slider, watch which reading moves, then ask me *why* it moved that way.`;
+      return `**PRASANTH PHYSICS SIMULATIONS TUTOR (offline mode)** — answering from your live simulation since no AI key is set on this host.\n\nYou asked: "${query.length > 140 ? query.slice(0, 140) + '…' : query}"\n\n${law}\n\n**Live right now in ${sim.name}:**\n${metrics}\n\nTry this: change one slider, watch which reading moves, then ask me *why* it moved that way.`;
     }
     aiChatForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -5006,7 +5011,7 @@ Rules:
     const btnCopyEmbed = document.getElementById('btnCopyEmbed');
 
     btnOpenEmbed.addEventListener('click', () => {
-      embedIframeText.value = `<iframe \n  src="${window.location.href}" \n  width="100%" \n  height="720px" \n  style="border: none; border-radius: 16px; overflow: hidden;" \n  title="PRASANTH AI Interactive Simulations">\n</iframe>`;
+      embedIframeText.value = `<iframe \n  src="${window.location.href}" \n  width="100%" \n  height="720px" \n  style="border: none; border-radius: 16px; overflow: hidden;" \n  title="PRASANTH PHYSICS SIMULATIONS Interactive Simulations">\n</iframe>`;
       embedModal.classList.remove('hidden');
     });
 
