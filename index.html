@@ -168,6 +168,16 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
+    /* ---- Lab shell reskin: flat academic surfaces, quiet chrome ---- */
+    #simSidebar, #aiDrawer, #dynamicControlsPanel, #guideBar { border-color: rgba(148, 163, 184, 0.16); }
+    #simControlBar { background: rgba(15, 23, 42, 0.92); }
+    .sim-nav-btn { border-radius: 8px; }
+    #dynamicControlsPanel input[type="range"] { cursor: pointer; }
+    #guideBar { background: rgba(15, 23, 42, 0.55); }
+    #crumbTrail { letter-spacing: 0.02em; }
+    @media (max-width: 1023px) {
+      body[data-mtab="lab"] #guideBar { display: block; }
+    }
   </style>
 </head>
 <body class="bg-space-950 text-slate-100 h-screen flex flex-col font-sans overflow-hidden selection:bg-cyan-500 selection:text-black">
@@ -455,6 +465,15 @@
       <div id="telePanel" class="hidden border-t border-slate-800/80 bg-space-900/60 px-3.5 py-2.5 shrink-0">
         <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400 mb-1.5">Live readings — scroll down for more</div>
         <div id="teleList" class="grid grid-cols-1 gap-x-4 gap-y-1 text-[12px] font-mono"></div>
+      </div>
+
+      <!-- Lab guide: derived from existing sim name, hint and first preset (no new claims) -->
+      <div id="guideBar" class="border-t border-slate-800/80 bg-space-900/40 px-3.5 py-2 text-xs leading-relaxed shrink-0">
+        <div id="crumbTrail" class="font-mono text-[11px] text-slate-400 mb-1">Physics › All › Projectile Dynamics</div>
+        <div class="flex flex-wrap gap-x-5 gap-y-1">
+          <span class="text-slate-300"><span class="text-slate-500">Observe: </span><span id="guideWhat">Adjust and observe the live readings.</span></span>
+          <span class="text-slate-300"><span class="text-slate-500">Try: </span><span id="guideTry" class="text-cyan-300">Earth Standard</span></span>
+        </div>
       </div>
 
       <!-- Bottom Parameter Sliders & Physical Controls -->
@@ -4671,6 +4690,19 @@ const ohmsSim = {
       } else {
         hudHintText.textContent = "Use real-time sliders below or ask PRASANTH PHYSICS SIMULATIONS TUTOR to explain the behavior.";
       }
+
+      // Lab guide bar: breadcrumb + observe/try, derived from existing name, hint and presets
+      try {
+        const parts = String(sim.name || '').split('·');
+        const cls = parts.length > 1 ? parts[parts.length - 1].trim() : 'All';
+        const title = parts[0].trim();
+        const crumb = document.getElementById('crumbTrail');
+        if (crumb) crumb.textContent = `Physics › ${cls} › ${title}`;
+        const gw = document.getElementById('guideWhat');
+        if (gw) gw.textContent = document.getElementById('hudHintText')?.textContent || 'Adjust and observe the live readings.';
+        const gt = document.getElementById('guideTry');
+        if (gt) gt.textContent = Object.keys(sim.presets || {})[0] || 'Default setup';
+      } catch (e) {}
 
       showToast(`Switched to ${sim.name}`, 'info');
       if ((window.matchMedia && window.matchMedia('(max-width:1023px)').matches) || document.body.classList.contains('view-mobile')) setMtab('lab');
