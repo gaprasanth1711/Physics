@@ -1571,25 +1571,17 @@
       name: "Electrostatics: Point-Charge Field",
       q1: 5, q2: -5, // micro-coulomb
       separation: 220, // px between charges
+      showEq: true,
+      useQ2: true,
       testTrail: [],
       init() { this.reset(); },
       reset() { this.testTrail = []; },
-      update(dt) {
-        // animate a test probe orbiting mid-field for intuition
-        const t = performance.now() / 1000;
-        const w = canvas.width / dpr, h = canvas.height / dpr;
-        const cx = w / 2, cy = h / 2;
-        const px = cx + Math.cos(t * 0.6) * (this.separation * 0.9);
-        const py = cy + Math.sin(t * 0.9) * (h * 0.28);
-        if (state.showTrails) {
-          this.testTrail.push({ x: px, y: py });
-          if (this.testTrail.length > 220) this.testTrail.shift();
-        }
-      },
+      update(dt) {},
       fieldAt(x, y) {
         const w = canvas.width / dpr, h = canvas.height / dpr;
-        const c1 = { x: w / 2 - this.separation / 2, y: h / 2 };
-        const c2 = { x: w / 2 + this.separation / 2, y: h / 2 };
+        const c1 = { x: w / 2 - (this.useQ2 ? this.separation / 2 : 0), y: h / 2 };
+        const c2 = { x: w / 2 + (this.useQ2 ? this.separation / 2 : 0), y: h / 2 };
+        const q2eff = this.useQ2 ? this.q2 : 0;
         const k = 900; // scaled Coulomb constant for viz
         function comp(q, c) {
           const dx = x - c.x, dy = y - c.y;
@@ -1598,36 +1590,63 @@
           const mag = k * q / r2;
           return { fx: mag * dx / r, fy: mag * dy / r };
         }
-        const a = comp(this.q1, c1), b = comp(this.q2, c2);
+        const a = comp(this.q1, c1), b = comp(q2eff, c2);
         return { fx: a.fx + b.fx, fy: a.fy + b.fy, c1, c2 };
       },
       render() {
         const w = canvas.width / dpr, h = canvas.height / dpr;
-        const step = 46;
-        // field vector grid
+        const step = 52;
+        // field vectors: large white arrows like reference, black UI background
         for (let gx = step / 2; gx < w; gx += step) {
           for (let gy = step / 2; gy < h; gy += step) {
             const f = this.fieldAt(gx, gy);
             const mag = Math.hypot(f.fx, f.fy) || 1;
-            const len = Math.min(16, 4 + mag * 0.35);
+            const len = Math.min(30, 14 + mag * 0.5);
             const ang = Math.atan2(f.fy, f.fx);
-            ctx.strokeStyle = 'rgba(56,189,248,0.55)';
-            ctx.lineWidth = 1.2;
+            const ex = gx + Math.cos(ang) * len, ey = gy + Math.sin(ang) * len;
+            ctx.strokeStyle = '#e8eef7';
+            ctx.lineWidth = 3; ctx.lineCap = 'round';
             ctx.beginPath();
             ctx.moveTo(gx, gy);
-            ctx.lineTo(gx + Math.cos(ang) * len, gy + Math.sin(ang) * len);
+            ctx.lineTo(ex, ey);
             ctx.stroke();
+            const hs = 8, ha = 0.45;
+            ctx.fillStyle = '#e8eef7';
+            ctx.beginPath();
+            ctx.moveTo(ex, ey);
+            ctx.lineTo(ex - hs * Math.cos(ang - ha), ey - hs * Math.sin(ang - ha));
+            ctx.lineTo(ex - hs * Math.cos(ang + ha), ey - hs * Math.sin(ang + ha));
+            ctx.closePath(); ctx.fill();
           }
         }
         const { c1, c2 } = this.fieldAt(w / 2, h / 2);
-        // test probe trail
-        if (state.showTrails && this.testTrail.length > 1) {
-          ctx.strokeStyle = 'rgba(52,211,153,0.7)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(this.testTrail[0].x, this.testTrail[0].y);
-          for (let p of this.testTrail) ctx.lineTo(p.x, p.y);
-          ctx.stroke();
+        // equipotential surfaces (green contours, V = kq/r)
+        if (this.showEq) {
+          try {
+            const cell = 14, nx = Math.ceil(w / cell), ny = Math.ceil(h / cell);
+            const V = [];
+            for (let j = 0; j <= ny; j++) { V[j] = []; for (let i = 0; i <= nx; i++) {
+              const px = i * cell, py = j * cell;
+              const d1 = Math.max(6, Math.hypot(px - c1.x, py - c1.y)) / 20 / 100;
+              const d2 = Math.max(6, Math.hypot(px - c2.x, py - c2.y)) / 20 / 100;
+              const q2e = this.useQ2 ? this.q2 : 0;
+              V[j][i] = 9e9 * (this.q1 * 1e-6) / d1 + 9e9 * (q2e * 1e-6) / d2;
+            }}
+            const qm = Math.max(1, Math.abs(this.q1), Math.abs(this.q2));
+            const lv = [];
+            [0.15, 0.3, 0.6, 1.2, 2.4].forEach(k => { lv.push(k * 1e6 * qm / 5); lv.push(-k * 1e6 * qm / 5); });
+            ctx.save(); ctx.strokeStyle = 'rgba(34,197,94,.7)'; ctx.lineWidth = 1.4;
+            for (const L of lv) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+              const a = V[j][i] - L, b = V[j][i+1] - L, c = V[j+1][i+1] - L, d = V[j+1][i] - L;
+              const pts = [];
+              if (a * b < 0) pts.push([(i + Math.abs(a) / (Math.abs(a) + Math.abs(b))) * cell, j * cell]);
+              if (b * c < 0) pts.push([(i+1) * cell, (j + Math.abs(b) / (Math.abs(b) + Math.abs(c))) * cell]);
+              if (d * c < 0) pts.push([(i + Math.abs(d) / (Math.abs(d) + Math.abs(c))) * cell, (j+1) * cell]);
+              if (a * d < 0) pts.push([i * cell, (j + Math.abs(a) / (Math.abs(a) + Math.abs(d))) * cell]);
+              if (pts.length === 2) { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); ctx.lineTo(pts[1][0], pts[1][1]); ctx.stroke(); }
+            }
+            ctx.restore();
+          } catch (e) {}
         }
         // charges
         const drawCharge = (c, q, col) => {
@@ -1639,16 +1658,27 @@
           ctx.fillText((q >= 0 ? '+' : '') + q + 'µC', c.x - 20, c.y - 20);
         };
         drawCharge(c1, this.q1, this.q1 >= 0 ? '#ef4444' : '#38bdf8');
-        drawCharge(c2, this.q2, this.q2 >= 0 ? '#ef4444' : '#38bdf8');
+        if (this.useQ2) drawCharge(c2, this.q2, this.q2 >= 0 ? '#ef4444' : '#38bdf8');
         ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
-        const r_m = (this.separation / 90).toFixed(1);
-        const F = (9e9 * Math.abs(this.q1 * this.q2) * 1e-12 / Math.max(0.2, r_m * r_m));
-        ctx.fillText(`F = k|q1 q2|/r² ≈ ${F.toExponential(2)} N  (r ≈ ${r_m} m scaled)`, 14, h - 14);
+        const r_cm = (this.separation / 20).toFixed(1);
+        const r_m = (this.separation / 20) / 100;
+        const F = (9e9 * Math.abs(this.q1 * this.q2) * 1e-12 / Math.max(1e-8, r_m * r_m));
+        ctx.fillText(`r = ${r_cm}cm · F = k|q1 q2|/r² ≈ ${F.toExponential(2)} N`, 14, h - 14);
       },
       getMetrics() {
+        const r_cm = this.separation / 20, r_m = r_cm / 100;
+        if (!this.useQ2) return [
+          { label: "Mode", val: "Single charge (q1 only)" },
+          { label: "Charge q1", val: `${this.q1} µC` },
+          { label: "Law", val: "E = kq/r², V = kq/r" },
+          { label: "CBSE", val: "Ch-1 Electrostatics" }
+        ];
+        const F = 9e9 * Math.abs(this.q1 * this.q2) * 1e-12 / Math.max(1e-8, r_m * r_m);
         return [
           { label: "Charge q1", val: `${this.q1} µC` },
           { label: "Charge q2", val: `${this.q2} µC` },
+          { label: "Separation r", val: `${r_cm.toFixed(1)} cm` },
+          { label: "Force F", val: `${F.toExponential(2)} N ${this.q1 * this.q2 < 0 ? '(attractive)' : '(repulsive)'}` },
           { label: "Law", val: "F = k q1 q2 / r²" },
           { label: "Field", val: "E = F / q0" },
           { label: "CBSE", val: "Ch-1 Electrostatics" }
@@ -1665,15 +1695,41 @@
             <div><div class="flex justify-between mb-1 text-slate-300"><span>Charge q1 (µC)</span><span id="valQ1" class="font-mono text-cyan-400">${this.q1}</span></div>
             <input type="range" id="ctrlQ1" min="-10" max="10" step="1" value="${this.q1}" class="w-full"></div>
             <div><div class="flex justify-between mb-1 text-slate-300"><span>Charge q2 (µC)</span><span id="valQ2" class="font-mono text-cyan-400">${this.q2}</span></div>
-            <input type="range" id="ctrlQ2" min="-10" max="10" step="1" value="${this.q2}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Separation</span><span id="valSep" class="font-mono text-cyan-400">${this.separation}px</span></div>
-            <input type="range" id="ctrlSep" min="120" max="340" value="${this.separation}" class="w-full"></div>
-          </div>`;
+            <input type="range" id="ctrlQ2" min="-10" max="10" step="1" value="${this.q2}" class="w-full" ${this.useQ2 ? '' : 'disabled'}></div>
+            <div><div class="flex justify-between mb-1 text-slate-300"><span>Separation</span><span id="valSep" class="font-mono text-cyan-400">${(this.separation/20).toFixed(1)}cm</span></div>
+            <input type="range" id="ctrlSep" min="80" max="480" step="10" value="${this.separation}" class="w-full" ${this.useQ2 ? '' : 'disabled'}></div>
+          </div>
+          <label class="flex items-center gap-2 mt-2 text-xs text-slate-300 cursor-pointer">
+            <input type="checkbox" id="ctrlQ2use" ${this.useQ2 ? 'checked' : ''} class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+            <span>Include second charge</span>
+          </label>
+          <label class="flex items-center gap-2 mt-2 text-xs text-slate-300 cursor-pointer">
+            <input type="checkbox" id="ctrlEq" ${this.showEq ? 'checked' : ''} class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+            <span>Equipotential surfaces</span>
+          </label>
+          <div class="mt-2 text-[11px] font-mono text-slate-400" id="forceSteps"></div>`;
       },
       bindControls() {
-        document.getElementById('ctrlQ1')?.addEventListener('input', (e) => { this.q1 = parseFloat(e.target.value); document.getElementById('valQ1').textContent = this.q1; });
-        document.getElementById('ctrlQ2')?.addEventListener('input', (e) => { this.q2 = parseFloat(e.target.value); document.getElementById('valQ2').textContent = this.q2; });
-        document.getElementById('ctrlSep')?.addEventListener('input', (e) => { this.separation = parseFloat(e.target.value); document.getElementById('valSep').textContent = `${this.separation}px`; });
+        const steps = () => {
+          const el = document.getElementById('forceSteps');
+          if (!el) return;
+          if (!this.useQ2) { el.textContent = 'Single charge mode: E=kq/r², V=kq/r at probe.'; return; }
+          const r_cm = this.separation / 20, r_m = r_cm / 100;
+          const F = 9e9 * Math.abs(this.q1 * this.q2) * 1e-12 / Math.max(1e-8, r_m * r_m);
+          el.textContent = `F steps: r=${r_cm.toFixed(1)}cm=${r_m.toFixed(3)}m, F=9e9×${Math.abs(this.q1)}µC×${Math.abs(this.q2)}µC/r²=${F.toExponential(2)}N ${this.q1 * this.q2 < 0 ? 'attractive' : 'repulsive'}`;
+        };
+        steps();
+        document.getElementById('ctrlQ1')?.addEventListener('input', (e) => { this.q1 = parseFloat(e.target.value); document.getElementById('valQ1').textContent = this.q1; steps(); });
+        document.getElementById('ctrlQ2')?.addEventListener('input', (e) => { this.q2 = parseFloat(e.target.value); document.getElementById('valQ2').textContent = this.q2; steps(); });
+        document.getElementById('ctrlSep')?.addEventListener('input', (e) => { this.separation = parseFloat(e.target.value); document.getElementById('valSep').textContent = `${(this.separation/20).toFixed(1)}cm`; steps(); });
+        document.getElementById('ctrlEq')?.addEventListener('change', (e) => { this.showEq = e.target.checked; });
+        document.getElementById('ctrlQ2use')?.addEventListener('change', (e) => {
+          this.useQ2 = e.target.checked;
+          const q2r = document.getElementById('ctrlQ2'), sr = document.getElementById('ctrlSep');
+          if (q2r) q2r.disabled = !this.useQ2;
+          if (sr) sr.disabled = !this.useQ2;
+          steps();
+        });
       }
     };
 
@@ -1900,7 +1956,7 @@
       isReal(r) { return this.finite(r.v) && r.v > 0 && !r.inf; },
       cases() {
         const fa = Math.max(50, Math.abs(this.f));
-        const R = (m) => Math.round(m * fa / 10) * 10;
+        const R = (m) => Math.max(60, Math.round(m * fa / 10) * 10);
         if (this.device === 'convexLens') return [
           ["Object at infinity", 4000], ["Beyond 2F", R(3)], ["At 2F", R(2)],
           ["Between F and 2F", R(1.4)], ["At F", R(1)], ["Inside F (O–F)", R(0.6)]
@@ -1924,6 +1980,7 @@
         const fa = Math.abs(f);
         const r = this.img();
         const objH = 64;
+        if (!mirror && this.objDist < 60) this.objDist = 60; // keep object out of lens glass
         const objX = cx - Math.min(this.objDist, 900);
         // bench
         ctx.strokeStyle = 'rgba(148,163,184,0.6)'; ctx.lineWidth = 2;
