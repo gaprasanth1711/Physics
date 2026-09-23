@@ -1915,7 +1915,8 @@
       deviceLabel() {
         return { convexLens: 'Convex lens', concaveLens: 'Concave lens', concaveMirror: 'Concave mirror', convexMirror: 'Convex mirror' }[this.device];
       },
-      update(dt) {},
+      rayT: 0,
+      update(dt) { this.rayT = ((this.rayT || 0) + dt * 0.45) % 1; },
       render() {
         const w = canvas.width / dpr, h = canvas.height / dpr;
         const cx = w / 2, axisY = h * 0.44;
@@ -2083,6 +2084,44 @@
             const kind = `${real ? 'Real' : 'Virtual'} ${imgH < 0 ? 'inverted' : 'erect'} |m|=${Math.abs(r.m).toFixed(2)}`;
             ctx.fillText(kind, Math.min(Math.max(imgX + 10, 8), w - 190), imgTipY - 8);
           }
+          // animated photons: object -> optic -> image (real) or diverging end (virtual)
+          try {
+            const t0 = this.rayT || 0;
+            const dot = (x, y, col) => {
+              ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 10;
+              ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+              ctx.shadowBlur = 0;
+            };
+            const onPoly = (pts, t) => {
+              let L = [0];
+              for (let i = 1; i < pts.length; i++) L.push(L[i-1] + Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
+              const tot = L[L.length-1] || 1;
+              let d = (t % 1) * tot;
+              for (let i = 1; i < pts.length; i++) {
+                if (d <= L[i]) {
+                  const k = (d - L[i-1]) / Math.max(1e-6, L[i] - L[i-1]);
+                  return [pts[i-1][0] + (pts[i][0]-pts[i-1][0])*k, pts[i-1][1] + (pts[i][1]-pts[i-1][1])*k];
+                }
+              }
+              return pts[pts.length-1];
+            };
+            let endA, endB;
+            if (!mirror) {
+              endA = (f > 0 || r.v > 0) ? [imgX, imgTipY] : [cx + 320, hy + (hy - axisY) * 0.6];
+              endB = (r.v > 0) ? [imgX, imgTipY] : [cx + 200, axisY + (axisY - startY) * 0.6];
+            } else {
+              endA = (f > 0 && r.v > 0) ? [imgX, imgTipY] : [cx - 320, hy + (hy - axisY) * 0.6];
+              endB = (imgX < cx) ? [imgX, imgTipY] : [cx - 200, axisY + (axisY - startY) * 0.6];
+            }
+            const polyA = [[startX, hy], [cx, hy], endA];
+            const polyB = [[startX, startY], [cx, axisY], endB];
+            for (const [poly, col] of [[polyA, '#fde68a'], [polyB, '#fde68a']]) {
+              for (const off of [0, 0.33, 0.66]) {
+                const p = onPoly(poly, (t0 + off) % 1);
+                dot(p[0], p[1], col);
+              }
+            }
+          } catch (e) {}
         }
         // screen with real image focus
         const real = this.isReal(r);
