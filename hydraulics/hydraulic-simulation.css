@@ -1,0 +1,184 @@
+/* Hydraulic Lift & Braking System — standalone preview styles.
+   Scoped to .hs-app. Light scientific theme, no external assets. */
+.hs-app {
+  --hs-bg: #f4f7fb;
+  --hs-surface: #ffffff;
+  --hs-border: #d7e0ea;
+  --hs-text: #1c2b3a;
+  --hs-muted: #5b6b7d;
+  --hs-accent: #0b6bcb;
+  --hs-accent-dark: #095aab;
+  --hs-ok: #15803d;
+  --hs-ok-bg: #e7f6ec;
+  --hs-warn: #b45309;
+  --hs-warn-bg: #fef3e2;
+  --hs-bad: #b91c1c;
+  --hs-bad-bg: #fdecec;
+  --hs-radius: 10px;
+  --hs-space: 16px;
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--hs-bg);
+  color: var(--hs-text);
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+  line-height: 1.5;
+}
+.hs-app * { box-sizing: border-box; }
+
+.hs-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--hs-surface);
+  border: 1px solid var(--hs-border);
+  border-radius: var(--hs-radius);
+  padding: 14px 18px;
+  margin-bottom: 14px;
+}
+.hs-header h1 { font-size: 1.25rem; margin: 0 0 2px; letter-spacing: 0.01em; }
+.hs-header p { margin: 0; color: var(--hs-muted); font-size: 0.85rem; }
+
+.hs-transport { display: flex; gap: 10px; align-items: center; font-size: 0.85rem; }
+.hs-transport select { font-size: 0.85rem; }
+
+.hs-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.hs-tab {
+  appearance: none;
+  border: 1px solid var(--hs-border);
+  background: var(--hs-surface);
+  color: var(--hs-text);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hs-tab[aria-selected="true"] {
+  background: var(--hs-accent);
+  border-color: var(--hs-accent);
+  color: #fff;
+}
+.hs-tab:hover { border-color: var(--hs-accent); }
+
+.hs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(260px, 4fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 860px) { .hs-grid { grid-template-columns: 1fr; } }
+
+.hs-stage, .hs-panel, .hs-card {
+  background: var(--hs-surface);
+  border: 1px solid var(--hs-border);
+  border-radius: var(--hs-radius);
+  padding: 14px;
+}
+.hs-stage svg.diagram { width: 100%; height: auto; display: block; }
+.hs-panel h2, .hs-card h2 { font-size: 1rem; margin: 0 0 10px; }
+
+.hs-status {
+  margin-top: 10px;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.hs-status.ok { background: var(--hs-ok-bg); color: var(--hs-ok); border: 1px solid #bfe6cc; }
+.hs-status.bad { background: var(--hs-bad-bg); color: var(--hs-bad); border: 1px solid #f3c1c1; }
+.hs-status.idle { background: #eef2f7; color: var(--hs-muted); border: 1px solid var(--hs-border); }
+
+.hs-ctrl { margin-bottom: 12px; }
+.hs-ctrl label { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; }
+.hs-ctrl label output { font-weight: 700; color: var(--hs-accent-dark); font-variant-numeric: tabular-nums; }
+.hs-ctrl input[type="range"] { width: 100%; min-height: 32px; accent-color: var(--hs-accent); }
+.hs-ctrl .hs-hint { font-size: 0.75rem; color: var(--hs-muted); font-weight: 400; }
+
+.hs-btnrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.hs-btn {
+  border: 1px solid var(--hs-accent);
+  background: var(--hs-accent);
+  color: #fff;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 40px;
+}
+.hs-btn:hover { background: var(--hs-accent-dark); }
+.hs-btn.secondary { background: #fff; color: var(--hs-accent-dark); }
+.hs-btn.secondary:hover { background: #eaf3fd; }
+.hs-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.hs-read { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin: 10px 0 0; padding: 0; }
+.hs-read div { display: flex; justify-content: space-between; gap: 8px; font-size: 0.85rem; border-bottom: 1px dashed #e3eaf2; padding: 3px 0; }
+.hs-read dt { color: var(--hs-muted); }
+.hs-read dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+
+.hs-grid2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 860px) { .hs-grid2 { grid-template-columns: 1fr; } }
+.hs-card svg.chart { width: 100%; height: auto; display: block; }
+.hs-obs { font-size: 0.88rem; }
+.hs-obs strong { display: block; margin-bottom: 4px; }
+
+.hs-explore {
+  background: var(--hs-surface);
+  border: 1px solid var(--hs-border);
+  border-radius: var(--hs-radius);
+  padding: 6px 16px 14px;
+  margin-bottom: 14px;
+}
+.hs-explore summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 10px 0;
+  min-height: 44px;
+}
+.hs-explore h3 { font-size: 0.92rem; margin: 14px 0 6px; }
+.hs-explore p, .hs-explore li { font-size: 0.88rem; }
+.hs-explore table { border-collapse: collapse; font-size: 0.85rem; margin: 6px 0; }
+.hs-explore th, .hs-explore td { border: 1px solid var(--hs-border); padding: 4px 10px; text-align: left; }
+.hs-explore th { background: #eef2f7; }
+.hs-eq { font-family: Georgia, "Times New Roman", serif; font-size: 1rem; background: #eef2f7; border-radius: 6px; padding: 6px 12px; display: inline-block; margin: 2px 4px 2px 0; }
+.hs-calc {
+  background: #0f2436;
+  color: #d9f1ff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-family: Consolas, "Courier New", monospace;
+  white-space: pre-wrap;
+  margin-top: 8px;
+}
+.hs-answer { background: #eef2f7; border-radius: 8px; padding: 8px 12px; font-size: 0.86rem; margin-top: 6px; }
+.hs-smallbtn {
+  border: 1px solid var(--hs-border);
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  min-height: 36px;
+}
+.hs-smallbtn:hover { border-color: var(--hs-accent); color: var(--hs-accent-dark); }
+.hs-check { display: flex; gap: 8px; align-items: center; font-size: 0.85rem; font-weight: 600; margin-top: 10px; min-height: 40px; }
+.hs-check input { width: 18px; height: 18px; accent-color: var(--hs-accent); }
+
+.hs-footer { color: var(--hs-muted); font-size: 0.78rem; }
+.hs-footer li { margin-bottom: 2px; }
+
+.hs-app :focus-visible { outline: 3px solid #7cc0ff; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .hs-app * { transition: none !important; }
+}
+.hs-btn, .hs-tab, .hs-smallbtn { transition: background 0.12s ease, border-color 0.12s ease; }

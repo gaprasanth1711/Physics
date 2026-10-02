@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydraulic Lift &amp; Braking System — Simulation Preview</title>
+<link rel="stylesheet" href="hydraulic-simulation.css">
+</head>
+<body>
+<div class="hs-app">
+  <header class="hs-header">
+    <div>
+      <h1>Hydraulic Lift &amp; Braking System</h1>
+      <p>Pascal&rsquo;s law &middot; idealised model &middot; CBSE Classes 9&ndash;12 / NEET&ndash;JEE foundation &middot; standalone preview</p>
+    </div>
+    <div class="hs-transport">
+      <button class="hs-btn secondary" id="hs-play" type="button" aria-pressed="true">Pause</button>
+      <label for="hs-speed">Speed
+        <select id="hs-speed">
+          <option value="0.25">0.25&times;</option>
+          <option value="0.5">0.5&times;</option>
+          <option value="1" selected>1&times;</option>
+          <option value="2">2&times;</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <nav class="hs-tabs" role="tablist" aria-label="Simulation modules">
+    <button class="hs-tab" id="hs-tab-lift" role="tab" aria-selected="true" aria-controls="hs-panel-lift" type="button">Hydraulic Lift</button>
+    <button class="hs-tab" id="hs-tab-brake" role="tab" aria-selected="false" aria-controls="hs-panel-brake" type="button">Hydraulic Braking</button>
+  </nav>
+
+  <main>
+    <!-- ==================== LIFT ==================== -->
+    <section id="hs-panel-lift" role="tabpanel" aria-labelledby="hs-tab-lift">
+      <div class="hs-grid">
+        <div class="hs-stage">
+          <svg class="diagram" id="hs-lift-svg" viewBox="0 0 660 430" role="img" aria-label="Hydraulic lift diagram: small input piston, large output piston with platform and load, connected fluid chamber">
+            <defs>
+              <marker id="hs-m-amber" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+                <polygon points="0,0 8,4.5 0,9" fill="#d97706"></polygon>
+              </marker>
+              <marker id="hs-m-green" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+                <polygon points="0,0 8,4.5 0,9" fill="#15803d"></polygon>
+              </marker>
+              <marker id="hs-m-blue" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <polygon points="0,0 7,4 0,8" fill="#0284c7"></polygon>
+              </marker>
+            </defs>
+            <!-- ground -->
+            <line x1="20" y1="372" x2="640" y2="372" stroke="#64748b" stroke-width="3"></line>
+            <!-- fluid chamber -->
+            <rect id="hs-chamber" x="70" y="300" width="520" height="52" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"></rect>
+            <text x="330" y="322" text-anchor="middle" font-size="11" fill="#075985" id="hs-p-label">P = —</text>
+            <text x="330" y="342" text-anchor="middle" font-size="10" fill="#5b6b7d">oil (incompressible) — pressure same everywhere</text>
+            <!-- pulse arrows in fluid -->
+            <g id="hs-pulse" opacity="0">
+              <line x1="210" y1="318" x2="252" y2="318" stroke="#0284c7" stroke-width="3" marker-end="url(#hs-m-blue)"></line>
+              <line x1="300" y1="334" x2="342" y2="334" stroke="#0284c7" stroke-width="3" marker-end="url(#hs-m-blue)"></line>
+              <line x1="390" y1="318" x2="432" y2="318" stroke="#0284c7" stroke-width="3" marker-end="url(#hs-m-blue)"></line>
+            </g>
+            <!-- small cylinder walls -->
+            <rect id="hs-wall-s1l" x="106" y="170" width="8" height="134" fill="#94a3b8"></rect>
+            <rect id="hs-wall-s1r" x="176" y="170" width="8" height="134" fill="#94a3b8"></rect>
+            <!-- large cylinder walls -->
+            <rect id="hs-wall-s2l" x="396" y="150" width="8" height="154" fill="#94a3b8"></rect>
+            <rect id="hs-wall-s2r" x="536" y="150" width="8" height="154" fill="#94a3b8"></rect>
+            <!-- input piston -->
+            <rect id="hs-p1" x="114" y="210" width="58" height="16" rx="2" fill="#475569" stroke="#1e293b" stroke-width="1.5"></rect>
+            <!-- output piston -->
+            <rect id="hs-p2" x="404" y="200" width="128" height="16" rx="2" fill="#475569" stroke="#1e293b" stroke-width="1.5"></rect>
+            <!-- platform -->
+            <rect id="hs-plat" x="388" y="190" width="160" height="10" fill="#334155"></rect>
+            <!-- load crate -->
+            <g id="hs-load">
+              <rect id="hs-crate" x="413" y="126" width="110" height="64" fill="#f59e0b" stroke="#92400e" stroke-width="2"></rect>
+              <line id="hs-crate-x1" x1="413" y1="126" x2="523" y2="190" stroke="#92400e" stroke-width="1.5"></line>
+              <line id="hs-crate-x2" x1="523" y1="126" x2="413" y2="190" stroke="#92400e" stroke-width="1.5"></line>
+              <text id="hs-load-label" x="468" y="162" text-anchor="middle" font-size="13" font-weight="bold" fill="#451a03">500 kg</text>
+            </g>
+            <!-- input force arrow -->
+            <line id="hs-f1-arrow" x1="143" y1="120" x2="143" y2="192" stroke="#d97706" stroke-width="5" marker-end="url(#hs-m-amber)"></line>
+            <text id="hs-f1-label" x="143" y="110" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400e">F1 = 500 N</text>
+            <!-- output force arrow -->
+            <line id="hs-f2-arrow" x1="596" y1="180" x2="596" y2="80" stroke="#15803d" stroke-width="5" marker-end="url(#hs-m-green)"></line>
+            <text id="hs-f2-label" x="596" y="70" text-anchor="middle" font-size="12" font-weight="bold" fill="#15803d">F2 = 6.25 kN</text>
+            <!-- displacement brackets -->
+            <line x1="92" y1="210" x2="92" y2="300" stroke="#5b6b7d" stroke-width="1.5" marker-start="url(#hs-m-blue)" marker-end="url(#hs-m-blue)"></line>
+            <text id="hs-d1-label" x="40" y="260" font-size="11" fill="#334155">d1 = 20.0 cm</text>
+            <text id="hs-d2-label" x="404" y="140" font-size="11" fill="#334155">d2 = 1.60 cm</text>
+            <text id="hs-a1-label" x="143" y="368" text-anchor="middle" font-size="11" fill="#334155">A1 = 20 cm²</text>
+            <text id="hs-a2-label" x="468" y="368" text-anchor="middle" font-size="11" fill="#334155">A2 = 250 cm²</text>
+            <text x="143" y="164" text-anchor="middle" font-size="10" fill="#5b6b7d">input piston</text>
+            <text x="468" y="118" text-anchor="middle" font-size="10" fill="#5b6b7d" id="hs-out-label">output piston + load</text>
+          </svg>
+          <div class="hs-status idle" id="hs-lift-status" role="status">Press “Apply force” to run a press.</div>
+        </div>
+        <div class="hs-panel">
+          <h2>Controls</h2>
+          <div class="hs-ctrl">
+            <label for="hs-in-f1">Input force F1 <output id="hs-out-f1" for="hs-in-f1">500 N</output></label>
+            <input type="range" id="hs-in-f1" min="10" max="1000" step="10" value="500">
+          </div>
+          <div class="hs-ctrl">
+            <label for="hs-in-a1">Input piston area A1 <output id="hs-out-a1" for="hs-in-a1">20 cm²</output></label>
+            <input type="range" id="hs-in-a1" min="1" max="50" step="1" value="20">
+          </div>
+          <div class="hs-ctrl">
+            <label for="hs-in-a2">Output piston area A2 <output id="hs-out-a2" for="hs-in-a2">250 cm²</output></label>
+            <input type="range" id="hs-in-a2" min="10" max="500" step="5" value="250">
+          </div>
+          <div class="hs-ctrl">
+            <label for="hs-in-load">Load mass <output id="hs-out-load" for="hs-in-load">500 kg</output></label>
+            <input type="range" id="hs-in-load" min="10" max="2000" step="10" value="500">
+          </div>
+          <div class="hs-btnrow">
+            <button class="hs-btn" id="hs-lift-apply" type="button">Apply force</button>
+            <button class="hs-btn secondary" id="hs-lift-release" type="button">Release</button>
+            <button class="hs-btn secondary" id="hs-lift-reset" type="button">Reset</button>
+          </div>
+          <dl class="hs-read" aria-live="polite">
+            <div><dt>Input pressure</dt><dd id="hs-r-pin">—</dd></div>
+            <div><dt>Output pressure</dt><dd id="hs-r-pout">—</dd></div>
+            <div><dt>Output force F2</dt><dd id="hs-r-f2">—</dd></div>
+            <div><dt>Mech. advantage</dt><dd id="hs-r-ma">—</dd></div>
+            <div><dt>Weight of load</dt><dd id="hs-r-w">—</dd></div>
+            <div><dt>Margin</dt><dd id="hs-r-margin">—</dd></div>
+            <div><dt>Input travel d1</dt><dd id="hs-r-d1">—</dd></div>
+            <div><dt>Output travel d2</dt><dd id="hs-r-d2">—</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="hs-grid2">
+        <div class="hs-card">
+          <h2>Input vs output force</h2>
+          <svg class="chart" id="hs-chart-force" viewBox="0 0 340 190" role="img" aria-label="Chart of output force versus input force"></svg>
+        </div>
+        <div class="hs-card hs-obs">
+          <strong>Observe</strong>
+          <div id="hs-obs-lift">Move a slider to see how the ratio changes the result.</div>
+        </div>
+      </div>
+      <details class="hs-explore">
+        <summary>Explore the Physics — hydraulic lift</summary>
+        <h3>Principle</h3>
+        <p>Pascal&rsquo;s law: pressure applied to an enclosed fluid is transmitted equally and undiminished to every part of the fluid. A small force on a small piston supports a large force on a large piston.</p>
+        <h3>Working, step by step</h3>
+        <p>1. Force F1 on area A1 creates pressure P = F1 / A1. 2. The same pressure P acts under area A2, giving F2 = P × A2. 3. The fluid volume pushed down (A1 × d1) equals the volume lifting the load (A2 × d2), so d2 = d1 × A1 / A2 — the load moves less than your hand.</p>
+        <h3>Equations</h3>
+        <p><span class="hs-eq">P = F / A</span><span class="hs-eq">F1/A1 = F2/A2</span><span class="hs-eq">A1·d1 = A2·d2</span></p>
+        <table>
+          <tr><th>Symbol</th><th>Meaning</th><th>Unit</th></tr>
+          <tr><td>F1, F2</td><td>input / output force</td><td>N</td></tr>
+          <tr><td>A1, A2</td><td>piston areas</td><td>cm² (→ m² in P = F/A)</td></tr>
+          <tr><td>d1, d2</td><td>piston travel per press</td><td>m</td></tr>
+          <tr><td>m</td><td>load mass (needs m·g to lift)</td><td>kg</td></tr>
+        </table>
+        <h3>Real world</h3>
+        <p>Car lifts, hydraulic jacks, forklifts and aircraft landing gear all trade distance for force this way.</p>
+        <h3>Question</h3>
+        <p>With A2/A1 = 25, how far must the small piston travel to raise the car 25 cm, and how many 20-cm presses is that?</p>
+        <button class="hs-smallbtn" id="hs-q-lift-btn" type="button" aria-expanded="false">Show answer</button>
+        <div class="hs-answer" id="hs-q-lift" hidden>d2 = d1 × A1/A2, so d1 = 25 cm × 25 = 625 cm = 6.25 m. At 20 cm per press that is 32 presses (31.25, rounded up).</div>
+        <h3>Experiments (resettable — Reset restores the press)</h3>
+        <div class="hs-btnrow">
+          <button class="hs-smallbtn" type="button" data-exp="lift-car">Car 500 kg</button>
+          <button class="hs-smallbtn" type="button" data-exp="lift-fail">Try to fail it (overload)</button>
+          <button class="hs-smallbtn" type="button" data-exp="lift-equal">Equal areas (MA = 1)</button>
+        </div>
+        <label class="hs-check"><input type="checkbox" id="hs-show-calc-lift"> Show calculations for current settings</label>
+        <div class="hs-calc" id="hs-calc-lift" hidden></div>
+      </details>
+    </section>
+
+    <!-- ==================== BRAKE ==================== -->
+    <section id="hs-panel-brake" role="tabpanel" aria-labelledby="hs-tab-brake" hidden>
+      <div class="hs-grid">
+        <div class="hs-stage">
+          <svg class="diagram" id="hs-brake-svg" viewBox="0 0 660 430" role="img" aria-label="Hydraulic brake diagram: pedal lever, reservoir, master cylinder, fluid lines, front and rear disc brakes">
+            <defs>
+              <marker id="hs-m-red" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+                <polygon points="0,0 8,4.5 0,9" fill="#b91c1c"></polygon>
+              </marker>
+            </defs>
+            <line x1="20" y1="392" x2="640" y2="392" stroke="#64748b" stroke-width="3"></line>
+            <!-- pedal lever -->
+            <circle cx="70" cy="200" r="6" fill="#334155"></circle>
+            <g id="hs-pedal">
+              <line x1="70" y1="200" x2="70" y2="96" stroke="#334155" stroke-width="8" stroke-linecap="round"></line>
+              <rect id="hs-pedal-pad" x="42" y="66" width="56" height="16" rx="4" fill="#0b6bcb"></rect>
+            </g>
+            <text x="70" y="52" text-anchor="middle" font-size="11" fill="#334155">pedal (×<tspan id="hs-pedal-r">4</tspan>)</text>
+            <text x="70" y="222" text-anchor="middle" font-size="10" fill="#5b6b7d">pivot</text>
+            <!-- pushrod -->
+            <line id="hs-rod" x1="70" y1="170" x2="196" y2="170" stroke="#94a3b8" stroke-width="5"></line>
+            <!-- reservoir -->
+            <rect x="220" y="86" width="80" height="40" fill="#fff" stroke="#334155" stroke-width="2"></rect>
+            <rect x="222" y="104" width="76" height="20" fill="#7dd3fc"></rect>
+            <text x="260" y="76" text-anchor="middle" font-size="11" fill="#334155">reservoir</text>
+            <line x1="260" y1="126" x2="260" y2="154" stroke="#0284c7" stroke-width="4"></line>
+            <!-- master cylinder -->
+            <rect x="190" y="154" width="150" height="32" fill="#f1f5f9" stroke="#334155" stroke-width="2"></rect>
+            <rect id="hs-mp" x="196" y="158" width="26" height="24" fill="#475569"></rect>
+            <text x="265" y="202" text-anchor="middle" font-size="11" fill="#334155">master cylinder <tspan id="hs-master-a">Am = 5 cm²</tspan></text>
+            <!-- fluid lines -->
+            <path id="hs-line-f" d="M340,170 H400 V232" fill="none" stroke="#0ea5e9" stroke-width="7" opacity="0.75" stroke-linecap="round"></path>
+            <path id="hs-line-r" d="M340,170 H440 V312 H551" fill="none" stroke="#0ea5e9" stroke-width="7" opacity="0.75" stroke-linecap="round"></path>
+            <text x="372" y="160" font-size="10" fill="#5b6b7d">brake lines</text>
+            <!-- front disc brake -->
+            <circle cx="470" cy="250" r="58" fill="#1e293b"></circle>
+            <circle cx="470" cy="250" r="34" fill="#94a3b8"></circle>
+            <g id="hs-spokes-f" stroke="#e2e8f0" stroke-width="4">
+              <line x1="470" y1="250" x2="498" y2="250"></line>
+              <line x1="470" y1="250" x2="479" y2="277"></line>
+              <line x1="470" y1="250" x2="448" y2="267"></line>
+              <line x1="470" y1="250" x2="448" y2="233"></line>
+              <line x1="470" y1="250" x2="479" y2="223"></line>
+            </g>
+            <circle cx="470" cy="250" r="9" fill="#0f172a"></circle>
+            <rect x="446" y="182" width="48" height="24" rx="6" fill="#ef4444" opacity="0.9"></rect>
+            <rect id="hs-pad-fl" x="424" y="228" width="10" height="44" fill="#b91c1c"></rect>
+            <rect id="hs-pad-fr" x="506" y="228" width="10" height="44" fill="#b91c1c"></rect>
+            <text x="470" y="176" text-anchor="middle" font-size="11" fill="#334155">front disc + caliper</text>
+            <!-- rear disc brake -->
+            <circle cx="585" cy="318" r="40" fill="#1e293b"></circle>
+            <circle cx="585" cy="318" r="24" fill="#94a3b8"></circle>
+            <g id="hs-spokes-r" stroke="#e2e8f0" stroke-width="3">
+              <line x1="585" y1="318" x2="605" y2="318"></line>
+              <line x1="585" y1="318" x2="591" y2="337"></line>
+              <line x1="585" y1="318" x2="573" y2="330"></line>
+              <line x1="585" y1="318" x2="573" y2="306"></line>
+              <line x1="585" y1="318" x2="591" y2="299"></line>
+            </g>
+            <circle cx="585" cy="318" r="7" fill="#0f172a"></circle>
+            <rect x="567" y="268" width="36" height="18" rx="5" fill="#ef4444" opacity="0.9"></rect>
+            <rect id="hs-pad-rl" x="555" y="300" width="8" height="36" fill="#b91c1c"></rect>
+            <rect id="hs-pad-rr" x="607" y="300" width="8" height="36" fill="#b91c1c"></rect>
+            <text x="585" y="262" text-anchor="middle" font-size="11" fill="#334155">rear</text>
+            <!-- clamp arrows -->
+            <g id="hs-clamp" opacity="0">
+              <line x1="404" y1="250" x2="430" y2="250" stroke="#b91c1c" stroke-width="4" marker-end="url(#hs-m-red)"></line>
+              <line x1="536" y1="250" x2="510" y2="250" stroke="#b91c1c" stroke-width="4" marker-end="url(#hs-m-red)"></line>
+            </g>
+            <!-- flow dots -->
+            <g id="hs-flow" fill="#075985" opacity="0">
+              <circle r="3.5" id="hs-fd0"></circle><circle r="3.5" id="hs-fd1"></circle>
+              <circle r="3.5" id="hs-fd2"></circle><circle r="3.5" id="hs-fd3"></circle>
+              <circle r="3.5" id="hs-fd4"></circle>
+            </g>
+            <!-- intensity -->
+            <text x="60" y="352" font-size="11" fill="#334155">braking intensity</text>
+            <rect x="60" y="360" width="300" height="14" rx="7" fill="#e2e8f0"></rect>
+            <rect id="hs-intensity" x="60" y="360" width="0" height="14" rx="7" fill="#15803d"></rect>
+            <text id="hs-intensity-label" x="368" y="372" font-size="11" fill="#334155">released</text>
+          </svg>
+          <div class="hs-status idle" id="hs-brake-status" role="status">Press the brake pedal to build pressure.</div>
+        </div>
+        <div class="hs-panel">
+          <h2>Controls</h2>
+          <div class="hs-ctrl">
+            <label for="hs-in-fp">Pedal force Fp <output id="hs-out-fp" for="hs-in-fp">150 N</output></label>
+            <input type="range" id="hs-in-fp" min="20" max="400" step="5" value="150">
+          </div>
+          <div class="hs-ctrl">
+            <label for="hs-in-pr">Pedal leverage ratio R <output id="hs-out-pr" for="hs-in-pr">4.0 : 1</output></label>
+            <input type="range" id="hs-in-pr" min="2" max="6" step="0.5" value="4">
+          </div>
+          <div class="hs-ctrl">
+            <label for="hs-in-am">Master cylinder area Am <output id="hs-out-am" for="hs-in-am">5 cm²</output></label>
+            <input type="range" id="hs-in-am" min="2" max="10" step="0.5" value="5">
+          </div>
+          <div class="hs-ctrl">
+            <label for="hs-in-aw">Wheel piston area Aw <output id="hs-out-aw" for="hs-in-aw">30 cm²</output></label>
+            <input type="range" id="hs-in-aw" min="10" max="60" step="1" value="30">
+          </div>
+          <div class="hs-btnrow">
+            <button class="hs-btn" id="hs-brake-press" type="button">Press pedal</button>
+            <button class="hs-btn secondary" id="hs-brake-release" type="button">Release</button>
+            <button class="hs-btn secondary" id="hs-brake-reset" type="button">Reset</button>
+          </div>
+          <dl class="hs-read" aria-live="polite">
+            <div><dt>Master cyl. force</dt><dd id="hs-r-fm">—</dd></div>
+            <div><dt>Line pressure P</dt><dd id="hs-r-bp">—</dd></div>
+            <div><dt>Clamp / wheel</dt><dd id="hs-r-fw">—</dd></div>
+            <div><dt>Clamp total (×2)</dt><dd id="hs-r-ftot">—</dd></div>
+            <div><dt>Force mult.</dt><dd id="hs-r-bma">—</dd></div>
+            <div><dt>Wheel speed</dt><dd id="hs-r-rpm">—</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="hs-grid2">
+        <div class="hs-card">
+          <h2>Pedal force vs wheel clamping force</h2>
+          <svg class="chart" id="hs-chart-brake" viewBox="0 0 340 190" role="img" aria-label="Chart of wheel clamping force versus pedal force"></svg>
+        </div>
+        <div class="hs-card hs-obs">
+          <strong>Observe</strong>
+          <div id="hs-obs-brake">Press the pedal: the same pressure reaches both wheels, and each clamp force scales with its piston area.</div>
+        </div>
+      </div>
+      <details class="hs-explore">
+        <summary>Explore the Physics — hydraulic brakes</summary>
+        <h3>Principle</h3>
+        <p>The pedal lever multiplies your foot force, the master cylinder turns it into fluid pressure, and that pressure pushes the larger wheel pistons. Small master area plus large wheel area gives the clamping force.</p>
+        <h3>Working, step by step</h3>
+        <p>1. Pedal lever: Fm = Fp × R. 2. Master cylinder: P = Fm / Am. 3. Each wheel piston: Fw = P × Aw. 4. Pads clamp the disc; friction there (not the hydraulics) makes the braking torque.</p>
+        <h3>Equations</h3>
+        <p><span class="hs-eq">Fm = Fp × R</span><span class="hs-eq">P = Fm / Am</span><span class="hs-eq">Fw = P × Aw</span></p>
+        <table>
+          <tr><th>Symbol</th><th>Meaning</th><th>Unit</th></tr>
+          <tr><td>Fp</td><td>foot force on pedal</td><td>N</td></tr>
+          <tr><td>R</td><td>pedal leverage ratio</td><td>—</td></tr>
+          <tr><td>Am, Aw</td><td>master / wheel piston area</td><td>cm² (→ m² in P = F/A)</td></tr>
+          <tr><td>Fw</td><td>clamp force per wheel</td><td>N</td></tr>
+        </table>
+        <h3>Force vs torque — read carefully</h3>
+        <p>Hydraulics only creates the <em>clamping force</em>. Braking torque needs pad–disc friction (τ ≈ F × μ × r) and stopping the vehicle needs the full vehicle dynamics. The slowing wheel here is illustrative, not a stopping-distance calculation.</p>
+        <h3>Real world</h3>
+        <p>Car disc/drum brakes, bicycle hydraulic brakes and clutch actuators all use a small master piston driving larger slave pistons.</p>
+        <h3>Question</h3>
+        <p>Your foot pushes 150 N with a 4:1 pedal onto a 5 cm² master cylinder. Two 30 cm² wheel pistons share the pressure. What is each clamp force — and what did you trade away to get it?</p>
+        <button class="hs-smallbtn" id="hs-q-brake-btn" type="button" aria-expanded="false">Show answer</button>
+        <div class="hs-answer" id="hs-q-brake" hidden>Fm = 600 N, P = 1.2 MPa, Fw = 3.6 kN per wheel. You traded pedal travel: the master piston moves much farther than each wheel piston (volume conservation again).</div>
+        <h3>Experiments (resettable — Reset re-spins the wheel)</h3>
+        <div class="hs-btnrow">
+          <button class="hs-smallbtn" type="button" data-exp="brake-city">City stop (150 N)</button>
+          <button class="hs-smallbtn" type="button" data-exp="brake-panic">Panic stop (400 N)</button>
+          <button class="hs-smallbtn" type="button" data-exp="brake-soft">Worn pads demo (small Aw)</button>
+        </div>
+        <label class="hs-check"><input type="checkbox" id="hs-show-calc-brake"> Show calculations for current settings</label>
+        <div class="hs-calc" id="hs-calc-brake" hidden></div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="hs-footer">
+    <ul>
+      <li>Idealised teaching model: incompressible fluid, no friction, leakage or compressibility, massless pistons, g = 9.81 m/s².</li>
+      <li>Wheel slowdown uses illustrative constants (μ = 0.4, disc r = 0.14 m, I = 30 kg·m²) — it shows the idea, not a real stopping distance.</li>
+      <li>Diagrams are schematic and not to scale. Works fully offline — no network calls.</li>
+    </ul>
+  </footer>
+</div>
+<script src="hydraulic-simulation.js"></script>
+</body>
+</html>
