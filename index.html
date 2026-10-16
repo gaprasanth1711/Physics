@@ -196,6 +196,18 @@
       </div>
     </div>
 
+    <!-- Hub Switcher Nav -->
+    <nav class="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 order-last sm:order-none">
+      <a href="/" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-cyan-700 rounded-lg shadow-sm transition">
+        <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-cyan-200"></i>
+        <span>Simulations</span>
+      </a>
+      <a href="/presentations" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 rounded-lg transition">
+        <i data-lucide="presentation" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span>PPT & Notes</span>
+      </a>
+    </nav>
+
     <!-- Top Action buttons -->
     <div class="flex items-center gap-2">
       <select id="viewSelect" title="Layout: auto, desktop or mobile view" class="px-2 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/80 rounded-lg border border-slate-700/60 focus:outline-none focus:border-cyan-400">
@@ -223,7 +235,7 @@
         <div id="simHubLabel" class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-2 hidden lg:block">Simulations Hub</div>
         <div class="px-1 mb-2">
           <label for="simSearch" class="visually-hidden">Search simulations by name, topic, class or concept</label>
-          <input id="simSearch" type="text" placeholder="Search 16 simulations..." aria-label="Search simulations by name, topic, class or concept" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-400 placeholder:text-slate-400">
+          <input id="simSearch" type="text" placeholder="Search 17 simulations..." aria-label="Search simulations by name, topic, class or concept" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-400 placeholder:text-slate-400">
         </div>
         <nav aria-label="Simulations" class="flex lg:flex-col gap-1.5 min-w-max lg:min-w-0" id="simNavList">
           <button data-sim="projectile" class="sim-nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
@@ -351,6 +363,14 @@
             <div>
               <div class="font-semibold leading-snug">Ohm's Law</div>
               <div class="text-[10px] text-slate-400 hidden lg:block">V = IR simple · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="circular" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="rotate-cw" class="w-4 h-4 shrink-0 text-cyan-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Circular Motion & Banking</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Cyclist, level & banked road · XI</div>
             </div>
           </button>
         </nav>
@@ -4596,6 +4616,777 @@ const ohmsSim = {
   }
 };
 
+
+    /* ==========================================================
+       SIMULATION 17: CIRCULAR MOTION & BANKING (NCERT CLASS 11)
+       ========================================================== */
+    const circularSim = {
+      name: "Circular Motion & Banking · XI",
+      subMode: 'cyclist', // 'cyclist' | 'unbanked' | 'banked'
+      
+      // Physics Parameters (SI Units)
+      v: 12.0,            // Speed m/s
+      r: 25.0,            // Radius of curve m
+      mu: 0.50,           // Friction coeff
+      thetaBankDeg: 15.0, // Bank angle deg
+      m: 80.0,            // Mass kg
+      g: 9.8,             // Gravity m/s^2
+
+      // Dynamic State
+      angle: 0,
+      driftR: 0,
+      driftSpeed: 0,
+      isSkidding: false,
+      skidType: 'none',   // 'outward' | 'inward' | 'none'
+      skidPoints: [],
+      particles: [],
+      showFBD: true,
+      showComponents: true,
+
+      // Web Audio Synthesizer Engine
+      soundEnabled: true,
+      audioCtx: null,
+      oscNode: null,
+      oscGain: null,
+      noiseNode: null,
+      noiseFilter: null,
+      noiseGain: null,
+      audioInitialized: false,
+
+      initAudio() {
+        if (this.audioInitialized) {
+          if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
+          return;
+        }
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          this.audioCtx = new AudioContext();
+
+          // Engine motion oscillator (triangle wave)
+          this.oscNode = this.audioCtx.createOscillator();
+          this.oscGain = this.audioCtx.createGain();
+          this.oscNode.type = 'triangle';
+          this.oscNode.frequency.value = 52;
+          this.oscGain.gain.value = 0.0;
+          this.oscNode.connect(this.oscGain);
+          this.oscGain.connect(this.audioCtx.destination);
+          this.oscNode.start();
+
+          // Tire skid screech synthesizer (white noise + bandpass filter)
+          const bufferSize = this.audioCtx.sampleRate * 2;
+          const noiseBuffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          this.noiseNode = this.audioCtx.createBufferSource();
+          this.noiseNode.buffer = noiseBuffer;
+          this.noiseNode.loop = true;
+
+          this.noiseFilter = this.audioCtx.createBiquadFilter();
+          this.noiseFilter.type = 'bandpass';
+          this.noiseFilter.frequency.value = 1750;
+          this.noiseFilter.Q.value = 4.2;
+
+          this.noiseGain = this.audioCtx.createGain();
+          this.noiseGain.gain.value = 0.0;
+
+          this.noiseNode.connect(this.noiseFilter);
+          this.noiseFilter.connect(this.noiseGain);
+          this.noiseGain.connect(this.audioCtx.destination);
+          this.noiseNode.start();
+
+          this.audioInitialized = true;
+        } catch (e) {
+          console.warn("Web Audio not supported or blocked:", e);
+        }
+      },
+
+      updateAudio() {
+        if (!this.audioInitialized) return;
+        if (!this.soundEnabled || !this.audioCtx) {
+          this.stopAudio();
+          return;
+        }
+        if (this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+
+        const now = this.audioCtx.currentTime;
+
+        // Dynamic Engine Pitch
+        if (state.isRunning && this.v > 0.4) {
+          const targetFreq = 42 + Math.min(this.v, 40) * 4.4;
+          this.oscNode.frequency.setTargetAtTime(targetFreq, now, 0.05);
+          this.oscGain.gain.setTargetAtTime(0.045, now, 0.05);
+        } else {
+          this.oscGain.gain.setTargetAtTime(0.0, now, 0.05);
+        }
+
+        // Dynamic Tire Screech when skidding
+        if (this.isSkidding && state.isRunning && this.v > 1.8) {
+          this.noiseGain.gain.setTargetAtTime(0.14, now, 0.04);
+        } else {
+          this.noiseGain.gain.setTargetAtTime(0.0, now, 0.05);
+        }
+      },
+
+      stopAudio() {
+        if (!this.audioInitialized || !this.audioCtx) return;
+        const now = this.audioCtx.currentTime;
+        if (this.oscGain) this.oscGain.gain.setTargetAtTime(0.0, now, 0.05);
+        if (this.noiseGain) this.noiseGain.gain.setTargetAtTime(0.0, now, 0.05);
+      },
+
+      toggleAudio() {
+        this.initAudio();
+        this.soundEnabled = !this.soundEnabled;
+        if (!this.soundEnabled) this.stopAudio();
+        return this.soundEnabled;
+      },
+
+      init() {
+        this.reset();
+      },
+
+      reset() {
+        this.angle = 0;
+        this.driftR = 0;
+        this.driftSpeed = 0;
+        this.isSkidding = false;
+        this.skidType = 'none';
+        this.skidPoints = [];
+        this.particles = [];
+        this.stopAudio();
+      },
+
+      calc() {
+        const theta = (this.thetaBankDeg * Math.PI) / 180;
+        const Fc = this.r > 0 ? (this.m * this.v * this.v) / this.r : 0;
+        let v0 = 0, vMax = 0, vMin = 0, N = 0, f = 0, fMax = 0, leanDeg = 0;
+
+        if (this.subMode === 'cyclist') {
+          const tanLean = (this.r > 0 && this.g > 0) ? (this.v * this.v) / (this.r * this.g) : 0;
+          leanDeg = Math.min(Math.atan(tanLean) * (180 / Math.PI), 75);
+          N = this.m * this.g;
+          f = Fc;
+          fMax = this.mu * N;
+          vMax = Math.sqrt(Math.max(0, this.mu * this.r * this.g));
+          vMin = 0;
+          v0 = 0;
+          this.isSkidding = this.v > vMax + 0.05;
+          this.skidType = this.isSkidding ? 'outward' : 'none';
+        } else if (this.subMode === 'unbanked') {
+          N = this.m * this.g;
+          f = Fc;
+          fMax = this.mu * N;
+          vMax = Math.sqrt(Math.max(0, this.mu * this.r * this.g));
+          vMin = 0;
+          v0 = 0;
+          this.isSkidding = this.v > vMax + 0.05;
+          this.skidType = this.isSkidding ? 'outward' : 'none';
+        } else if (this.subMode === 'banked') {
+          v0 = Math.sqrt(Math.max(0, this.r * this.g * Math.tan(theta)));
+          const denomMax = 1 - this.mu * Math.tan(theta);
+          vMax = denomMax <= 0.001 ? 999 : Math.sqrt(Math.max(0, this.r * this.g * (this.mu + Math.tan(theta)) / denomMax));
+          if (Math.tan(theta) > this.mu) {
+            const denomMin = 1 + this.mu * Math.tan(theta);
+            vMin = Math.sqrt(Math.max(0, this.r * this.g * (Math.tan(theta) - this.mu) / denomMin));
+          } else {
+            vMin = 0;
+          }
+          const sinT = Math.sin(theta);
+          const cosT = Math.cos(theta);
+          N = this.m * (this.g * cosT + (this.v * this.v / this.r) * sinT);
+          f = this.m * ((this.v * this.v / this.r) * cosT - this.g * sinT);
+          fMax = this.mu * N;
+
+          if (this.v > vMax + 0.05) {
+            this.isSkidding = true;
+            this.skidType = 'outward';
+          } else if (this.v < vMin - 0.05 && vMin > 0) {
+            this.isSkidding = true;
+            this.skidType = 'inward';
+          } else {
+            this.isSkidding = false;
+            this.skidType = 'none';
+          }
+        }
+
+        return { Fc, v0, vMax, vMin, N, f, fMax, leanDeg, theta };
+      },
+
+      update(dt) {
+        if (!isFinite(dt) || dt <= 0) return;
+        const p = this.calc();
+
+        if (this.r > 0 && this.v > 0) {
+          const omega = this.v / this.r;
+          this.angle = (this.angle + omega * dt) % (Math.PI * 2);
+        }
+
+        if (this.isSkidding) {
+          if (this.skidType === 'outward') {
+            this.driftSpeed += 14.0 * dt;
+            this.driftR += this.driftSpeed * dt;
+            if (this.driftR > 75) this.driftR = 75;
+          } else if (this.skidType === 'inward') {
+            this.driftSpeed -= 8.0 * dt;
+            this.driftR += this.driftSpeed * dt;
+            if (this.driftR < -24) this.driftR = -24;
+          }
+        } else {
+          this.driftR += (0 - this.driftR) * 0.08;
+          this.driftSpeed = 0;
+        }
+
+        // Live Audio Synthesizer Update
+        this.updateAudio();
+      },
+
+      drawArrow(x1, y1, x2, y2, color, label, valStr = '') {
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const head = 9;
+        const ang = Math.atan2(dy, dx);
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+        ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+
+        if (label) {
+          ctx.font = 'bold 10px Inter, sans-serif';
+          ctx.textAlign = dx >= 0 ? 'left' : 'right';
+          ctx.textBaseline = dy >= 0 ? 'top' : 'bottom';
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 4;
+          ctx.fillText(valStr ? `${label} (${valStr})` : label, x2 + Math.cos(ang) * 6, y2 + Math.sin(ang) * 6);
+        }
+        ctx.restore();
+      },
+
+      drawDashed(x1, y1, x2, y2, color, label = '') {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        if (label) {
+          ctx.font = '9px monospace';
+          ctx.fillStyle = color;
+          ctx.fillText(label, (x1 + x2) / 2 + 4, (y1 + y2) / 2 - 4);
+        }
+        ctx.restore();
+      },
+
+      render() {
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+        const p = this.calc();
+        const isSplit = w >= 640;
+
+        const fbdRect = isSplit 
+          ? { x: 0, y: 0, w: w * 0.48, h: h } 
+          : { x: 0, y: 0, w: w, h: h * 0.52 };
+        const trackRect = isSplit 
+          ? { x: w * 0.48, y: 0, w: w * 0.52, h: h } 
+          : { x: 0, y: h * 0.52, w: w, h: h * 0.48 };
+
+        // Subtle divider line
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (isSplit) {
+          ctx.moveTo(w * 0.48, 0); ctx.lineTo(w * 0.48, h);
+        } else {
+          ctx.moveTo(0, h * 0.52); ctx.lineTo(w, h * 0.52);
+        }
+        ctx.stroke();
+
+        this.renderFBD(fbdRect, p);
+        this.renderTrack(trackRect, p);
+      },
+
+      renderFBD(rect, p) {
+        ctx.save();
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        const titleText = this.subMode === 'cyclist' 
+          ? '🔬 Bending of Cyclist (FBD Cross-Section)' 
+          : this.subMode === 'unbanked' 
+            ? '🔬 Car on Level Road (FBD Cross-Section)' 
+            : '🔬 Car on Banked Road (FBD Cross-Section)';
+        ctx.fillText(titleText, rect.x + 12, rect.y + 18);
+
+        const groundY = rect.y + rect.h * 0.74;
+        const cx = rect.x + rect.w * 0.52;
+
+        if (this.subMode === 'cyclist') {
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(rect.x + 10, groundY);
+          ctx.lineTo(rect.x + rect.w - 10, groundY);
+          ctx.stroke();
+
+          const contactX = cx + 20;
+          const contactY = groundY;
+          const leanRad = (p.leanDeg * Math.PI) / 180;
+          const bikeH = Math.min(rect.h * 0.4, 130);
+          const cmDist = bikeH * 0.65;
+          const cmX = contactX - cmDist * Math.sin(leanRad);
+          const cmY = contactY - cmDist * Math.cos(leanRad);
+          const headX = contactX - (bikeH + 18) * Math.sin(leanRad);
+          const headY = contactY - (bikeH + 18) * Math.cos(leanRad);
+
+          ctx.save();
+          ctx.translate(contactX, contactY);
+          ctx.rotate(-leanRad);
+          ctx.fillStyle = '#0f172a';
+          ctx.beginPath(); ctx.ellipse(0, -22, 10, 22, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#64748b'; ctx.lineWidth = 3; ctx.stroke();
+          ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(0, -22); ctx.lineTo(0, -60); ctx.lineTo(12, -80);
+          ctx.moveTo(0, -60); ctx.lineTo(-16, -60); ctx.stroke();
+          ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.ellipse(0, -85, 12, 20, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(0, -110, 11, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+          ctx.setLineDash([4, 4]); ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(contactX, contactY); ctx.lineTo(contactX, contactY - 110); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(contactX, contactY); ctx.lineTo(headX, headY); ctx.stroke();
+          ctx.setLineDash([]);
+
+          if (leanRad > 0.04) {
+            ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.arc(contactX, contactY, 36, -Math.PI / 2, -Math.PI / 2 - leanRad, true); ctx.stroke();
+            ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 10px monospace';
+            ctx.fillText(`θ = ${p.leanDeg.toFixed(1)}°`, contactX - 42, contactY - 42);
+          }
+
+          ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(cmX, cmY, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#000'; ctx.stroke();
+
+          if (this.showFBD) {
+            const sc = 0.08;
+            const wLen = this.m * this.g * sc;
+            const nLen = p.N * sc;
+            const fLen = p.f * sc;
+
+            this.drawArrow(cmX, cmY, cmX, cmY + wLen, '#f59e0b', 'W=mg', `${Math.round(this.m * this.g)}N`);
+            this.drawArrow(contactX, contactY, contactX, contactY - nLen, '#38bdf8', 'N', `${Math.round(p.N)}N`);
+            this.drawArrow(contactX, contactY, contactX - fLen, contactY, '#ef4444', 'fₛ', `${Math.round(p.f)}N`);
+            this.drawArrow(contactX, contactY, contactX - fLen, contactY - nLen, '#06b6d4', 'R Resultant');
+            this.drawArrow(cmX, cmY, cmX - p.Fc * sc, cmY, '#c084fc', 'Fc');
+          }
+
+        } else if (this.subMode === 'unbanked') {
+          ctx.strokeStyle = '#475569'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(rect.x + 10, groundY); ctx.lineTo(rect.x + rect.w - 10, groundY); ctx.stroke();
+
+          const carW = Math.min(rect.w * 0.45, 140);
+          const carH = carW * 0.42;
+          const carX = cx - carW / 2;
+          const carY = groundY - carH - 8;
+
+          ctx.fillStyle = '#0284c7';
+          ctx.beginPath(); ctx.roundRect(carX, carY, carW, carH, [12, 12, 4, 4]); ctx.fill();
+          ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.8; ctx.stroke();
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(carX + 18, carY - 18, carW - 36, 20);
+          ctx.fillStyle = '#ef4444'; ctx.fillRect(carX + 8, carY + 10, 18, 8); ctx.fillRect(carX + carW - 26, carY + 10, 18, 8);
+          ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.roundRect(carX + 10, groundY - 22, 16, 24, 4); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.roundRect(carX + carW - 26, groundY - 22, 16, 24, 4); ctx.fill(); ctx.stroke();
+
+          const cmX = cx, cmY = carY + carH * 0.55;
+          ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(cmX, cmY, 5, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000'; ctx.stroke();
+
+          if (this.showFBD) {
+            const sc = 0.008;
+            this.drawArrow(cmX, cmY, cmX, cmY + this.m * this.g * sc, '#f59e0b', 'W=mg');
+            this.drawArrow(carX + 18, groundY, carX + 18, groundY - (p.N / 2) * sc, '#38bdf8', 'N₁');
+            this.drawArrow(carX + carW - 18, groundY, carX + carW - 18, groundY - (p.N / 2) * sc, '#38bdf8', 'N₂');
+            this.drawArrow(carX + 18, groundY, carX + 18 - (p.f / 2) * sc, groundY, '#ef4444', 'f₁');
+            this.drawArrow(carX + carW - 18, groundY, carX + carW - 18 - (p.f / 2) * sc, groundY, '#ef4444', 'f₂');
+            this.drawArrow(cmX, cmY, cmX - p.Fc * sc, cmY, '#c084fc', 'Fc');
+          }
+
+        } else if (this.subMode === 'banked') {
+          const theta = p.theta;
+          const bankW = Math.min(rect.w * 0.8, 260);
+          const p1X = cx - bankW * 0.5 * Math.cos(theta);
+          const p1Y = groundY + bankW * 0.5 * Math.sin(theta);
+          const p2X = cx + bankW * 0.5 * Math.cos(theta);
+          const p2Y = groundY - bankW * 0.5 * Math.sin(theta);
+
+          ctx.fillStyle = 'rgba(30, 41, 59, 0.7)'; ctx.strokeStyle = '#475569'; ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(p1X - 10, p1Y); ctx.lineTo(p2X + 10, p2Y); ctx.lineTo(p2X + 10, p1Y); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+
+          ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.8;
+          ctx.beginPath(); ctx.arc(p1X - 10, p1Y, 50, 0, -theta, true); ctx.stroke();
+          ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 10px monospace';
+          ctx.fillText(`θ = ${this.thetaBankDeg.toFixed(1)}°`, p1X + 46, p1Y - 10);
+
+          ctx.save();
+          ctx.translate(cx, groundY);
+          ctx.rotate(-theta);
+          const carW = Math.min(rect.w * 0.42, 130);
+          const carH = carW * 0.4;
+          const carX = -carW / 2;
+          const carY = -carH - 8;
+
+          ctx.fillStyle = '#ea580c';
+          ctx.beginPath(); ctx.roundRect(carX, carY, carW, carH, [10, 10, 3, 3]); ctx.fill();
+          ctx.strokeStyle = '#fb923c'; ctx.lineWidth = 1.8; ctx.stroke();
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(carX + 16, carY - 16, carW - 32, 18);
+          ctx.fillStyle = '#ef4444'; ctx.fillRect(carX + 6, carY + 8, 16, 7); ctx.fillRect(carX + carW - 22, carY + 8, 16, 7);
+          ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.roundRect(carX + 8, -20, 15, 22, 3); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.roundRect(carX + carW - 23, -20, 15, 22, 3); ctx.fill(); ctx.stroke();
+          ctx.restore();
+
+          const cmLocalY = -carH * 0.55;
+          const cmX = cx - cmLocalY * Math.sin(theta);
+          const cmY = groundY + cmLocalY * Math.cos(theta);
+
+          ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(cmX, cmY, 5, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#000'; ctx.stroke();
+
+          if (this.showFBD) {
+            const sc = 0.007;
+            this.drawArrow(cmX, cmY, cmX, cmY + this.m * this.g * sc, '#f59e0b', 'W=mg');
+            const nLen = p.N * sc;
+            const nX = -nLen * Math.sin(theta);
+            const nY = -nLen * Math.cos(theta);
+            this.drawArrow(cmX, cmY, cmX + nX, cmY + nY, '#38bdf8', 'N', `${Math.round(p.N)}N`);
+
+            const fLen = p.f * sc;
+            if (Math.abs(p.f) > 10) {
+              const fX = -fLen * Math.cos(theta);
+              const fY = fLen * Math.sin(theta);
+              this.drawArrow(cmX, cmY, cmX + fX, cmY + fY, '#ef4444', p.f > 0 ? 'f (down)' : 'f (up)');
+            }
+
+            this.drawArrow(cmX, cmY, cmX - p.Fc * sc, cmY, '#c084fc', 'Fc');
+
+            if (this.showComponents) {
+              this.drawDashed(cmX, cmY, cmX, cmY + nY, '#38bdf8', 'N cos θ');
+              this.drawDashed(cmX, cmY + nY, cmX + nX, cmY + nY, '#38bdf8', 'N sin θ');
+            }
+          }
+        }
+
+        ctx.restore();
+      },
+
+      renderTrack(rect, p) {
+        ctx.save();
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText(`🛰️ Aerial Track View (r = ${this.r}m)`, rect.x + 12, rect.y + 18);
+
+        const cx = rect.x + rect.w * 0.48;
+        const cy = rect.y + rect.h * 0.52;
+
+        const maxR = Math.min(rect.w, rect.h) * 0.36;
+        const minR = 40;
+        const pixR = minR + ((this.r - 10) / (150 - 10)) * (maxR - minR);
+
+        const roadW = 34;
+        ctx.beginPath(); ctx.arc(cx, cy, pixR, 0, Math.PI * 2);
+        ctx.lineWidth = roadW; ctx.strokeStyle = '#1e293b'; ctx.stroke();
+
+        ctx.lineWidth = 2.5; ctx.strokeStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(cx, cy, pixR + roadW / 2, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(cx, cy, pixR - roadW / 2, 0, Math.PI * 2); ctx.stroke();
+
+        ctx.lineWidth = 1.2; ctx.strokeStyle = '#f59e0b'; ctx.setLineDash([6, 6]);
+        ctx.beginPath(); ctx.arc(cx, cy, pixR, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.font = '9px monospace'; ctx.fillText('O', cx + 6, cy - 4);
+
+        if (state.showTrails && this.skidPoints.length > 1) {
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          for (let i = 0; i < this.skidPoints.length; i++) {
+            const pt = this.skidPoints[i];
+            const px = cx + (pixR + pt.drift) * Math.cos(pt.ang);
+            const py = cy + (pixR + pt.drift) * Math.sin(pt.ang);
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+
+        const effR = pixR + this.driftR;
+        const vx = cx + effR * Math.cos(this.angle);
+        const vy = cy + effR * Math.sin(this.angle);
+
+        if (this.isSkidding && state.isRunning) {
+          this.skidPoints.push({ ang: this.angle, drift: this.driftR });
+          if (this.skidPoints.length > 200) this.skidPoints.shift();
+
+          if (Math.random() < 0.5) {
+            this.particles.push({
+              x: vx + (Math.random() - 0.5) * 6,
+              y: vy + (Math.random() - 0.5) * 6,
+              dx: (Math.random() - 0.5) * 0.7,
+              dy: (Math.random() - 0.5) * 0.7,
+              alpha: 0.7,
+              size: 3 + Math.random() * 4
+            });
+          }
+        }
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const pt = this.particles[i];
+          pt.x += pt.dx; pt.y += pt.dy; pt.alpha -= 0.025; pt.size += 0.2;
+          if (pt.alpha <= 0) {
+            this.particles.splice(i, 1);
+          } else {
+            ctx.fillStyle = `rgba(180, 195, 215, ${pt.alpha})`;
+            ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(vx, vy); ctx.stroke();
+        ctx.fillStyle = '#38bdf8'; ctx.font = '10px monospace';
+        ctx.fillText(`r = ${this.r}m`, (cx + vx) / 2 + 5, (cy + vy) / 2);
+
+        ctx.save();
+        ctx.translate(vx, vy);
+        ctx.rotate(this.angle + Math.PI / 2);
+
+        if (this.subMode === 'cyclist') {
+          ctx.fillStyle = '#38bdf8'; ctx.fillRect(-2, -10, 4, 20);
+          ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(-7, -7); ctx.lineTo(7, -7); ctx.stroke();
+        } else {
+          ctx.fillStyle = this.subMode === 'banked' ? '#ea580c' : '#0284c7';
+          ctx.beginPath(); ctx.roundRect(-6, -11, 12, 22, 3); ctx.fill();
+          ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 1.2; ctx.stroke();
+          ctx.fillStyle = '#0f172a'; ctx.fillRect(-4, -7, 8, 4);
+          ctx.fillStyle = '#fef08a'; ctx.fillRect(-5, -11, 2, 2); ctx.fillRect(3, -11, 2, 2);
+        }
+        ctx.restore();
+
+        if (state.showVectors && this.v > 0.5) {
+          const tanAng = this.angle + Math.PI / 2;
+          const vLen = Math.min(this.v * 1.5, 45);
+          this.drawArrow(vx, vy, vx + vLen * Math.cos(tanAng), vy + vLen * Math.sin(tanAng), '#22c55e', 'v');
+          const aLen = Math.min((this.v * this.v / this.r) * 1.4, 40);
+          this.drawArrow(vx, vy, vx - aLen * Math.cos(this.angle), vy - aLen * Math.sin(this.angle), '#c084fc', 'a_c');
+        }
+
+        ctx.restore();
+      },
+
+      getMetrics() {
+        const p = this.calc();
+        const modeTitle = this.subMode === 'cyclist' ? 'Cyclist Bending' : this.subMode === 'unbanked' ? 'Level Road' : 'Banked Road';
+        let status = '🟢 Safe Cruising';
+        if (this.isSkidding) {
+          status = this.skidType === 'inward' ? '⚠️ Slipping Inward (v < vmin)' : '🚨 Skidding Outward (v > vmax)';
+        } else {
+          const ratio = p.vMax > 0 && p.vMax < 999 ? this.v / p.vMax : this.v / 30;
+          if (ratio > 0.88) status = '🟡 Near Limit (>88%)';
+        }
+
+        const m = [
+          { label: 'Sub-Case', val: modeTitle },
+          { label: 'Speed v', val: `${this.v.toFixed(1)} m/s (${(this.v * 3.6).toFixed(0)} km/h)` },
+        ];
+        if (this.subMode === 'banked') {
+          m.push({ label: 'Optimum v₀', val: `${p.v0.toFixed(1)} m/s` });
+        }
+        m.push({ label: 'Limit vₘₐₓ', val: p.vMax >= 999 ? '∞' : `${p.vMax.toFixed(1)} m/s` });
+        if (this.subMode === 'banked' && p.vMin > 0) {
+          m.push({ label: 'Slip Limit vₘᵢₙ', val: `${p.vMin.toFixed(1)} m/s` });
+        }
+        m.push(
+          { label: 'Centripetal Fc', val: `${Math.round(p.Fc)} N` },
+          { label: 'Friction f', val: `${Math.round(Math.abs(p.f))} N / ${Math.round(p.fMax)} N` }
+        );
+        if (this.subMode === 'cyclist') {
+          m.push({ label: 'Lean Angle θ', val: `${p.leanDeg.toFixed(1)}°` });
+        } else if (this.subMode === 'banked') {
+          m.push({ label: 'Bank Angle θ', val: `${this.thetaBankDeg.toFixed(1)}°` });
+        }
+        m.push({ label: 'Audio Synthesizer', val: this.soundEnabled ? '🔊 Active (Engine/Skid)' : '🔇 Muted' });
+        m.push({ label: 'Condition', val: status });
+        return m;
+      },
+
+      presets: {
+        "Cyclist: Sharp Turn 50 km/h": { subMode: 'cyclist', v: 13.9, r: 20, mu: 0.5, m: 80 },
+        "Cyclist: Gentle Corner (Safe)": { subMode: 'cyclist', v: 8.0, r: 35, mu: 0.5, m: 80 },
+        "Level Road: Safe Cornering": { subMode: 'unbanked', v: 12.0, r: 40, mu: 0.5, m: 1200 },
+        "Level Road: Wet Skid (v > vmax)": { subMode: 'unbanked', v: 20.0, r: 30, mu: 0.25, m: 1200 },
+        "Banked Road: Optimum 60 km/h (f=0)": { subMode: 'banked', v: 16.2, r: 100, thetaBankDeg: 15, mu: 0.35, m: 1200 },
+        "Banked Road: Steep NASCAR 28°": { subMode: 'banked', v: 28.0, r: 90, thetaBankDeg: 28, mu: 0.6, m: 1200 },
+        "Banked Road: Icy Slip (v < vmin)": { subMode: 'banked', v: 2.0, r: 45, thetaBankDeg: 25, mu: 0.1, m: 1200 }
+      },
+
+      buildControls() {
+        return `
+          <div class="space-y-2.5 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-400 font-mono text-[11px]">CASE:</span>
+                <button id="btnCaseCyclist" class="px-2.5 py-1 rounded-lg font-semibold transition ${this.subMode === 'cyclist' ? 'bg-cyan-500 text-black' : 'bg-slate-800 text-slate-300 hover:text-white'}">🚴 Cyclist</button>
+                <button id="btnCaseUnbanked" class="px-2.5 py-1 rounded-lg font-semibold transition ${this.subMode === 'unbanked' ? 'bg-cyan-500 text-black' : 'bg-slate-800 text-slate-300 hover:text-white'}">🚗 Level Road</button>
+                <button id="btnCaseBanked" class="px-2.5 py-1 rounded-lg font-semibold transition ${this.subMode === 'banked' ? 'bg-cyan-500 text-black' : 'bg-slate-800 text-slate-300 hover:text-white'}">🏎️ Banked Road</button>
+              </div>
+              <div class="flex items-center gap-1.5 text-[11px]">
+                <button id="btnCircSound" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}">
+                  <span>${this.soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF'}</span>
+                </button>
+                ${this.subMode === 'banked' ? '<button id="btnSetV0" class="px-2 py-0.5 rounded bg-cyan-900/60 hover:bg-cyan-800 text-cyan-300 border border-cyan-700/50">v = v₀ (Optimum)</button>' : ''}
+                <button id="btnSetVmax" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Set vₘₐₓ</button>
+                <button id="btnSetVStop" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Stop (0)</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <div class="flex justify-between mb-1 text-slate-300"><span>Speed v</span><span id="valCircV" class="font-mono text-cyan-400">${this.v.toFixed(1)} m/s (${(this.v*3.6).toFixed(0)} km/h)</span></div>
+                <input type="range" id="ctrlCircV" min="0" max="40" step="0.5" value="${this.v}" class="w-full">
+              </div>
+              <div>
+                <div class="flex justify-between mb-1 text-slate-300"><span>Radius r (m)</span><span id="valCircR" class="font-mono text-cyan-400">${this.r} m</span></div>
+                <input type="range" id="ctrlCircR" min="10" max="150" step="1" value="${this.r}" class="w-full">
+              </div>
+              <div>
+                <div class="flex justify-between mb-1 text-slate-300"><span>Friction μₛ</span><span id="valCircMu" class="font-mono text-cyan-400">${this.mu.toFixed(2)}</span></div>
+                <input type="range" id="ctrlCircMu" min="0.00" max="1.10" step="0.02" value="${this.mu}" class="w-full">
+              </div>
+              <div id="colCircBank" style="display: ${this.subMode === 'banked' ? 'block' : 'none'};">
+                <div class="flex justify-between mb-1 text-slate-300"><span>Bank Angle θ</span><span id="valCircBank" class="font-mono text-cyan-400">${this.thetaBankDeg.toFixed(1)}°</span></div>
+                <input type="range" id="ctrlCircBank" min="2" max="45" step="0.5" value="${this.thetaBankDeg}" class="w-full">
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400 pt-1">
+              <div class="flex items-center gap-3">
+                <label class="flex items-center gap-1.5 cursor-pointer text-slate-300"><input type="checkbox" id="chkCircFBD" ${this.showFBD ? 'checked' : ''} class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"><span>FBD Vectors</span></label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-slate-300"><input type="checkbox" id="chkCircComp" ${this.showComponents ? 'checked' : ''} class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0"><span>Components</span></label>
+                <button id="btnClearCircTraces" class="text-cyan-400 hover:text-cyan-300 underline font-mono">Clear Skid Marks</button>
+              </div>
+              <span class="font-mono text-[10px] text-slate-400 hidden sm:inline">tan θ = v²/rg · vₘₐₓ = √(μrg) · v₀ = √(rg tan θ)</span>
+            </div>
+          </div>
+        `;
+      },
+
+      bindControls() {
+        // Auto-resume audio on first control interaction
+        this.initAudio();
+
+        const bindBtn = (id, mode, mass) => {
+          document.getElementById(id)?.addEventListener('click', () => {
+            this.initAudio();
+            this.subMode = mode;
+            this.m = mass;
+            this.reset();
+            controlsPanel.innerHTML = this.buildControls();
+            this.bindControls();
+          });
+        };
+        bindBtn('btnCaseCyclist', 'cyclist', 80);
+        bindBtn('btnCaseUnbanked', 'unbanked', 1200);
+        bindBtn('btnCaseBanked', 'banked', 1200);
+
+        document.getElementById('btnCircSound')?.addEventListener('click', () => {
+          const isEnabled = this.toggleAudio();
+          const btn = document.getElementById('btnCircSound');
+          if (btn) {
+            btn.innerHTML = `<span>${isEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF'}</span>`;
+            btn.className = `flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${isEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}`;
+          }
+          showToast(isEnabled ? 'Synthesized Audio Enabled' : 'Audio Muted', 'info');
+        });
+
+        document.getElementById('ctrlCircV')?.addEventListener('input', (e) => {
+          this.initAudio();
+          this.v = parseFloat(e.target.value);
+          document.getElementById('valCircV').textContent = `${this.v.toFixed(1)} m/s (${(this.v * 3.6).toFixed(0)} km/h)`;
+        });
+        document.getElementById('ctrlCircR')?.addEventListener('input', (e) => {
+          this.r = parseFloat(e.target.value);
+          document.getElementById('valCircR').textContent = `${this.r} m`;
+        });
+        document.getElementById('ctrlCircMu')?.addEventListener('input', (e) => {
+          this.mu = parseFloat(e.target.value);
+          document.getElementById('valCircMu').textContent = this.mu.toFixed(2);
+        });
+        document.getElementById('ctrlCircBank')?.addEventListener('input', (e) => {
+          this.thetaBankDeg = parseFloat(e.target.value);
+          document.getElementById('valCircBank').textContent = `${this.thetaBankDeg.toFixed(1)}°`;
+        });
+        document.getElementById('chkCircFBD')?.addEventListener('change', (e) => { this.showFBD = e.target.checked; });
+        document.getElementById('chkCircComp')?.addEventListener('change', (e) => { this.showComponents = e.target.checked; });
+        document.getElementById('btnClearCircTraces')?.addEventListener('click', () => {
+          this.skidPoints = [];
+          this.particles = [];
+          showToast('Skid traces cleared', 'info');
+        });
+
+        document.getElementById('btnSetV0')?.addEventListener('click', () => {
+          this.initAudio();
+          const p = this.calc();
+          this.v = Math.round(p.v0 * 10) / 10;
+          controlsPanel.innerHTML = this.buildControls();
+          this.bindControls();
+          showToast(`Speed set to Optimum v₀ = ${this.v} m/s`, 'success');
+        });
+        document.getElementById('btnSetVmax')?.addEventListener('click', () => {
+          this.initAudio();
+          const p = this.calc();
+          if (p.vMax < 999) {
+            this.v = Math.round(p.vMax * 10) / 10;
+            controlsPanel.innerHTML = this.buildControls();
+            this.bindControls();
+            showToast(`Speed set to Limit vₘₐₓ = ${this.v} m/s`, 'info');
+          } else {
+            showToast('vₘₐₓ is infinite for current banking & friction!', 'info');
+          }
+        });
+        document.getElementById('btnSetVStop')?.addEventListener('click', () => {
+          this.v = 0;
+          this.stopAudio();
+          controlsPanel.innerHTML = this.buildControls();
+          this.bindControls();
+        });
+      }
+    };
+
     // Registry of simulations
     const simulations = {
       projectile: projectileSim,
@@ -4613,7 +5404,8 @@ const ohmsSim = {
       fric: fricSim,
       col: colSim,
       wave: waveSim,
-      ohms: ohmsSim
+      ohms: ohmsSim,
+      circular: circularSim
     };
 
     /* ==========================================================
@@ -4687,6 +5479,8 @@ const ohmsSim = {
         hudHintText.textContent = "Change tension or mode; nodes stay fixed while antinodes swing.";
       } else if (simKey === 'ohms') {
         hudHintText.textContent = "Slide voltage and resistance — bulb brightness follows power P = VI.";
+      } else if (simKey === 'circular') {
+        hudHintText.textContent = "CBSE XI Circular Motion: Switch Cyclist / Level / Banked road; test safe speeds and skidding.";
       } else {
         hudHintText.textContent = "Use real-time sliders below or ask PRASANTH PHYSICS SIMULATIONS TUTOR to explain the behavior.";
       }
@@ -4797,6 +5591,9 @@ const ohmsSim = {
         state.isRunning = true;
       } else {
         state.isRunning = !state.isRunning;
+      }
+      if (!state.isRunning && simulations[state.activeSim]?.stopAudio) {
+        simulations[state.activeSim].stopAudio();
       }
       updatePlayPauseButton();
     });
@@ -5122,7 +5919,8 @@ Rules:
       fric: "**Incline:** $N = mg\\cos\\theta$. Stays put while $mg\\sin\\theta \\le \\mu_s N$; slides with $f_k = \\mu_k N$ opposing motion once it slips.",
       col: "**Collisions:** total momentum $p$ is always conserved. Restitution $e$ sets bounce: $e=1$ elastic (KE kept), $e=0$ sticky (max KE lost).",
       wave: "**Standing waves:** $v = \\sqrt{T/\\mu}$, mode frequencies $f_n = nv/2L$. Nodes never move; antinodes swing widest. Two travelling waves superpose: $y = y_1+y_2$.",
-      ohms: "**Ohm's law:** $V = IR$, power $P = VI$. Double voltage at fixed R and current doubles; double R at fixed V and current halves."
+      ohms: "**Ohm's law:** $V = IR$, power $P = VI$. Double voltage at fixed R and current doubles; double R at fixed V and current halves.",
+      circular: "**Circular Motion & Banking (NCERT XI):**\n• *Cyclist Bending:* Leans at $\\tan\\theta = v^2/(rg)$ to balance torque; safe without skidding if $v \\le \\sqrt{\\mu_s rg}$.\n• *Level Road:* Tires supply centripetal force $f_s = mv^2/r \\le \\mu_s mg$; maximum safe speed is $v_{\\max} = \\sqrt{\\mu_s rg}$.\n• *Banked Road:* Outer edge elevated at angle $\\theta$. Optimum speed without tire friction: $v_0 = \\sqrt{rg\\tan\\theta}$. Upper safe limit: $v_{\\max} = \\sqrt{rg(\\mu_s+\\tan\\theta)/(1-\\mu_s\\tan\\theta)}$. Lower slip limit: $v_{\\min} = \\sqrt{rg(\\tan\\theta-\\mu_s)/(1+\\mu_s\\tan\\theta)}$ (if $\\tan\\theta > \\mu_s$)."
     };
     function buildLocalAnswer(sim, query) {
       const law = TUTOR_KNOWLEDGE[state.activeSim] || "Adjust the sliders and watch the live readings change.";
@@ -5211,13 +6009,16 @@ Rules:
        ========================================================== */
     window.onload = function() {
       resizeCanvas();
-      switchSimulation('projectile');
+      const urlParams = new URLSearchParams(window.location.search);
+      const initialSim = urlParams.get('sim') || 'circular';
+      switchSimulation(simulations[initialSim] ? initialSim : 'circular');
       lucide.createIcons();
       if ((window.matchMedia && window.matchMedia('(max-width:1023px)').matches) || document.body.classList.contains('view-mobile')) {
-        showToast('16 simulations here — tap Sims below or the SIM box above to switch', 'info');
+        showToast('17 simulations here — tap Sims below or the SIM box above to switch', 'info');
       }
       requestAnimationFrame(gameLoop);
     };
   </script>
 </body>
 </html>
+

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRASANTH PHYSICS - PPT Presentations & Study Notes (CBSE Class 11 & 12 · NEET · JEE)</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- KaTeX for rendered math equations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              400: '#38bdf8',
+              500: '#0284c7',
+              600: '#0369a1',
+              900: '#0c4a6e',
+            },
+            space: {
+              800: '#0f172a',
+              900: '#090d16',
+              950: '#05070d'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.45);
+    }
+
+    /* Content protection & no-download styling */
+    .protected-view {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    @media print {
+      body {
+        display: none !important;
+      }
+    }
+    
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+
+<body class="bg-space-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-black">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800/80 bg-space-900/95 backdrop-blur-md sticky top-0 z-50 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-md">
+    <div class="flex items-center gap-3">
+      <a href="/" class="h-9 w-9 rounded-xl bg-cyan-700 hover:bg-cyan-600 flex items-center justify-center shadow-sm transition">
+        <i data-lucide="atom" class="w-5 h-5 text-white"></i>
+      </a>
+      <div>
+        <div class="flex items-center gap-2">
+          <a href="/" class="font-bold text-base md:text-lg tracking-tight text-slate-100 hover:text-cyan-400 transition">
+            PRASANTH PHYSICS
+          </a>
+          <span class="text-[10px] bg-cyan-900/60 text-cyan-300 font-mono px-2 py-0.5 rounded-full border border-cyan-700/40">
+            PPT & NOTES
+          </span>
+        </div>
+        <p class="text-[10px] text-slate-400 font-mono tracking-wide uppercase">CBSE Class 11 & 12 · NEET · JEE Material Hub</p>
+      </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="flex items-center gap-2 bg-slate-800/70 p-1 rounded-xl border border-slate-700/60">
+      <a href="/" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/60 rounded-lg transition">
+        <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span>Simulations Lab</span>
+      </a>
+      <a href="/presentations" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-cyan-700 rounded-lg shadow-sm transition">
+        <i data-lucide="presentation" class="w-3.5 h-3.5 text-cyan-200"></i>
+        <span>PPT Presentations</span>
+      </a>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+    
+    <!-- Left Chapter Navigation Sidebar -->
+    <aside class="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-space-900/60 flex flex-col shrink-0 max-h-[45vh] lg:max-h-[calc(100vh-61px)]">
+      
+      <!-- Search & Class Filters -->
+      <div class="p-3 border-b border-slate-800/80 bg-space-900/90 space-y-2.5">
+        <div class="relative">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5"></i>
+          <input 
+            id="chapterSearch" 
+            type="text" 
+            placeholder="Search chapters or topics..." 
+            class="w-full bg-slate-800/90 text-slate-200 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-cyan-400 placeholder:text-slate-400"
+          >
+        </div>
+
+        <!-- Class Pills -->
+        <div class="flex gap-2 overflow-x-auto pb-1" id="classPills">
+          <button data-class="class-12" class="class-pill active flex-1 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-center transition">Class 12 (15 Ch · 188 Modules)</button>
+          <button data-class="class-11" class="class-pill flex-1 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent text-center transition">Class 11 (15 Ch · 144 Modules)</button>
+        </div>
+      </div>
+
+      <!-- Chapter List -->
+      <div class="flex-1 overflow-y-auto p-2 space-y-1" id="chapterListContainer">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Footer Info -->
+      <div class="p-3 border-t border-slate-800/80 text-[11px] text-slate-400 bg-space-900/40">
+        <div class="flex items-center gap-1.5 text-cyan-400 font-medium">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+          <span>Interactive Animated Presentations</span>
+        </div>
+        <p class="mt-1 text-[10px] text-slate-400">Step-by-step builds, diagrams, formulas and PYQs streamed live. Direct downloads are restricted to protect teaching decks.</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Stage -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+      
+      <!-- Breadcrumb & Title Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-mono text-cyan-400 mb-1" id="breadcrumbText">
+            <span>CBSE CLASS 12 PHYSICS</span>
+            <span>/</span>
+            <span class="text-slate-400">CHAPTER 01</span>
+          </div>
+          <h2 id="currentChapterTitle" class="text-xl md:text-2xl font-bold tracking-tight text-white">
+            Electric Charges and Fields
+          </h2>
+          <div class="flex items-center gap-2 mt-1.5">
+            <span id="moduleBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 font-mono font-medium">12 Interactive Modules (Animated)</span>
+            <span class="text-xs text-slate-400 hidden sm:inline">• Click slide or press Spacebar to step through builds & animations</span>
+          </div>
+        </div>
+
+        <!-- Action / Fullscreen controls -->
+        <div class="flex items-center gap-2">
+          <button id="btnReloadPlayer" class="flex items-center gap-1 px-3 py-1.5 text-xs text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700/60 transition" title="Reload Slide Deck">
+            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+            <span>Reload</span>
+          </button>
+          <button id="btnFullscreen" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-cyan-700 hover:bg-cyan-600 rounded-lg shadow-sm transition">
+            <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
+            <span>Enter Fullscreen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Subtopic / Parts Tabs (Modular Chapters) -->
+      <div>
+        <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+          <span>Select Module / Sub-Topic:</span>
+          <span id="partsCounterText" class="text-cyan-400 text-[10px]">12 Available Parts</span>
+        </div>
+        <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin" id="partsTabContainer">
+          <!-- Injected via JavaScript (e.g. Part 1, Part 2, Part 3) -->
+        </div>
+      </div>
+
+      <!-- Presentation Viewer Container (Protected Native Animation Engine) -->
+      <div id="presentationStage" class="relative w-full aspect-video rounded-2xl overflow-hidden glass-panel border border-slate-700/70 shadow-2xl bg-black flex items-center justify-center select-none">
+        
+        <!-- Native Google Slides Animated Engine Frame -->
+        <div id="iframeContainer" class="relative w-full h-full flex items-center justify-center bg-black">
+          <!-- Loading placeholder while presentation initializes -->
+          <div id="slideLoader" class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/90 z-10 transition-opacity duration-300">
+            <div class="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-xs text-slate-300 font-mono">Loading Animated Presentation Module...</p>
+            <p class="text-[10px] text-slate-500">Native PowerPoint animations, builds & transitions active</p>
+          </div>
+          <iframe 
+            id="slideFrame" 
+            src="" 
+            class="w-full h-full border-0 relative z-0" 
+            allow="autoplay; fullscreen"
+            allowfullscreen="true" 
+            mozallowfullscreen="true" 
+            webkitallowfullscreen="true">
+          </iframe>
+        </div>
+
+        <!-- Subtle Watermark overlay to protect against screen-record scrapers -->
+        <div class="absolute top-3 right-4 pointer-events-none opacity-40 text-[11px] font-mono tracking-wider text-slate-300 bg-space-950/80 px-2 py-0.5 rounded border border-slate-700/50 z-20">
+          physicsprasanth.vercel.app
+        </div>
+      </div>
+
+      <!-- Protection & Interaction Notice Bar -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-400 gap-2">
+        <div class="flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400 shrink-0"></i>
+          <span><strong>Animated Deck:</strong> Click directly on the slide or press <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-cyan-300 font-mono">Space</kbd> / <kbd class="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[11px] text-cyan-300 font-mono">→</kbd> to step through animations & builds.</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-slate-400 text-[11px]">
+          <i data-lucide="lock" class="w-3.5 h-3.5 text-cyan-500 shrink-0"></i>
+          <span>Direct Downloads Restricted · Live Interactive Revision</span>
+        </div>
+      </div>
+
+      <!-- Chapter Study Notes, Formulas & Quick Revision Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+        
+        <!-- Key Formulas & Core Concepts (KaTeX) -->
+        <div class="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex items-center gap-2 text-cyan-400 font-semibold text-sm">
+            <i data-lucide="sigma" class="w-4 h-4"></i>
+            <span>Must-Know Board Exam Formulas</span>
+          </div>
+          <div id="formulasContainer" class="space-y-3 font-mono text-sm text-slate-200">
+            <!-- KaTeX injected -->
+          </div>
+        </div>
+
+        <!-- Chapter High-Yield Summary -->
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 text-purple-400 font-semibold text-sm">
+              <i data-lucide="target" class="w-4 h-4"></i>
+              <span>Board Weightage & Tips</span>
+            </div>
+            <div id="chapterTips" class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <!-- Tips injected -->
+            </div>
+          </div>
+
+          <!-- Simulation Quick Link -->
+          <div id="simRecommendation" class="pt-3 border-t border-slate-800/80">
+            <a href="/" class="flex items-center justify-between p-2.5 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/40 border border-cyan-800/50 text-cyan-300 text-xs transition">
+              <span class="flex items-center gap-2">
+                <i data-lucide="play-circle" class="w-4 h-4 text-cyan-400"></i>
+                <span class="font-medium">Open Interactive Lab for this Topic</span>
+              </span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Load All 332 Animated Modules Curriculum -->
+  <script src="/curriculum.js"></script>
+
+  <!-- JavaScript Player Logic -->
+  <script>
+    // State management
+    let currentClass = "class-12";
+    let selectedChapter = CURRICULUM["class-12"][0];
+    let selectedPartIndex = 0;
+
+    // Render Chapters in Sidebar
+    function renderChapterList(filterText = "") {
+      const container = document.getElementById("chapterListContainer");
+      const chapters = CURRICULUM[currentClass] || [];
+      const query = filterText.toLowerCase().trim();
+
+      const filtered = chapters.filter(ch => 
+        ch.title.toLowerCase().includes(query) || 
+        ch.parts.some(p => p.name.toLowerCase().includes(query))
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No chapters matching "${filterText}"</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(ch => {
+        const isActive = ch.id === selectedChapter.id;
+        return `
+          <button 
+            data-id="${ch.id}" 
+            class="chapter-btn w-full text-left p-2.5 rounded-xl text-xs transition border flex items-center justify-between gap-2 ${
+              isActive 
+                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200 font-semibold shadow-sm' 
+                : 'border-transparent text-slate-300 hover:bg-slate-800/60 hover:text-white'
+            }"
+          >
+            <div class="truncate">
+              <div class="truncate">${ch.title}</div>
+              <div class="text-[10px] text-slate-400 font-normal">${ch.parts.length} Modules (Animated) · ${ch.weightage}</div>
+            </div>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5 shrink-0 ${isActive ? 'text-cyan-400' : 'text-slate-400'}"></i>
+          </button>
+        `;
+      }).join('');
+
+      // Add click listeners
+      container.querySelectorAll('.chapter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          selectedChapter = chapters.find(c => c.id === id);
+          selectedPartIndex = 0;
+          renderChapterList(document.getElementById("chapterSearch").value);
+          renderMainStage();
+        });
+      });
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Render Main Stage (Player, Tabs, Formulas, Tips)
+    function renderMainStage() {
+      if (!selectedChapter) return;
+
+      // Update Breadcrumb & Title
+      const classLabel = currentClass.replace('-', ' ').toUpperCase();
+      document.getElementById("breadcrumbText").innerHTML = `
+        <span>CBSE ${classLabel}</span>
+        <span>/</span>
+        <span class="text-slate-400">${selectedChapter.id}</span>
+      `;
+      document.getElementById("currentChapterTitle").textContent = selectedChapter.title;
+      document.getElementById("moduleBadge").textContent = `${selectedChapter.parts.length} Modules (Animated PPT)`;
+      document.getElementById("partsCounterText").textContent = `${selectedChapter.parts.length} Modules Available`;
+
+      // Render Parts Tabs (Modular Chapters)
+      const tabsContainer = document.getElementById("partsTabContainer");
+      tabsContainer.innerHTML = selectedChapter.parts.map((part, idx) => {
+        const isActive = idx === selectedPartIndex;
+        return `
+          <button 
+            data-index="${idx}" 
+            class="part-tab shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition font-medium border ${
+              isActive 
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm font-semibold' 
+                : 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200'
+            }"
+          >
+            <span>👉 ${part.name}</span>
+          </button>
+        `;
+      }).join('');
+
+      tabsContainer.querySelectorAll('.part-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedPartIndex = parseInt(btn.getAttribute('data-index'));
+          renderMainStage();
+        });
+      });
+
+      // Update player to load animated presentation
+      const currentPart = selectedChapter.parts[selectedPartIndex] || selectedChapter.parts[0];
+      const iframe = document.getElementById("slideFrame");
+      const loader = document.getElementById("slideLoader");
+      
+      if (loader) loader.style.display = "flex";
+
+      if (iframe.src !== currentPart.embedUrl) {
+        iframe.src = currentPart.embedUrl;
+      } else {
+        if (loader) loader.style.display = "none";
+      }
+
+      // Render Formulas with KaTeX
+      const formulasContainer = document.getElementById("formulasContainer");
+      formulasContainer.innerHTML = selectedChapter.formulas.map(f => {
+        return `<div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 math-item">\\(${f}\\)</div>`;
+      }).join('');
+
+      // Render Tips
+      const tipsContainer = document.getElementById("chapterTips");
+      tipsContainer.innerHTML = selectedChapter.tips.map(t => {
+        return `<div class="flex items-start gap-2 bg-slate-900/40 p-2 rounded-lg border border-slate-800/60"><span>•</span><div>${t}</div></div>`;
+      }).join('');
+
+      // Re-render KaTeX math
+      if (window.renderMathInElement) {
+        renderMathInElement(formulasContainer, {
+          delimiters: [
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Toggle fullscreen on stage
+    function toggleStageFullscreen() {
+      const stage = document.getElementById("presentationStage");
+      if (!document.fullscreenElement) {
+        if (stage.requestFullscreen) {
+          stage.requestFullscreen();
+        } else if (stage.webkitRequestFullscreen) {
+          stage.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Initialize Event Listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      const iframe = document.getElementById("slideFrame");
+      iframe.onload = () => {
+        const loader = document.getElementById("slideLoader");
+        if (loader) loader.style.display = "none";
+      };
+
+      // Class selector pills
+      document.querySelectorAll(".class-pill").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".class-pill").forEach(b => {
+            b.classList.remove("active", "bg-cyan-500/20", "text-cyan-300", "border-cyan-500/40");
+            b.classList.add("text-slate-400", "border-transparent");
+          });
+          btn.classList.add("active", "bg-cyan-500/20", "text-cyan-300", "border-cyan-500/40");
+          btn.classList.remove("text-slate-400", "border-transparent");
+
+          currentClass = btn.getAttribute("data-class");
+          selectedChapter = CURRICULUM[currentClass][0];
+          selectedPartIndex = 0;
+          renderChapterList();
+          renderMainStage();
+        });
+      });
+
+      // Chapter search input
+      document.getElementById("chapterSearch").addEventListener("input", (e) => {
+        renderChapterList(e.target.value);
+      });
+
+      // Reload player
+      document.getElementById("btnReloadPlayer").addEventListener("click", () => {
+        const iframe = document.getElementById("slideFrame");
+        const loader = document.getElementById("slideLoader");
+        if (loader) loader.style.display = "flex";
+        const currentSrc = iframe.src;
+        iframe.src = "";
+        setTimeout(() => { iframe.src = currentSrc; }, 150);
+      });
+
+      // Fullscreen player button
+      document.getElementById("btnFullscreen").addEventListener("click", toggleStageFullscreen);
+
+      // Disable right-click on the presentation stage
+      document.getElementById("presentationStage").addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+      });
+
+      // Initial Render
+      renderChapterList();
+      renderMainStage();
+    });
+  </script>
+</body>
+</html>

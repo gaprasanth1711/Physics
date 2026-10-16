@@ -1,0 +1,2858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Physics Lab: Circular Motion & Banking - CBSE Class 11 NCERT</title>
+  <meta name="description" content="PhET-style interactive physics simulation for CBSE Class 11 Physics: Bending of Cyclist, Car on Level Road, and Car on Banked Road.">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: rgba(30, 41, 59, 0.85);
+      --bg-card-hover: rgba(51, 65, 85, 0.9);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --accent-glow: rgba(56, 189, 248, 0.3);
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --canvas-bg: #090d16;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --control-w: 360px;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.92);
+      --bg-card-hover: rgba(241, 245, 249, 0.95);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-glow: rgba(2, 132, 199, 0.2);
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --canvas-bg: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .brand-text h1 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-text span.badge {
+      font-size: 0.65rem;
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .brand-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* TABS */
+    .mode-tabs {
+      display: flex;
+      background: var(--bg-primary);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      gap: 4px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #000000;
+      font-weight: 700;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    /* HEADER ACTIONS */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-badge {
+      position: relative;
+    }
+
+    /* MAIN WORKSPACE */
+    .main-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (max-width: 960px) {
+      .main-container {
+        flex-direction: column;
+        height: auto;
+        overflow-y: auto;
+      }
+    }
+
+    /* SIMULATION STAGE */
+    .simulation-viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--canvas-bg);
+      position: relative;
+      overflow: hidden;
+      min-height: 480px;
+    }
+
+    /* CANVAS CONTAINERS */
+    .canvases-wrapper {
+      flex: 1;
+      display: flex;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .canvases-wrapper {
+        flex-direction: column;
+      }
+    }
+
+    .canvas-pane {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-color);
+    }
+
+    .canvas-pane:last-child {
+      border-right: none;
+    }
+
+    .pane-header {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      z-index: 10;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-main);
+      pointer-events: none;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    /* HUD OVERLAY */
+    .hud-overlay {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      max-width: 280px;
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .status-safe {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid var(--success);
+      color: #4ade80;
+    }
+
+    .status-warning {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid var(--warning);
+      color: #fbbf24;
+    }
+
+    .status-danger {
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid var(--danger);
+      color: #f87171;
+      animation: pulse-danger 1s infinite alternate;
+    }
+
+    @keyframes pulse-danger {
+      from { box-shadow: 0 0 4px var(--danger); }
+      to { box-shadow: 0 0 16px var(--danger); }
+    }
+
+    .hud-metrics {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: var(--text-main);
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .metric-label {
+      color: var(--text-muted);
+    }
+
+    .metric-val {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* SPEED METER / SAFETY GAUGE */
+    .speed-gauge-wrap {
+      margin-top: 4px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 4px;
+      padding: 4px 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .gauge-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #334155;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .gauge-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #f59e0b 70%, #ef4444);
+      transition: width 0.1s linear;
+    }
+
+    .gauge-markers {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* CONTROL PANEL (SIDEBAR) */
+    .control-panel {
+      width: var(--control-w);
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 20;
+    }
+
+    @media (max-width: 960px) {
+      .control-panel {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        max-height: 480px;
+      }
+    }
+
+    .panel-section {
+      padding: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ACTION BAR */
+    .playback-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .btn-action {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+    }
+
+    .btn-action.btn-primary {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    .btn-action.btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .speed-select-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-primary);
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .speed-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .speed-btn.active {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* SLIDERS & CONTROLS */
+    .control-group {
+      margin-bottom: 12px;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 0.78rem;
+    }
+
+    .control-label {
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .control-val {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      background: var(--bg-primary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+
+    .range-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #334155;
+      outline: none;
+      transition: background 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 6px var(--accent-glow);
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .preset-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .pill-btn {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .pill-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+
+    .pill-btn.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* TOGGLE SWITCHES */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 0.78rem;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #334155;
+      transition: 0.3s;
+      border-radius: 20px;
+    }
+
+    .slider-toggle:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider-toggle {
+      background-color: var(--accent);
+    }
+
+    input:checked + .slider-toggle:before {
+      transform: translateX(16px);
+      background-color: #000;
+    }
+
+    /* VECTOR LEGEND */
+    .vector-legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 0.72rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* MODAL (THEORY & QUIZ) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      transform: translateY(20px);
+      transition: transform 0.25s ease;
+    }
+
+    .modal-backdrop.open .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .modal-close:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .formula-box {
+      background: var(--bg-primary);
+      border-left: 4px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+    }
+
+    .formula-box h4 {
+      color: var(--accent);
+      margin-bottom: 4px;
+      font-family: var(--font-sans);
+    }
+
+    /* QUIZ QUESTIONS */
+    .quiz-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .quiz-question {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .quiz-opt {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .quiz-opt:hover {
+      border-color: var(--accent);
+      background: var(--bg-card-hover);
+    }
+
+    .quiz-opt.correct {
+      background: rgba(34, 197, 94, 0.2);
+      border-color: var(--success);
+      color: #4ade80;
+    }
+
+    .quiz-opt.incorrect {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: var(--danger);
+      color: #f87171;
+    }
+
+    .quiz-feedback {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .quiz-btn-row {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-apply-preset {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* TOAST ALERTS */
+    .toast-container {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 60;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent);
+      color: var(--text-main);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      animation: fadeInOut 2.5s forwards;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(10px); }
+      15% { opacity: 1; transform: translateY(0); }
+      85% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- NAVIGATION HEADER -->
+  <header>
+    <div class="brand-group">
+      <div class="brand-icon">⚛</div>
+      <div class="brand-text">
+        <h1>Circular Dynamics <span class="badge">NCERT 11</span></h1>
+        <p>Bending of Cyclist & Banking of Roads</p>
+      </div>
+    </div>
+
+    <!-- SIMULATION MODE TABS -->
+    <div class="mode-tabs">
+      <button class="tab-btn active" data-mode="cyclist" id="tabCyclist">
+        <span>🚴</span> Bending of Cyclist
+      </button>
+      <button class="tab-btn" data-mode="unbanked" id="tabUnbanked">
+        <span>🚗</span> Level (Unbanked) Road
+      </button>
+      <button class="tab-btn" data-mode="banked" id="tabBanked">
+        <span>🏎️</span> Banked Road
+      </button>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="header-actions">
+      <button class="btn-icon" id="btnTheory" title="NCERT Equations & Theory">📖</button>
+      <button class="btn-icon" id="btnQuiz" title="NCERT Practice Quiz">🎯</button>
+      <button class="btn-icon" id="btnSound" title="Toggle Sound Synthesizer">🔇</button>
+      <button class="btn-icon" id="btnTheme" title="Toggle Dark/Light Mode">🌙</button>
+    </div>
+  </header>
+
+  <!-- MAIN SIMULATION AREA -->
+  <main class="main-container">
+    
+    <!-- VIEWPORT WITH DUAL SYNCHRONIZED CANVASES -->
+    <section class="simulation-viewport">
+      
+      <!-- CANVASES WRAPPER -->
+      <div class="canvases-wrapper">
+        <!-- PANE 1: Cross-Section & Free Body Diagram (FBD) -->
+        <div class="canvas-pane" id="paneCrossSection">
+          <div class="pane-header">
+            <span>🔬</span> Rear Cross-Section & Free Body Diagram (FBD)
+          </div>
+          <canvas id="fbdCanvas"></canvas>
+        </div>
+
+        <!-- PANE 2: Top-Down Track & Trajectory View -->
+        <div class="canvas-pane" id="paneTrack">
+          <div class="pane-header">
+            <span>🛰️</span> Aerial Circular Track & Motion
+          </div>
+          <canvas id="trackCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- LIVE HUD TELEMETRY OVERLAY -->
+      <div class="hud-overlay">
+        <!-- Real-time Status Badge -->
+        <div class="status-badge status-safe" id="statusBadge">
+          <span id="statusIcon">🟢</span>
+          <span id="statusText">Safe Cruising</span>
+        </div>
+
+        <!-- Live Metrics HUD -->
+        <div class="hud-metrics">
+          <div class="metric-row">
+            <span class="metric-label">Velocity (v):</span>
+            <span class="metric-val" id="hudV">0.0 m/s (0 km/h)</span>
+          </div>
+          <div class="metric-row" id="hudVoptRow" style="display: none;">
+            <span class="metric-label">Optimum Speed (v₀):</span>
+            <span class="metric-val" id="hudVopt">--</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Max Safe Speed (vₘₐₓ):</span>
+            <span class="metric-val" id="hudVmax">--</span>
+          </div>
+          <div class="metric-row" id="hudVminRow" style="display: none;">
+            <span class="metric-label">Min Safe Speed (vₘᵢₙ):</span>
+            <span class="metric-val" id="hudVmin">--</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Required Fc (mv²/r):</span>
+            <span class="metric-val" id="hudFc">0 N</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Avail. Friction (fₛ):</span>
+            <span class="metric-val" id="hudFs">0 N</span>
+          </div>
+          <div class="metric-row" id="hudAngleRow">
+            <span class="metric-label" id="hudAngleLabel">Lean Angle (θ):</span>
+            <span class="metric-val" id="hudAngleVal">0.0°</span>
+          </div>
+
+          <!-- Speed vs Limits Visual Gauge -->
+          <div class="speed-gauge-wrap">
+            <div class="gauge-bar-track">
+              <div class="gauge-bar-fill" id="gaugeFill"></div>
+            </div>
+            <div class="gauge-markers">
+              <span>0</span>
+              <span id="gaugeVlimitLabel">vₘₐₓ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOAST NOTIFICATIONS -->
+      <div class="toast-container" id="toastContainer"></div>
+    </section>
+
+    <!-- CONTROL PANEL (SIDEBAR) -->
+    <aside class="control-panel">
+      
+      <!-- PLAYBACK & TIME CONTROLS -->
+      <div class="panel-section">
+        <div class="section-title">
+          <span>Simulation Controls</span>
+          <span style="font-size: 0.68rem; color: var(--text-muted);">Delta-t: 16ms</span>
+        </div>
+        
+        <div class="playback-row">
+          <button class="btn-action btn-primary" id="btnPlayPause">
+            <span id="playIcon">⏸</span> <span id="playText">Pause</span>
+          </button>
+          <button class="btn-action" id="btnStep" title="Advance by 0.05s">
+            ⏭ Step
+          </button>
+          <button class="btn-action" id="btnReset" title="Reset to defaults">
+            🔄 Reset
+          </button>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Sim Speed:</span>
+          <div class="speed-select-wrap">
+            <button class="speed-btn" data-speed="0.25">0.25x</button>
+            <button class="speed-btn" data-speed="0.5">0.5x</button>
+            <button class="speed-btn active" data-speed="1.0">1.0x</button>
+            <button class="speed-btn" data-speed="2.0">2.0x</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRIMARY PHYSICAL PARAMETERS -->
+      <div class="panel-section">
+        <div class="section-title">
+          <span>Physical Parameters</span>
+          <span id="modeBadge" style="font-size: 0.65rem; color: var(--accent); background: var(--bg-primary); padding: 2px 6px; border-radius: 4px;">Cyclist Mode</span>
+        </div>
+
+        <!-- 1. VELOCITY (v) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Speed (v)</span>
+            <span class="control-val" id="valSpeed">10.0 m/s</span>
+          </div>
+          <div class="range-input-wrap">
+            <input type="range" id="inputSpeed" min="0" max="40" step="0.5" value="10">
+          </div>
+          <div class="preset-pills">
+            <button class="pill-btn" id="btnPresetV0" style="display: none;">Optimum (v₀)</button>
+            <button class="pill-btn" id="btnPresetVmax">Set to vₘₐₓ</button>
+            <button class="pill-btn" id="btnPresetVmin" style="display: none;">Set to vₘᵢₙ</button>
+            <button class="pill-btn" id="btnPresetVStop">Stop (0)</button>
+          </div>
+        </div>
+
+        <!-- 2. RADIUS OF CURVATURE (r) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Curve Radius (r)</span>
+            <span class="control-val" id="valRadius">25 m</span>
+          </div>
+          <div class="range-input-wrap">
+            <input type="range" id="inputRadius" min="10" max="150" step="1" value="25">
+          </div>
+          <div class="preset-pills">
+            <button class="pill-btn" data-radius="15">Tight (15m)</button>
+            <button class="pill-btn active" data-radius="25">Medium (25m)</button>
+            <button class="pill-btn" data-radius="60">Highway (60m)</button>
+            <button class="pill-btn" data-radius="120">Speedway (120m)</button>
+          </div>
+        </div>
+
+        <!-- 3. COEFFICIENT OF FRICTION (μ) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Friction Coeff. (μₛ)</span>
+            <span class="control-val" id="valMu">0.50</span>
+          </div>
+          <div class="range-input-wrap">
+            <input type="range" id="inputMu" min="0.00" max="1.10" step="0.02" value="0.50">
+          </div>
+          <div class="preset-pills">
+            <button class="pill-btn" data-mu="0.05">Icy (0.05)</button>
+            <button class="pill-btn" data-mu="0.25">Wet (0.25)</button>
+            <button class="pill-btn active" data-mu="0.50">Normal (0.50)</button>
+            <button class="pill-btn" data-mu="0.85">Dry Track (0.85)</button>
+          </div>
+        </div>
+
+        <!-- 4. BANKING ANGLE (θ) - ONLY IN BANKED MODE -->
+        <div class="control-group" id="groupBankingAngle" style="display: none;">
+          <div class="control-label-row">
+            <span class="control-label">Banking Angle (θ)</span>
+            <span class="control-val" id="valBankingAngle">15.0°</span>
+          </div>
+          <div class="range-input-wrap">
+            <input type="range" id="inputBankingAngle" min="0" max="45" step="0.5" value="15">
+          </div>
+          <div class="preset-pills">
+            <button class="pill-btn" data-bank="5">Flat 5°</button>
+            <button class="pill-btn active" data-bank="15">Expressway 15°</button>
+            <button class="pill-btn" data-bank="28">NASCAR 28°</button>
+            <button class="pill-btn" data-bank="40">Steep 40°</button>
+          </div>
+        </div>
+
+        <!-- 5. MASS (m) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Total Mass (m)</span>
+            <span class="control-val" id="valMass">80 kg</span>
+          </div>
+          <div class="range-input-wrap">
+            <input type="range" id="inputMass" min="40" max="2500" step="10" value="80">
+          </div>
+        </div>
+
+        <!-- 6. GRAVITATIONAL ACCELERATION (g) -->
+        <div class="control-group">
+          <div class="control-label-row">
+            <span class="control-label">Gravity (g)</span>
+            <span class="control-val" id="valGravity">9.8 m/s²</span>
+          </div>
+          <div class="preset-pills">
+            <button class="pill-btn active" data-g="9.8">Earth (9.8)</button>
+            <button class="pill-btn" data-g="1.6">Moon (1.6)</button>
+            <button class="pill-btn" data-g="3.7">Mars (3.7)</button>
+            <button class="pill-btn" data-g="24.8">Jupiter (24.8)</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- VISUALIZATION & OVERLAY TOGGLES -->
+      <div class="panel-section">
+        <div class="section-title">Visual Overlays & FBD</div>
+
+        <div class="toggle-row">
+          <span>Show Force Vectors (FBD)</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleVectors" checked>
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <span>Show Vector Components</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleComponents" checked>
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <span>Show Velocity & Accel Vectors</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleVelocityVector" checked>
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <span>Skid Marks & Tire Traces</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleSkidTraces" checked>
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row" id="rowCyclistAutoLean">
+          <span>Auto-Lean to Equilibrium</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleAutoLean" checked>
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <!-- VECTOR COLOR LEGEND -->
+        <div class="vector-legend">
+          <div class="legend-item"><div class="legend-dot" style="background: #38bdf8;"></div>Normal Force (N)</div>
+          <div class="legend-item"><div class="legend-dot" style="background: #f59e0b;"></div>Gravity (mg)</div>
+          <div class="legend-item"><div class="legend-dot" style="background: #ef4444;"></div>Friction (f)</div>
+          <div class="legend-item"><div class="legend-dot" style="background: #c084fc;"></div>Centripetal (Fc)</div>
+          <div class="legend-item"><div class="legend-dot" style="background: #22c55e;"></div>Velocity (v)</div>
+          <div class="legend-item"><div class="legend-dot" style="background: #06b6d4;"></div>Resultant (R)</div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <button class="btn-action" id="btnClearTraces" style="width: 100%;">
+            🧹 Clear Skid Traces
+          </button>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- MODAL: NCERT EQUATIONS & THEORY -->
+  <div class="modal-backdrop" id="modalTheory">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>📖 NCERT Class 11 Physics: Circular Motion</h2>
+        <button class="modal-close" id="btnCloseTheory">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <h3>1. Bending of a Cyclist (NCERT Section 5.10)</h3>
+        <p>When a cyclist rounds a curved path of radius <em>r</em> at speed <em>v</em>, a centripetal force is necessary. If the cyclist remains upright, friction provides the centripetal force, which exerts an overturning torque about the center of mass. To prevent toppling, the cyclist leans inward at an angle &theta; with the vertical.</p>
+        <div class="formula-box">
+          <h4>Key Equations (Cyclist):</h4>
+          Vertical Equilibrium: <strong>R cos &theta; = mg</strong><br>
+          Centripetal Requirement: <strong>R sin &theta; = mv² / r</strong><br>
+          Dividing: <strong>tan &theta; = v² / (rg)</strong> &rArr; <strong>&theta; = arctan(v² / rg)</strong><br>
+          Maximum Safe Speed without Skidding: <strong>v_max = &radic;(&mu;_s &middot; r &middot; g)</strong>
+        </div>
+
+        <h3 style="margin-top: 16px;">2. Motion of a Car on a Level Road</h3>
+        <p>On a horizontal level road, normal reaction balances gravity (<em>N = mg</em>). The only horizontal force acting towards the center of curvature is the static friction <em>f_s</em> between the tires and the asphalt.</p>
+        <div class="formula-box">
+          <h4>Key Equations (Level Road):</h4>
+          Centripetal Force: <strong>f_s = mv² / r</strong><br>
+          Limiting Friction Condition: <strong>f_s &le; &mu;_s N = &mu;_s mg</strong><br>
+          Maximum Safe Speed: <strong>v_max = &radic;(&mu;_s &middot; r &middot; g)</strong><br>
+          <em>Note:</em> If v &gt; v_max, static friction is exceeded, and the vehicle skids outward!
+        </div>
+
+        <h3 style="margin-top: 16px;">3. Motion of a Car on a Banked Road</h3>
+        <p>To reduce dependence on friction and prevent tire wear at high speeds, roads are banked (outer edge raised relative to inner edge) by angle &theta;.</p>
+        <div class="formula-box">
+          <h4>Key Equations (Banked Road):</h4>
+          <strong>(a) Optimum Speed (Zero Lateral Friction, f = 0):</strong><br>
+          N sin &theta; = mv₀² / r &nbsp;|&nbsp; N cos &theta; = mg &rArr; <strong>v₀ = &radic;(rg &middot; tan &theta;)</strong><br><br>
+          <strong>(b) Maximum Safe Speed (Friction down the incline):</strong><br>
+          <strong>v_max = &radic;[ rg &middot; (&mu;_s + tan &theta;) / (1 - &mu;_s tan &theta;) ]</strong><br><br>
+          <strong>(c) Minimum Safe Speed (Friction up the incline, if tan &theta; &gt; &mu;_s):</strong><br>
+          <strong>v_min = &radic;[ rg &middot; (tan &theta; - &mu;_s) / (1 + &mu;_s tan &theta;) ]</strong> (If tan &theta; &le; &mu;_s, v_min = 0)
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NCERT PRACTICE QUIZ -->
+  <div class="modal-backdrop" id="modalQuiz">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🎯 CBSE Class 11 Exam Challenge Problems</h2>
+        <button class="modal-close" id="btnCloseQuiz">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- QUIZ 1 -->
+        <div class="quiz-card" id="q1">
+          <div class="quiz-question">
+            1. A cyclist negotiating a sharp circular curve of radius r = 20 m at speed v = 14 m/s (g = 9.8 m/s²). What is the lean angle &theta; with the vertical to maintain balance?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">A) 30°</button>
+            <button class="quiz-opt" data-correct="true">B) 45°</button>
+            <button class="quiz-opt" data-correct="false">C) 60°</button>
+            <button class="quiz-opt" data-correct="false">D) 15°</button>
+          </div>
+          <div class="quiz-feedback"></div>
+          <div class="quiz-btn-row">
+            <button class="btn-apply-preset" data-preset="cyclist_45">⚡ Load Scenario into Lab</button>
+          </div>
+        </div>
+
+        <!-- QUIZ 2 -->
+        <div class="quiz-card" id="q2">
+          <div class="quiz-question">
+            2. A car is traveling on a flat circular track of radius 50 m. The coefficient of static friction is &mu;_s = 0.5 (g = 9.8 m/s²). What is the maximum speed without skidding?
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="false">A) 11.2 m/s</button>
+            <button class="quiz-opt" data-correct="true">B) 15.65 m/s (~56.3 km/h)</button>
+            <button class="quiz-opt" data-correct="false">C) 22.1 m/s</button>
+            <button class="quiz-opt" data-correct="false">D) 25.0 m/s</button>
+          </div>
+          <div class="quiz-feedback"></div>
+          <div class="quiz-btn-row">
+            <button class="btn-apply-preset" data-preset="unbanked_50">⚡ Load Scenario into Lab</button>
+          </div>
+        </div>
+
+        <!-- QUIZ 3 -->
+        <div class="quiz-card" id="q3">
+          <div class="quiz-question">
+            3. A highway curve of radius 100 m is banked at 15°. At what optimum speed (v₀) can a car round the turn with ZERO wear on tires (no lateral friction required)? (g = 9.8 m/s²)
+          </div>
+          <div class="quiz-options">
+            <button class="quiz-opt" data-correct="true">A) 16.2 m/s (~58.3 km/h)</button>
+            <button class="quiz-opt" data-correct="false">B) 24.5 m/s</button>
+            <button class="quiz-opt" data-correct="false">C) 8.9 m/s</button>
+            <button class="quiz-opt" data-correct="false">D) 32.0 m/s</button>
+          </div>
+          <div class="quiz-feedback"></div>
+          <div class="quiz-btn-row">
+            <button class="btn-apply-preset" data-preset="banked_optimum">⚡ Load Scenario into Lab</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- EMBEDDED JAVASCRIPT ENGINE -->
+  <script>
+    /**
+     * PHET-STYLE PHYSICS SIMULATION ENGINE
+     * Topic: Bending of Cyclist, Car in Banked and Unbanked Road
+     * CBSE Class 11 Physics (NCERT Chapter 5: Laws of Motion)
+     */
+
+    // Canvas roundRect Polyfill for universal cross-browser stability
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radii) {
+        if (!radii) radii = 0;
+        if (typeof radii === 'number') radii = [radii, radii, radii, radii];
+        const r1 = radii[0] || 0;
+        const r2 = radii[1] !== undefined ? radii[1] : r1;
+        const r3 = radii[2] !== undefined ? radii[2] : r1;
+        const r4 = radii[3] !== undefined ? radii[3] : r2;
+        this.beginPath();
+        this.moveTo(x + r1, y);
+        this.lineTo(x + w - r2, y);
+        this.quadraticCurveTo(x + w, y, x + w, y + r2);
+        this.lineTo(x + w, y + h - r3);
+        this.quadraticCurveTo(x + w, y + h, x + w - r3, y + h);
+        this.lineTo(x + r4, y + h);
+        this.quadraticCurveTo(x, y + h, x, y + h - r4);
+        this.lineTo(x, y + r1);
+        this.quadraticCurveTo(x, y, x + r1, y);
+        this.closePath();
+        return this;
+      };
+    }
+
+    // --- 1. SIMULATION STATE & CONFIGURATION ---
+    const State = {
+      mode: 'cyclist', // 'cyclist' | 'unbanked' | 'banked'
+      running: true,
+      timeScale: 1.0,
+      
+      // Physics Variables (SI Units)
+      v: 10.0,             // velocity (m/s)
+      r: 25.0,             // radius of curvature (m)
+      mu: 0.50,            // coefficient of static friction
+      thetaBankDeg: 15.0,  // banking angle (degrees)
+      m: 80.0,             // mass (kg)
+      g: 9.8,              // gravitational acceleration (m/s²)
+      
+      // Calculated Values
+      thetaBankRad: 0.2618,
+      v0: 0,               // optimum speed for banked road
+      vMax: 0,             // maximum safe speed
+      vMin: 0,             // minimum safe speed
+      Fc: 0,               // required centripetal force
+      N: 0,                // normal reaction force
+      f: 0,                // frictional force
+      fMax: 0,             // maximum available static friction
+      cyclistLeanDeg: 0,   // cyclist inclination angle with vertical
+      
+      // Dynamic Simulation State
+      vehicleAngle: 0,     // top-down orbital angle (radians)
+      driftR: 0,           // radial displacement offset during skid (m)
+      driftSpeed: 0,       // radial outward velocity (m/s)
+      isSkidding: false,   // true if slipping/skidding
+      skidType: 'none',    // 'outward' | 'inward' | 'topple' | 'none'
+      skidPoints: [],      // tire trace history
+      particles: [],       // smoke particles
+      
+      // Visual Toggles
+      showVectors: true,
+      showComponents: true,
+      showVelocityVector: true,
+      showSkidTraces: true,
+      autoLeanCyclist: true,
+      soundEnabled: false,
+    };
+
+    // --- 2. AUDIO SYNTHESIZER (WEB AUDIO API) ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.noiseNode = null;
+        this.noiseFilter = null;
+        this.noiseGain = null;
+        this.oscNode = null;
+        this.oscGain = null;
+        this.initialized = false;
+      }
+
+      init() {
+        if (this.initialized) return;
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+
+          // Engine hum oscillator
+          this.oscNode = this.ctx.createOscillator();
+          this.oscGain = this.ctx.createGain();
+          this.oscNode.type = 'triangle';
+          this.oscNode.frequency.value = 60;
+          this.oscGain.gain.value = 0.0;
+          this.oscNode.connect(this.oscGain);
+          this.oscGain.connect(this.ctx.destination);
+          this.oscNode.start();
+
+          // Skid noise synthesizer (white noise + bandpass filter)
+          const bufferSize = this.ctx.sampleRate * 2;
+          const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          this.noiseNode = this.ctx.createBufferSource();
+          this.noiseNode.buffer = noiseBuffer;
+          this.noiseNode.loop = true;
+
+          this.noiseFilter = this.ctx.createBiquadFilter();
+          this.noiseFilter.type = 'bandpass';
+          this.noiseFilter.frequency.value = 1800;
+          this.noiseFilter.Q.value = 4;
+
+          this.noiseGain = this.ctx.createGain();
+          this.noiseGain.gain.value = 0;
+
+          this.noiseNode.connect(this.noiseFilter);
+          this.noiseFilter.connect(this.noiseGain);
+          this.noiseGain.connect(this.ctx.destination);
+          this.noiseNode.start();
+
+          this.initialized = true;
+        } catch (e) {
+          console.warn("AudioContext not supported or blocked", e);
+        }
+      }
+
+      update(speed, isSkidding) {
+        if (!State.soundEnabled || !this.initialized || !this.ctx) return;
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+
+        // Engine pitch
+        const freq = 40 + Math.min(speed, 40) * 4;
+        this.oscNode.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.05);
+        this.oscGain.gain.setTargetAtTime(State.running && speed > 0.5 ? 0.04 : 0, this.ctx.currentTime, 0.05);
+
+        // Skid screech
+        if (isSkidding && State.running && speed > 2) {
+          this.noiseGain.gain.setTargetAtTime(0.12, this.ctx.currentTime, 0.04);
+        } else {
+          this.noiseGain.gain.setTargetAtTime(0.0, this.ctx.currentTime, 0.05);
+        }
+      }
+
+      stop() {
+        if (!this.initialized) return;
+        this.oscGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.noiseGain.gain.setValueAtTime(0, this.ctx.currentTime);
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // --- 3. PHYSICS CALCULATOR ENGINE (NCERT ALIGNED) ---
+    function updatePhysicsCalculations() {
+      const { mode, v, r, mu, m, g, thetaBankDeg } = State;
+      const theta = (thetaBankDeg * Math.PI) / 180;
+      State.thetaBankRad = theta;
+
+      // Required Centripetal Force: Fc = m * v² / r
+      State.Fc = r > 0 ? (m * v * v) / r : 0;
+
+      if (mode === 'cyclist') {
+        // --- A. BENDING OF CYCLIST ---
+        // tan(theta) = v² / (r * g) where theta is angle with vertical
+        const tanLean = (r > 0 && g > 0) ? (v * v) / (r * g) : 0;
+        State.cyclistLeanDeg = Math.min(Math.atan(tanLean) * (180 / Math.PI), 75);
+        
+        // Vertical normal reaction: N = mg
+        State.N = m * g;
+        // Lateral friction needed: f = Fc = m v² / r
+        State.f = State.Fc;
+        // Limiting static friction: f_max = mu * N
+        State.fMax = mu * State.N;
+        // Maximum safe speed: v_max = sqrt(mu * r * g)
+        State.vMax = Math.sqrt(Math.max(0, mu * r * g));
+        State.vMin = 0;
+        State.v0 = 0;
+
+        // Check if skidding occurs
+        if (v > State.vMax + 0.05) {
+          State.isSkidding = true;
+          State.skidType = 'outward';
+        } else {
+          State.isSkidding = false;
+          State.skidType = 'none';
+        }
+
+      } else if (mode === 'unbanked') {
+        // --- B. CAR ON LEVEL (UNBANKED) ROAD ---
+        // N = mg
+        State.N = m * g;
+        // f = mv²/r
+        State.f = State.Fc;
+        // Limiting static friction: f_max = mu * N = mu * mg
+        State.fMax = mu * State.N;
+        // v_max = sqrt(mu * r * g)
+        State.vMax = Math.sqrt(Math.max(0, mu * r * g));
+        State.vMin = 0;
+        State.v0 = 0;
+
+        // Skidding detection
+        if (v > State.vMax + 0.05) {
+          State.isSkidding = true;
+          State.skidType = 'outward';
+        } else {
+          State.isSkidding = false;
+          State.skidType = 'none';
+        }
+
+      } else if (mode === 'banked') {
+        // --- C. CAR ON BANKED ROAD ---
+        // 1. Optimum Speed: v0 = sqrt(r * g * tan(theta))
+        State.v0 = Math.sqrt(Math.max(0, r * g * Math.tan(theta)));
+
+        // 2. Maximum Safe Speed: v_max = sqrt( r*g*(mu + tan(theta)) / (1 - mu*tan(theta)) )
+        const denomMax = 1 - mu * Math.tan(theta);
+        if (denomMax <= 0.001) {
+          // If mu * tan(theta) >= 1, road can handle arbitrarily high speeds without skidding
+          State.vMax = 999.0;
+        } else {
+          State.vMax = Math.sqrt(Math.max(0, r * g * (mu + Math.tan(theta)) / denomMax));
+        }
+
+        // 3. Minimum Safe Speed (if tan(theta) > mu):
+        if (Math.tan(theta) > mu) {
+          const denomMin = 1 + mu * Math.tan(theta);
+          State.vMin = Math.sqrt(Math.max(0, r * g * (Math.tan(theta) - mu) / denomMin));
+        } else {
+          State.vMin = 0; // car can safely stand still at rest
+        }
+
+        // Real-time normal force and friction force
+        // When v > v0: friction acts DOWN the incline to help turn
+        // When v < v0: friction acts UP the incline to prevent sliding down
+        const sinT = Math.sin(theta);
+        const cosT = Math.cos(theta);
+        
+        // Exact equations:
+        // N * cosT - f * sinT = mg  (with f positive down the incline)
+        // N * sinT + f * cosT = m*v²/r
+        // Solving:
+        State.N = m * (g * cosT + (v * v / r) * sinT);
+        State.f = m * ((v * v / r) * cosT - g * sinT);
+        State.fMax = mu * State.N;
+
+        // Check limits
+        if (v > State.vMax + 0.05) {
+          State.isSkidding = true;
+          State.skidType = 'outward';
+        } else if (v < State.vMin - 0.05 && State.vMin > 0) {
+          State.isSkidding = true;
+          State.skidType = 'inward';
+        } else {
+          State.isSkidding = false;
+          State.skidType = 'none';
+        }
+      }
+    }
+
+    // --- 4. HUD & DOM METRICS UPDATE ---
+    const dom = {
+      fbdCanvas: document.getElementById('fbdCanvas'),
+      trackCanvas: document.getElementById('trackCanvas'),
+      statusBadge: document.getElementById('statusBadge'),
+      statusIcon: document.getElementById('statusIcon'),
+      statusText: document.getElementById('statusText'),
+      hudV: document.getElementById('hudV'),
+      hudVoptRow: document.getElementById('hudVoptRow'),
+      hudVopt: document.getElementById('hudVopt'),
+      hudVmax: document.getElementById('hudVmax'),
+      hudVminRow: document.getElementById('hudVminRow'),
+      hudVmin: document.getElementById('hudVmin'),
+      hudFc: document.getElementById('hudFc'),
+      hudFs: document.getElementById('hudFs'),
+      hudAngleRow: document.getElementById('hudAngleRow'),
+      hudAngleLabel: document.getElementById('hudAngleLabel'),
+      hudAngleVal: document.getElementById('hudAngleVal'),
+      gaugeFill: document.getElementById('gaugeFill'),
+      gaugeVlimitLabel: document.getElementById('gaugeVlimitLabel'),
+
+      // Controls
+      inputSpeed: document.getElementById('inputSpeed'),
+      valSpeed: document.getElementById('valSpeed'),
+      inputRadius: document.getElementById('inputRadius'),
+      valRadius: document.getElementById('valRadius'),
+      inputMu: document.getElementById('inputMu'),
+      valMu: document.getElementById('valMu'),
+      inputBankingAngle: document.getElementById('inputBankingAngle'),
+      valBankingAngle: document.getElementById('valBankingAngle'),
+      groupBankingAngle: document.getElementById('groupBankingAngle'),
+      inputMass: document.getElementById('inputMass'),
+      valMass: document.getElementById('valMass'),
+      valGravity: document.getElementById('valGravity'),
+      modeBadge: document.getElementById('modeBadge'),
+
+      // Buttons
+      btnPlayPause: document.getElementById('btnPlayPause'),
+      playIcon: document.getElementById('playIcon'),
+      playText: document.getElementById('playText'),
+      btnStep: document.getElementById('btnStep'),
+      btnReset: document.getElementById('btnReset'),
+      btnClearTraces: document.getElementById('btnClearTraces'),
+      btnPresetV0: document.getElementById('btnPresetV0'),
+      btnPresetVmax: document.getElementById('btnPresetVmax'),
+      btnPresetVmin: document.getElementById('btnPresetVmin'),
+      btnPresetVStop: document.getElementById('btnPresetVStop'),
+      rowCyclistAutoLean: document.getElementById('rowCyclistAutoLean'),
+
+      // Toggles
+      toggleVectors: document.getElementById('toggleVectors'),
+      toggleComponents: document.getElementById('toggleComponents'),
+      toggleVelocityVector: document.getElementById('toggleVelocityVector'),
+      toggleSkidTraces: document.getElementById('toggleSkidTraces'),
+      toggleAutoLean: document.getElementById('toggleAutoLean'),
+      btnSound: document.getElementById('btnSound'),
+      btnTheme: document.getElementById('btnTheme'),
+      btnTheory: document.getElementById('btnTheory'),
+      btnQuiz: document.getElementById('btnQuiz'),
+      modalTheory: document.getElementById('modalTheory'),
+      modalQuiz: document.getElementById('modalQuiz'),
+      btnCloseTheory: document.getElementById('btnCloseTheory'),
+      btnCloseQuiz: document.getElementById('btnCloseQuiz'),
+      toastContainer: document.getElementById('toastContainer')
+    };
+
+    function updateHUD() {
+      const kmh = (State.v * 3.6).toFixed(1);
+      dom.hudV.textContent = `${State.v.toFixed(1)} m/s (${kmh} km/h)`;
+      dom.hudFc.textContent = `${Math.round(State.Fc)} N`;
+
+      // Available vs used friction
+      const fDisplay = Math.abs(State.f);
+      dom.hudFs.textContent = `${Math.round(fDisplay)} N / ${Math.round(State.fMax)} N`;
+
+      if (State.mode === 'cyclist') {
+        dom.hudVoptRow.style.display = 'none';
+        dom.hudVminRow.style.display = 'none';
+        dom.hudVmax.textContent = `${State.vMax.toFixed(1)} m/s (${(State.vMax * 3.6).toFixed(1)} km/h)`;
+        dom.hudAngleRow.style.display = 'flex';
+        dom.hudAngleLabel.textContent = 'Lean Angle (θ):';
+        dom.hudAngleVal.textContent = `${State.cyclistLeanDeg.toFixed(1)}°`;
+        dom.btnPresetV0.style.display = 'none';
+        dom.btnPresetVmin.style.display = 'none';
+        dom.gaugeVlimitLabel.textContent = `vₘₐₓ (${State.vMax.toFixed(1)}m/s)`;
+
+      } else if (State.mode === 'unbanked') {
+        dom.hudVoptRow.style.display = 'none';
+        dom.hudVminRow.style.display = 'none';
+        dom.hudVmax.textContent = `${State.vMax.toFixed(1)} m/s (${(State.vMax * 3.6).toFixed(1)} km/h)`;
+        dom.hudAngleRow.style.display = 'none';
+        dom.btnPresetV0.style.display = 'none';
+        dom.btnPresetVmin.style.display = 'none';
+        dom.gaugeVlimitLabel.textContent = `vₘₐₓ (${State.vMax.toFixed(1)}m/s)`;
+
+      } else if (State.mode === 'banked') {
+        dom.hudVoptRow.style.display = 'flex';
+        dom.hudVopt.textContent = `${State.v0.toFixed(1)} m/s (${(State.v0 * 3.6).toFixed(1)} km/h)`;
+        
+        dom.hudVmax.textContent = State.vMax >= 999 
+          ? '∞ (No Slip Limit)' 
+          : `${State.vMax.toFixed(1)} m/s (${(State.vMax * 3.6).toFixed(1)} km/h)`;
+
+        if (State.vMin > 0) {
+          dom.hudVminRow.style.display = 'flex';
+          dom.hudVmin.textContent = `${State.vMin.toFixed(1)} m/s (${(State.vMin * 3.6).toFixed(1)} km/h)`;
+          dom.btnPresetVmin.style.display = 'inline-block';
+        } else {
+          dom.hudVminRow.style.display = 'none';
+          dom.btnPresetVmin.style.display = 'none';
+        }
+
+        dom.hudAngleRow.style.display = 'flex';
+        dom.hudAngleLabel.textContent = 'Bank Angle (θ):';
+        dom.hudAngleVal.textContent = `${State.thetaBankDeg.toFixed(1)}°`;
+        dom.btnPresetV0.style.display = 'inline-block';
+        dom.gaugeVlimitLabel.textContent = State.vMax < 999 ? `vₘₐₓ (${State.vMax.toFixed(1)}m/s)` : `v₀ (${State.v0.toFixed(1)}m/s)`;
+      }
+
+      // Safety Status Badge
+      dom.statusBadge.className = 'status-badge';
+      if (State.isSkidding) {
+        dom.statusBadge.classList.add('status-danger');
+        if (State.skidType === 'inward') {
+          dom.statusIcon.textContent = '⚠️';
+          dom.statusText.textContent = 'Slipping Down Incline (v < vₘᵢₙ)!';
+        } else {
+          dom.statusIcon.textContent = '🚨';
+          dom.statusText.textContent = State.mode === 'cyclist' 
+            ? 'Cyclist Skidding Outward!' 
+            : 'Vehicle Skidding Off Curve!';
+        }
+      } else {
+        const ratio = State.vMax > 0 && State.vMax < 999 ? State.v / State.vMax : State.v / 30;
+        if (ratio > 0.88) {
+          dom.statusBadge.classList.add('status-warning');
+          dom.statusIcon.textContent = '⚠️';
+          dom.statusText.textContent = 'Traction Near Limit (>88%)';
+        } else {
+          dom.statusBadge.classList.add('status-safe');
+          dom.statusIcon.textContent = '🟢';
+          dom.statusText.textContent = State.mode === 'banked' && Math.abs(State.v - State.v0) < 0.5 
+            ? 'Optimum Speed (Zero Friction)' 
+            : 'Safe Circular Motion';
+        }
+      }
+
+      // Speed Gauge Bar fill percentage
+      const maxScale = (State.vMax > 0 && State.vMax < 999) ? State.vMax * 1.25 : 35;
+      const fillPct = Math.min(100, Math.max(0, (State.v / maxScale) * 100));
+      dom.gaugeFill.style.width = `${fillPct}%`;
+    }
+
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      dom.toastContainer.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 2600);
+    }
+
+    // --- 5. GRAPHICS & CANVAS RENDERING ENGINE ---
+    const ctxFBD = dom.fbdCanvas.getContext('2d');
+    const ctxTrack = dom.trackCanvas.getContext('2d');
+
+    // Auto-scale canvases for crisp Retina / HiDPI screens
+    function resizeCanvases() {
+      const dpr = window.devicePixelRatio || 1;
+      
+      const rectFBD = dom.fbdCanvas.parentElement.getBoundingClientRect();
+      dom.fbdCanvas.width = rectFBD.width * dpr;
+      dom.fbdCanvas.height = rectFBD.height * dpr;
+      ctxFBD.resetTransform();
+      ctxFBD.scale(dpr, dpr);
+
+      const rectTrack = dom.trackCanvas.parentElement.getBoundingClientRect();
+      dom.trackCanvas.width = rectTrack.width * dpr;
+      dom.trackCanvas.height = rectTrack.height * dpr;
+      ctxTrack.resetTransform();
+      ctxTrack.scale(dpr, dpr);
+    }
+
+    window.addEventListener('resize', resizeCanvases);
+
+    // Vector Drawing Helper with arrowhead
+    function drawVector(ctx, fromX, fromY, toX, toY, color, label, valueStr = '') {
+      const dx = toX - fromX;
+      const dy = toY - fromY;
+      const len = Math.hypot(dx, dy);
+      if (len < 2) return;
+
+      const headlen = 10;
+      const angle = Math.atan2(dy, dx);
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3.2;
+      ctx.lineCap = 'round';
+
+      // Main shaft
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+
+      // Arrowhead
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+
+      // Text Label
+      if (label) {
+        ctx.font = 'bold 12px ' + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = dx >= 0 ? 'left' : 'right';
+        ctx.textBaseline = dy >= 0 ? 'top' : 'bottom';
+        
+        const textOffset = 8;
+        const lx = toX + Math.cos(angle) * textOffset;
+        const ly = toY + Math.sin(angle) * textOffset;
+        
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(valueStr ? `${label} (${valueStr})` : label, lx, ly);
+      }
+      ctx.restore();
+    }
+
+    // Dashed component helper
+    function drawDashedLine(ctx, x1, y1, x2, y2, color, label = '') {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      if (label) {
+        ctx.font = '10px monospace';
+        ctx.fillStyle = color;
+        ctx.fillText(label, (x1 + x2) / 2 + 5, (y1 + y2) / 2 - 5);
+      }
+      ctx.restore();
+    }
+
+    // --- 5A. RENDER REAR CROSS-SECTION & FBD ---
+    function renderFBD() {
+      const width = dom.fbdCanvas.clientWidth;
+      const height = dom.fbdCanvas.clientHeight;
+      ctxFBD.clearRect(0, 0, width, height);
+
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      const groundY = height * 0.76;
+      const centerX = width * 0.5;
+
+      ctxFBD.save();
+
+      if (State.mode === 'cyclist') {
+        renderCyclistFBD(width, height, centerX, groundY, isDark);
+      } else if (State.mode === 'unbanked') {
+        renderCarUnbankedFBD(width, height, centerX, groundY, isDark);
+      } else if (State.mode === 'banked') {
+        renderCarBankedFBD(width, height, centerX, groundY, isDark);
+      }
+
+      ctxFBD.restore();
+    }
+
+    // Render Cyclist Cross Section & Leaning
+    function renderCyclistFBD(width, height, cx, gy, isDark) {
+      // 1. Draw Road Ground
+      ctxFBD.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctxFBD.lineWidth = 4;
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(20, gy);
+      ctxFBD.lineTo(width - 20, gy);
+      ctxFBD.stroke();
+
+      // Asphalt texture / stripes
+      ctxFBD.fillStyle = isDark ? '#1e293b' : '#cbd5e1';
+      ctxFBD.fillRect(20, gy + 2, width - 40, 24);
+
+      // Contact point on road
+      const contactX = cx + 30; // slight curve offset
+      const contactY = gy;
+
+      // Lean angle (inward to left towards center of circular curvature)
+      const leanRad = (State.cyclistLeanDeg * Math.PI) / 180;
+      const heightBicycle = 140;
+
+      // Center of Mass (CM) position
+      const cmDist = heightBicycle * 0.65;
+      const cmX = contactX - cmDist * Math.sin(leanRad);
+      const cmY = contactY - cmDist * Math.cos(leanRad);
+
+      // Top of cyclist (Head)
+      const headX = contactX - (heightBicycle + 20) * Math.sin(leanRad);
+      const headY = contactY - (heightBicycle + 20) * Math.cos(leanRad);
+
+      // 2. Draw Bicycle & Cyclist Body
+      ctxFBD.save();
+      ctxFBD.translate(contactX, contactY);
+      ctxFBD.rotate(-leanRad);
+
+      // Wheel contact patch
+      ctxFBD.fillStyle = '#0f172a';
+      ctxFBD.beginPath();
+      ctxFBD.ellipse(0, -28, 14, 28, 0, 0, Math.PI * 2);
+      ctxFBD.fill();
+      ctxFBD.lineWidth = 4;
+      ctxFBD.strokeStyle = '#64748b';
+      ctxFBD.stroke();
+
+      // Bicycle frame
+      ctxFBD.strokeStyle = '#38bdf8';
+      ctxFBD.lineWidth = 5;
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(0, -28);
+      ctxFBD.lineTo(0, -75); // seatpost
+      ctxFBD.lineTo(15, -100); // handlebar
+      ctxFBD.moveTo(0, -75);
+      ctxFBD.lineTo(-20, -75); // saddle
+      ctxFBD.stroke();
+
+      // Cyclist Torso & Limbs
+      ctxFBD.fillStyle = '#f59e0b';
+      ctxFBD.beginPath();
+      ctxFBD.ellipse(0, -105, 16, 26, 0.1, 0, Math.PI * 2);
+      ctxFBD.fill();
+
+      // Helmet
+      ctxFBD.fillStyle = '#ef4444';
+      ctxFBD.beginPath();
+      ctxFBD.arc(0, -135, 14, 0, Math.PI * 2);
+      ctxFBD.fill();
+
+      // Arms
+      ctxFBD.strokeStyle = '#f59e0b';
+      ctxFBD.lineWidth = 5;
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(-10, -115);
+      ctxFBD.lineTo(12, -98);
+      ctxFBD.stroke();
+
+      ctxFBD.restore();
+
+      // 3. Draw Vertical Reference & Angle Arc at Contact Point
+      ctxFBD.save();
+      ctxFBD.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+      ctxFBD.setLineDash([5, 5]);
+      ctxFBD.lineWidth = 1.5;
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(contactX, contactY);
+      ctxFBD.lineTo(contactX, contactY - 130);
+      ctxFBD.stroke();
+
+      // Inclination line along bike axis
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(contactX, contactY);
+      ctxFBD.lineTo(headX, headY);
+      ctxFBD.stroke();
+      ctxFBD.setLineDash([]);
+
+      // Angle arc
+      if (leanRad > 0.05) {
+        ctxFBD.strokeStyle = '#38bdf8';
+        ctxFBD.lineWidth = 2;
+        ctxFBD.beginPath();
+        ctxFBD.arc(contactX, contactY, 45, -Math.PI / 2, -Math.PI / 2 - leanRad, true);
+        ctxFBD.stroke();
+        
+        ctxFBD.fillStyle = '#38bdf8';
+        ctxFBD.font = 'bold 11px monospace';
+        ctxFBD.fillText(`θ = ${State.cyclistLeanDeg.toFixed(1)}°`, contactX - 45, contactY - 50);
+      }
+      ctxFBD.restore();
+
+      // Center of Mass symbol (crosshair disc)
+      ctxFBD.save();
+      ctxFBD.translate(cmX, cmY);
+      ctxFBD.fillStyle = '#f59e0b';
+      ctxFBD.beginPath();
+      ctxFBD.arc(0, 0, 7, 0, Math.PI * 2);
+      ctxFBD.fill();
+      ctxFBD.strokeStyle = '#000';
+      ctxFBD.lineWidth = 1.5;
+      ctxFBD.stroke();
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(-7, 0); ctxFBD.lineTo(7, 0);
+      ctxFBD.moveTo(0, -7); ctxFBD.lineTo(0, 7);
+      ctxFBD.stroke();
+      ctxFBD.fillStyle = isDark ? '#fff' : '#000';
+      ctxFBD.font = '10px sans-serif';
+      ctxFBD.fillText('CM', 10, -3);
+      ctxFBD.restore();
+
+      // 4. FREE BODY DIAGRAM (FBD) VECTORS
+      if (State.showVectors) {
+        const scaleF = 0.12; // Force pixel scale
+
+        // Weight W = mg (Downward from CM)
+        const wLen = State.m * State.g * scaleF;
+        drawVector(ctxFBD, cmX, cmY, cmX, cmY + wLen, '#f59e0b', 'W = mg', `${Math.round(State.m * State.g)} N`);
+
+        // Normal Force N (Upward from contact point)
+        const nLen = State.N * scaleF;
+        drawVector(ctxFBD, contactX, contactY, contactX, contactY - nLen, '#38bdf8', 'N', `${Math.round(State.N)} N`);
+
+        // Static Friction f (Towards center of circle - leftward from contact point)
+        const fLen = State.f * scaleF;
+        drawVector(ctxFBD, contactX, contactY, contactX - fLen, contactY, '#ef4444', 'fₛ', `${Math.round(State.f)} N`);
+
+        // Resultant Reaction of Ground: R = N + f (Points directly along the bicycle through CM!)
+        const rLenX = -fLen;
+        const rLenY = -nLen;
+        drawVector(ctxFBD, contactX, contactY, contactX + rLenX, contactY + rLenY, '#06b6d4', 'R (Ground Resultant)');
+
+        // Centripetal Force Demand (Horizontal at CM)
+        const fcLen = State.Fc * scaleF;
+        drawVector(ctxFBD, cmX, cmY, cmX - fcLen, cmY, '#c084fc', 'Fc = mv²/r', `${Math.round(State.Fc)} N`);
+      }
+    }
+
+    // Render Car on Level (Unbanked) Road FBD
+    function renderCarUnbankedFBD(width, height, cx, gy, isDark) {
+      // 1. Draw Flat Road
+      ctxFBD.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctxFBD.lineWidth = 4;
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(20, gy);
+      ctxFBD.lineTo(width - 20, gy);
+      ctxFBD.stroke();
+
+      // Asphalt
+      ctxFBD.fillStyle = isDark ? '#1e293b' : '#cbd5e1';
+      ctxFBD.fillRect(20, gy + 2, width - 40, 24);
+
+      // Car Dimensions
+      const carW = 160;
+      const carH = 70;
+      const carX = cx - carW / 2;
+      const carY = gy - carH - 12;
+
+      // 2. Draw Rear View of Car
+      ctxFBD.save();
+      // Body
+      const carGrad = ctxFBD.createLinearGradient(carX, carY, carX, carY + carH);
+      carGrad.addColorStop(0, '#0284c7');
+      carGrad.addColorStop(1, '#0369a1');
+      ctxFBD.fillStyle = carGrad;
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX, carY, carW, carH, [18, 18, 6, 6]);
+      ctxFBD.fill();
+      ctxFBD.lineWidth = 2;
+      ctxFBD.strokeStyle = '#38bdf8';
+      ctxFBD.stroke();
+
+      // Roof / Cabin
+      ctxFBD.fillStyle = isDark ? '#0f172a' : '#475569';
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + 24, carY - 32, carW - 48, 36, [10, 10, 0, 0]);
+      ctxFBD.fill();
+
+      // Rear Windshield
+      ctxFBD.fillStyle = '#64748b';
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + 30, carY - 26, carW - 60, 26, [6, 6, 0, 0]);
+      ctxFBD.fill();
+
+      // Taillights
+      ctxFBD.fillStyle = '#ef4444';
+      ctxFBD.fillRect(carX + 10, carY + 16, 26, 12);
+      ctxFBD.fillRect(carX + carW - 36, carY + 16, 26, 12);
+
+      // License Plate
+      ctxFBD.fillStyle = '#f8fafc';
+      ctxFBD.fillRect(cx - 25, carY + 36, 50, 16);
+      ctxFBD.fillStyle = '#0f172a';
+      ctxFBD.font = 'bold 8px monospace';
+      ctxFBD.textAlign = 'center';
+      ctxFBD.fillText('NCERT-11', cx, carY + 48);
+
+      // Wheels
+      const tireW = 24;
+      const tireH = 34;
+      ctxFBD.fillStyle = '#0f172a';
+      ctxFBD.strokeStyle = '#475569';
+      ctxFBD.lineWidth = 3;
+      // Inner Wheel (Left)
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + 12, gy - tireH + 2, tireW, tireH, 6);
+      ctxFBD.fill(); ctxFBD.stroke();
+      // Outer Wheel (Right)
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + carW - 12 - tireW, gy - tireH + 2, tireW, tireH, 6);
+      ctxFBD.fill(); ctxFBD.stroke();
+
+      ctxFBD.restore();
+
+      // Center of Mass (CM)
+      const cmX = cx;
+      const cmY = carY + carH * 0.55;
+
+      // Draw CM symbol
+      ctxFBD.save();
+      ctxFBD.translate(cmX, cmY);
+      ctxFBD.fillStyle = '#f59e0b';
+      ctxFBD.beginPath(); ctxFBD.arc(0, 0, 7, 0, Math.PI * 2); ctxFBD.fill();
+      ctxFBD.strokeStyle = '#000'; ctxFBD.stroke();
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(-7, 0); ctxFBD.lineTo(7, 0);
+      ctxFBD.moveTo(0, -7); ctxFBD.lineTo(0, 7);
+      ctxFBD.stroke();
+      ctxFBD.restore();
+
+      // 3. Free Body Diagram Vectors
+      if (State.showVectors) {
+        const scaleF = 0.012; // Scaled for heavy car (kg)
+
+        // Weight W = mg
+        const wLen = State.m * State.g * scaleF;
+        drawVector(ctxFBD, cmX, cmY, cmX, cmY + wLen, '#f59e0b', 'W = mg', `${Math.round(State.m * State.g)} N`);
+
+        // Normal Reactions on Inner and Outer Wheels
+        const nLeft = (State.N / 2) * scaleF;
+        const nRight = (State.N / 2) * scaleF;
+        const wheelLX = carX + 24;
+        const wheelRX = carX + carW - 24;
+
+        drawVector(ctxFBD, wheelLX, gy, wheelLX, gy - nLeft, '#38bdf8', 'N₁');
+        drawVector(ctxFBD, wheelRX, gy, wheelRX, gy - nRight, '#38bdf8', 'N₂');
+
+        // Friction on tires (inward towards center - left)
+        const fLeft = (State.f / 2) * scaleF;
+        const fRight = (State.f / 2) * scaleF;
+        drawVector(ctxFBD, wheelLX, gy, wheelLX - fLeft, gy, '#ef4444', 'f₁');
+        drawVector(ctxFBD, wheelRX, gy, wheelRX - fRight, gy, '#ef4444', 'f₂');
+
+        // Total Centripetal Force Demand
+        const fcLen = State.Fc * scaleF;
+        drawVector(ctxFBD, cmX, cmY, cmX - fcLen, cmY, '#c084fc', 'Fc = mv²/r', `${Math.round(State.Fc)} N`);
+      }
+    }
+
+    // Render Car on Banked Road FBD
+    function renderCarBankedFBD(width, height, cx, gy, isDark) {
+      const theta = State.thetaBankRad;
+      const bankW = 320;
+      
+      // Calculate Incline Plane Coordinates
+      const p1X = cx - bankW * 0.5 * Math.cos(theta);
+      const p1Y = gy + bankW * 0.5 * Math.sin(theta);
+      const p2X = cx + bankW * 0.5 * Math.cos(theta);
+      const p2Y = gy - bankW * 0.5 * Math.sin(theta);
+
+      // 1. Draw Incline Bank Wedge
+      ctxFBD.save();
+      ctxFBD.fillStyle = isDark ? '#1e293b' : '#e2e8f0';
+      ctxFBD.strokeStyle = isDark ? '#475569' : '#94a3b8';
+      ctxFBD.lineWidth = 3;
+
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(p1X - 20, p1Y);
+      ctxFBD.lineTo(p2X + 20, p2Y);
+      ctxFBD.lineTo(p2X + 20, p1Y);
+      ctxFBD.closePath();
+      ctxFBD.fill();
+      ctxFBD.stroke();
+
+      // Horizontal ground base line
+      ctxFBD.strokeStyle = isDark ? '#64748b' : '#cbd5e1';
+      ctxFBD.setLineDash([4, 4]);
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(p1X - 20, p1Y);
+      ctxFBD.lineTo(p2X + 40, p1Y);
+      ctxFBD.stroke();
+      ctxFBD.setLineDash([]);
+
+      // Banking Angle Arc
+      ctxFBD.strokeStyle = '#38bdf8';
+      ctxFBD.lineWidth = 2;
+      ctxFBD.beginPath();
+      ctxFBD.arc(p1X - 20, p1Y, 70, 0, -theta, true);
+      ctxFBD.stroke();
+      ctxFBD.fillStyle = '#38bdf8';
+      ctxFBD.font = 'bold 12px monospace';
+      ctxFBD.fillText(`θ = ${State.thetaBankDeg.toFixed(1)}°`, p1X + 60, p1Y - 14);
+
+      ctxFBD.restore();
+
+      // 2. Render Car on Incline Surface
+      ctxFBD.save();
+      // Translate to road center and rotate by -theta
+      ctxFBD.translate(cx, gy);
+      ctxFBD.rotate(-theta);
+
+      const carW = 150;
+      const carH = 65;
+      const carX = -carW / 2;
+      const carY = -carH - 10;
+
+      // Car Body
+      const carGrad = ctxFBD.createLinearGradient(carX, carY, carX, carY + carH);
+      carGrad.addColorStop(0, '#f97316');
+      carGrad.addColorStop(1, '#c2410c');
+      ctxFBD.fillStyle = carGrad;
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX, carY, carW, carH, [16, 16, 4, 4]);
+      ctxFBD.fill();
+      ctxFBD.lineWidth = 2;
+      ctxFBD.strokeStyle = '#fdba74';
+      ctxFBD.stroke();
+
+      // Cabin & Windshield
+      ctxFBD.fillStyle = isDark ? '#0f172a' : '#334155';
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + 22, carY - 28, carW - 44, 32, [8, 8, 0, 0]);
+      ctxFBD.fill();
+
+      // Rear Glass
+      ctxFBD.fillStyle = '#94a3b8';
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + 28, carY - 24, carW - 56, 24, [5, 5, 0, 0]);
+      ctxFBD.fill();
+
+      // Taillights
+      ctxFBD.fillStyle = '#ef4444';
+      ctxFBD.fillRect(carX + 8, carY + 14, 24, 10);
+      ctxFBD.fillRect(carX + carW - 32, carY + 14, 24, 10);
+
+      // License Plate
+      ctxFBD.fillStyle = '#fff';
+      ctxFBD.fillRect(-22, carY + 34, 44, 14);
+      ctxFBD.fillStyle = '#000';
+      ctxFBD.font = 'bold 8px monospace';
+      ctxFBD.textAlign = 'center';
+      ctxFBD.fillText('BANKED', 0, carY + 44);
+
+      // Wheels on Incline
+      ctxFBD.fillStyle = '#0f172a';
+      ctxFBD.strokeStyle = '#475569';
+      ctxFBD.lineWidth = 2.5;
+      const tireW = 22;
+      const tireH = 30;
+      // Lower Wheel (towards inner track)
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + 10, -tireH + 2, tireW, tireH, 5);
+      ctxFBD.fill(); ctxFBD.stroke();
+      // Upper Wheel (towards outer rim)
+      ctxFBD.beginPath();
+      ctxFBD.roundRect(carX + carW - 10 - tireW, -tireH + 2, tireW, tireH, 5);
+      ctxFBD.fill(); ctxFBD.stroke();
+
+      ctxFBD.restore();
+
+      // 3. Center of Mass Coordinates in Global View
+      const localCmY = -carH * 0.55;
+      const cmX = cx - localCmY * Math.sin(theta);
+      const cmY = gy + localCmY * Math.cos(theta);
+
+      // Draw CM symbol
+      ctxFBD.save();
+      ctxFBD.translate(cmX, cmY);
+      ctxFBD.fillStyle = '#f59e0b';
+      ctxFBD.beginPath(); ctxFBD.arc(0, 0, 7, 0, Math.PI * 2); ctxFBD.fill();
+      ctxFBD.strokeStyle = '#000'; ctxFBD.stroke();
+      ctxFBD.beginPath();
+      ctxFBD.moveTo(-7, 0); ctxFBD.lineTo(7, 0);
+      ctxFBD.moveTo(0, -7); ctxFBD.lineTo(0, 7);
+      ctxFBD.stroke();
+      ctxFBD.restore();
+
+      // 4. Free Body Diagram Vectors
+      if (State.showVectors) {
+        const scaleF = 0.011;
+
+        // Weight W = mg (Vertically downward)
+        const wLen = State.m * State.g * scaleF;
+        drawVector(ctxFBD, cmX, cmY, cmX, cmY + wLen, '#f59e0b', 'W = mg', `${Math.round(State.m * State.g)} N`);
+
+        // Normal Force N (Perpendicular to Incline: rotated by -theta from vertical)
+        const nLen = State.N * scaleF;
+        const nDirX = -nLen * Math.sin(theta);
+        const nDirY = -nLen * Math.cos(theta);
+        drawVector(ctxFBD, cmX, cmY, cmX + nDirX, cmY + nDirY, '#38bdf8', 'N', `${Math.round(State.N)} N`);
+
+        // Friction Force f (Parallel to Incline surface)
+        // If State.f > 0: acts DOWN the incline (towards left-down: cos(theta), sin(theta))
+        // If State.f < 0: acts UP the incline (towards right-up)
+        const fLen = State.f * scaleF;
+        if (Math.abs(State.f) > 10) {
+          const fDirX = -fLen * Math.cos(theta);
+          const fDirY = fLen * Math.sin(theta);
+          const fLabel = State.f > 0 ? 'f (down incline)' : 'f (up incline)';
+          drawVector(ctxFBD, cmX, cmY, cmX + fDirX, cmY + fDirY, '#ef4444', fLabel, `${Math.round(Math.abs(State.f))} N`);
+        }
+
+        // Required Centripetal Force (Horizontal towards center - Left)
+        const fcLen = State.Fc * scaleF;
+        drawVector(ctxFBD, cmX, cmY, cmX - fcLen, cmY, '#c084fc', 'Fc = mv²/r', `${Math.round(State.Fc)} N`);
+
+        // 5. Decomposition of Components (NCERT Diagram)
+        if (State.showComponents) {
+          // N cos(theta) (Vertical component balancing mg and f*sin(theta))
+          drawDashedLine(ctxFBD, cmX, cmY, cmX, cmY + nDirY, '#38bdf8', 'N cos θ');
+          // N sin(theta) (Horizontal component contributing to centripetal force)
+          drawDashedLine(ctxFBD, cmX, cmY + nDirY, cmX + nDirX, cmY + nDirY, '#38bdf8', 'N sin θ');
+        }
+      }
+    }
+
+    // --- 5B. RENDER AERIAL CIRCULAR TRACK VIEW ---
+    function renderTrack() {
+      const width = dom.trackCanvas.clientWidth;
+      const height = dom.trackCanvas.clientHeight;
+      ctxTrack.clearRect(0, 0, width, height);
+
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      const cx = width * 0.46;
+      const cy = height * 0.5;
+
+      // Coordinate Scaling: Fit radius r onto canvas
+      // We scale real radius (10m - 150m) to pixel radius
+      const maxTrackPix = Math.min(width, height) * 0.38;
+      const minTrackPix = 65;
+      const rRatio = (State.r - 10) / (150 - 10);
+      const pixelR = minTrackPix + rRatio * (maxTrackPix - minTrackPix);
+
+      ctxTrack.save();
+
+      // 1. Draw Infield & Outfield
+      ctxTrack.fillStyle = isDark ? '#090d16' : '#e2e8f0';
+      ctxTrack.fillRect(0, 0, width, height);
+
+      // Track Road Surface
+      const roadW = 42;
+      ctxTrack.beginPath();
+      ctxTrack.arc(cx, cy, pixelR, 0, Math.PI * 2);
+      ctxTrack.lineWidth = roadW;
+      ctxTrack.strokeStyle = isDark ? '#1e293b' : '#94a3b8';
+      ctxTrack.stroke();
+
+      // Inner and Outer Curb Strips
+      ctxTrack.lineWidth = 3;
+      ctxTrack.strokeStyle = '#ef4444'; // Red outer barrier
+      ctxTrack.beginPath();
+      ctxTrack.arc(cx, cy, pixelR + roadW / 2, 0, Math.PI * 2);
+      ctxTrack.stroke();
+
+      ctxTrack.strokeStyle = '#ffffff'; // White inner line
+      ctxTrack.beginPath();
+      ctxTrack.arc(cx, cy, pixelR - roadW / 2, 0, Math.PI * 2);
+      ctxTrack.stroke();
+
+      // Dashed centerline
+      ctxTrack.lineWidth = 1.5;
+      ctxTrack.strokeStyle = '#f59e0b';
+      ctxTrack.setLineDash([8, 8]);
+      ctxTrack.beginPath();
+      ctxTrack.arc(cx, cy, pixelR, 0, Math.PI * 2);
+      ctxTrack.stroke();
+      ctxTrack.setLineDash([]);
+
+      // 2. Draw Center of Curvature & Radius Marker
+      ctxTrack.fillStyle = '#38bdf8';
+      ctxTrack.beginPath();
+      ctxTrack.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctxTrack.fill();
+      ctxTrack.font = '10px sans-serif';
+      ctxTrack.fillText('Center (O)', cx + 8, cy - 6);
+
+      // 3. Render Historic Skid Traces
+      if (State.showSkidTraces && State.skidPoints.length > 1) {
+        ctxTrack.save();
+        ctxTrack.strokeStyle = isDark ? 'rgba(0, 0, 0, 0.65)' : 'rgba(30, 41, 59, 0.5)';
+        ctxTrack.lineWidth = 3.5;
+        ctxTrack.beginPath();
+        for (let i = 0; i < State.skidPoints.length; i++) {
+          const pt = State.skidPoints[i];
+          if (i === 0) ctxTrack.moveTo(pt.x, pt.y);
+          else ctxTrack.lineTo(pt.x, pt.y);
+        }
+        ctxTrack.stroke();
+        ctxTrack.restore();
+      }
+
+      // 4. Vehicle Position on Track
+      // Current effective radius including any skid drift
+      const effectiveR = pixelR + State.driftR;
+      const angle = State.vehicleAngle;
+      const vx = cx + effectiveR * Math.cos(angle);
+      const vy = cy + effectiveR * Math.sin(angle);
+
+      // Record skid points when skidding
+      if (State.isSkidding && State.running) {
+        State.skidPoints.push({ x: vx, y: vy });
+        if (State.skidPoints.length > 250) State.skidPoints.shift();
+
+        // Spawn smoke particles
+        if (Math.random() < 0.6) {
+          State.particles.push({
+            x: vx + (Math.random() - 0.5) * 6,
+            y: vy + (Math.random() - 0.5) * 6,
+            vx: (Math.random() - 0.5) * 0.8,
+            vy: (Math.random() - 0.5) * 0.8,
+            alpha: 0.8,
+            size: 4 + Math.random() * 5
+          });
+        }
+      }
+
+      // Render smoke particles
+      for (let i = State.particles.length - 1; i >= 0; i--) {
+        const p = State.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= 0.02;
+        p.size += 0.3;
+        if (p.alpha <= 0) {
+          State.particles.splice(i, 1);
+        } else {
+          ctxTrack.fillStyle = isDark ? `rgba(200, 210, 225, ${p.alpha})` : `rgba(100, 116, 139, ${p.alpha})`;
+          ctxTrack.beginPath();
+          ctxTrack.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctxTrack.fill();
+        }
+      }
+
+      // Draw Radius Vector line to vehicle
+      ctxTrack.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctxTrack.lineWidth = 1.5;
+      ctxTrack.beginPath();
+      ctxTrack.moveTo(cx, cy);
+      ctxTrack.lineTo(vx, vy);
+      ctxTrack.stroke();
+      
+      const midRx = (cx + vx) / 2;
+      const midRy = (cy + vy) / 2;
+      ctxTrack.fillStyle = '#38bdf8';
+      ctxTrack.font = 'bold 11px monospace';
+      ctxTrack.fillText(`r = ${State.r}m`, midRx + 6, midRy);
+
+      // 5. Draw Vehicle Sprite
+      ctxTrack.save();
+      ctxTrack.translate(vx, vy);
+      // Orient sprite tangent to circular motion: angle + pi/2
+      ctxTrack.rotate(angle + Math.PI / 2);
+
+      if (State.mode === 'cyclist') {
+        // Cyclist top view
+        ctxTrack.fillStyle = '#38bdf8';
+        ctxTrack.fillRect(-3, -12, 6, 24); // frame
+        ctxTrack.fillStyle = '#f59e0b';
+        ctxTrack.beginPath();
+        ctxTrack.arc(0, 0, 5, 0, Math.PI * 2); // helmet
+        ctxTrack.fill();
+        // Handlebars
+        ctxTrack.strokeStyle = '#e2e8f0';
+        ctxTrack.lineWidth = 2.5;
+        ctxTrack.beginPath();
+        ctxTrack.moveTo(-9, -8); ctxTrack.lineTo(9, -8);
+        ctxTrack.stroke();
+      } else {
+        // Car top view
+        const carL = 26;
+        const carW = 14;
+        ctxTrack.fillStyle = State.mode === 'banked' ? '#ea580c' : '#0284c7';
+        ctxTrack.beginPath();
+        ctxTrack.roundRect(-carW / 2, -carL / 2, carW, carL, 4);
+        ctxTrack.fill();
+        ctxTrack.strokeStyle = '#f8fafc';
+        ctxTrack.lineWidth = 1.5;
+        ctxTrack.stroke();
+
+        // Windshield
+        ctxTrack.fillStyle = '#0f172a';
+        ctxTrack.fillRect(-carW / 2 + 2, -carL / 2 + 5, carW - 4, 5);
+        // Headlights
+        ctxTrack.fillStyle = '#fef08a';
+        ctxTrack.fillRect(-carW / 2 + 1, -carL / 2, 3, 2);
+        ctxTrack.fillRect(carW / 2 - 4, -carL / 2, 3, 2);
+      }
+      ctxTrack.restore();
+
+      // 6. Draw Velocity and Centripetal Acceleration Vectors
+      if (State.showVelocityVector && State.v > 0.5) {
+        // Velocity vector: Tangent to path
+        const vScale = 1.8;
+        const vLen = Math.min(State.v * vScale, 65);
+        const tanAngle = angle + Math.PI / 2;
+        const vEndX = vx + vLen * Math.cos(tanAngle);
+        const vEndY = vy + vLen * Math.sin(tanAngle);
+        drawVector(ctxTrack, vx, vy, vEndX, vEndY, '#22c55e', 'v');
+
+        // Centripetal Acceleration: Directly towards center O
+        const aLen = Math.min((State.v * State.v / State.r) * 1.5, 55);
+        const aEndX = vx - aLen * Math.cos(angle);
+        const aEndY = vy - aLen * Math.sin(angle);
+        drawVector(ctxTrack, vx, vy, aEndX, aEndY, '#c084fc', 'a_c');
+      }
+
+      ctxTrack.restore();
+    }
+
+    // --- 6. PHYSICS SIMULATION STEP & INTEGRATION LOOP ---
+    let lastTime = performance.now();
+
+    function physicsLoop(currentTime) {
+      const dtMs = currentTime - lastTime;
+      lastTime = currentTime;
+
+      // Fixed step clamping to prevent tab blur explosions
+      const dt = Math.min(dtMs / 1000, 0.05) * State.timeScale;
+
+      if (State.running && dt > 0) {
+        updatePhysicsCalculations();
+
+        // Angular velocity: omega = v / r
+        if (State.r > 0 && State.v > 0) {
+          const omega = State.v / State.r;
+          State.vehicleAngle = (State.vehicleAngle + omega * dt) % (Math.PI * 2);
+        }
+
+        // Dynamic Skid drift modeling
+        if (State.isSkidding) {
+          if (State.skidType === 'outward') {
+            // Drift radially outward
+            State.driftSpeed += 14.0 * dt;
+            State.driftR += State.driftSpeed * dt;
+            if (State.driftR > 75) {
+              // Wrap around or cap
+              State.driftR = 75;
+            }
+          } else if (State.skidType === 'inward') {
+            // Slip down bank towards inner ditch
+            State.driftSpeed -= 8.0 * dt;
+            State.driftR += State.driftSpeed * dt;
+            if (State.driftR < -24) {
+              State.driftR = -24;
+            }
+          }
+        } else {
+          // Smoothly return vehicle to optimal track centerline
+          State.driftR += (0 - State.driftR) * 0.08;
+          State.driftSpeed = 0;
+        }
+
+        // Audio update
+        sound.update(State.v, State.isSkidding);
+      }
+
+      // Update Telemetry & Visuals
+      updateHUD();
+      renderFBD();
+      renderTrack();
+
+      requestAnimationFrame(physicsLoop);
+    }
+
+    // --- 7. EVENT HANDLERS & USER INTERACTION ---
+    function setupEventListeners() {
+      // 1. Mode Switching Tabs
+      const tabs = [
+        { id: 'tabCyclist', mode: 'cyclist', badge: 'Cyclist Mode', defaultMass: 80 },
+        { id: 'tabUnbanked', mode: 'unbanked', badge: 'Level Road Mode', defaultMass: 1200 },
+        { id: 'tabBanked', mode: 'banked', badge: 'Banked Road Mode', defaultMass: 1200 },
+      ];
+
+      tabs.forEach(tab => {
+        document.getElementById(tab.id).addEventListener('click', () => {
+          tabs.forEach(t => document.getElementById(t.id).classList.remove('active'));
+          document.getElementById(tab.id).classList.add('active');
+
+          State.mode = tab.mode;
+          State.m = tab.defaultMass;
+          dom.inputMass.value = tab.defaultMass;
+          dom.valMass.textContent = `${tab.defaultMass} kg`;
+          dom.modeBadge.textContent = tab.badge;
+          
+          // Show/Hide banking angle control
+          dom.groupBankingAngle.style.display = tab.mode === 'banked' ? 'block' : 'none';
+          dom.rowCyclistAutoLean.style.display = tab.mode === 'cyclist' ? 'flex' : 'none';
+
+          // Reset skid
+          State.driftR = 0;
+          State.driftSpeed = 0;
+          State.skidPoints = [];
+          
+          updatePhysicsCalculations();
+          showToast(`Switched to: ${tab.badge}`);
+        });
+      });
+
+      // 2. Play / Pause & Stepping
+      dom.btnPlayPause.addEventListener('click', () => {
+        State.running = !State.running;
+        dom.playIcon.textContent = State.running ? '⏸' : '▶';
+        dom.playText.textContent = State.running ? 'Pause' : 'Play';
+        if (!State.running) sound.stop();
+      });
+
+      dom.btnStep.addEventListener('click', () => {
+        State.running = false;
+        dom.playIcon.textContent = '▶';
+        dom.playText.textContent = 'Play';
+        // Advance single frame
+        if (State.r > 0) {
+          const omega = State.v / State.r;
+          State.vehicleAngle = (State.vehicleAngle + omega * 0.05) % (Math.PI * 2);
+        }
+        updatePhysicsCalculations();
+        updateHUD();
+        renderFBD();
+        renderTrack();
+      });
+
+      // Reset
+      dom.btnReset.addEventListener('click', () => {
+        State.v = 10.0;
+        State.r = 25.0;
+        State.mu = 0.50;
+        State.thetaBankDeg = 15.0;
+        State.driftR = 0;
+        State.driftSpeed = 0;
+        State.skidPoints = [];
+        State.particles = [];
+        State.running = true;
+
+        dom.inputSpeed.value = 10;
+        dom.valSpeed.textContent = '10.0 m/s';
+        dom.inputRadius.value = 25;
+        dom.valRadius.textContent = '25 m';
+        dom.inputMu.value = 0.50;
+        dom.valMu.textContent = '0.50';
+        dom.inputBankingAngle.value = 15;
+        dom.valBankingAngle.textContent = '15.0°';
+        dom.playIcon.textContent = '⏸';
+        dom.playText.textContent = 'Pause';
+
+        updatePhysicsCalculations();
+        showToast('Simulation reset to NCERT defaults');
+      });
+
+      dom.btnClearTraces.addEventListener('click', () => {
+        State.skidPoints = [];
+        State.particles = [];
+        showToast('Tire traces cleared');
+      });
+
+      // Sim Speed Buttons
+      document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          State.timeScale = parseFloat(btn.dataset.speed);
+        });
+      });
+
+      // 3. Slider Inputs
+      dom.inputSpeed.addEventListener('input', (e) => {
+        State.v = parseFloat(e.target.value);
+        dom.valSpeed.textContent = `${State.v.toFixed(1)} m/s`;
+        updatePhysicsCalculations();
+      });
+
+      dom.inputRadius.addEventListener('input', (e) => {
+        State.r = parseFloat(e.target.value);
+        dom.valRadius.textContent = `${State.r} m`;
+        updatePhysicsCalculations();
+      });
+
+      dom.inputMu.addEventListener('input', (e) => {
+        State.mu = parseFloat(e.target.value);
+        dom.valMu.textContent = State.mu.toFixed(2);
+        updatePhysicsCalculations();
+      });
+
+      dom.inputBankingAngle.addEventListener('input', (e) => {
+        State.thetaBankDeg = parseFloat(e.target.value);
+        dom.valBankingAngle.textContent = `${State.thetaBankDeg.toFixed(1)}°`;
+        updatePhysicsCalculations();
+      });
+
+      dom.inputMass.addEventListener('input', (e) => {
+        State.m = parseFloat(e.target.value);
+        dom.valMass.textContent = `${State.m} kg`;
+        updatePhysicsCalculations();
+      });
+
+      // 4. Quick Presets
+      dom.btnPresetV0.addEventListener('click', () => {
+        State.v = Math.round(State.v0 * 10) / 10;
+        dom.inputSpeed.value = State.v;
+        dom.valSpeed.textContent = `${State.v.toFixed(1)} m/s`;
+        updatePhysicsCalculations();
+        showToast(`Speed set to Optimum v₀: ${State.v.toFixed(1)} m/s`);
+      });
+
+      dom.btnPresetVmax.addEventListener('click', () => {
+        if (State.vMax < 999) {
+          State.v = Math.round(State.vMax * 10) / 10;
+          dom.inputSpeed.value = State.v;
+          dom.valSpeed.textContent = `${State.v.toFixed(1)} m/s`;
+          updatePhysicsCalculations();
+          showToast(`Speed set to Limit vₘₐₓ: ${State.v.toFixed(1)} m/s`);
+        } else {
+          showToast('vₘₐₓ is infinite for current steep banking & friction!');
+        }
+      });
+
+      dom.btnPresetVmin.addEventListener('click', () => {
+        State.v = Math.round(State.vMin * 10) / 10;
+        dom.inputSpeed.value = State.v;
+        dom.valSpeed.textContent = `${State.v.toFixed(1)} m/s`;
+        updatePhysicsCalculations();
+        showToast(`Speed set to Slip Limit vₘᵢₙ: ${State.v.toFixed(1)} m/s`);
+      });
+
+      dom.btnPresetVStop.addEventListener('click', () => {
+        State.v = 0;
+        dom.inputSpeed.value = 0;
+        dom.valSpeed.textContent = '0.0 m/s';
+        updatePhysicsCalculations();
+      });
+
+      // Radius Pills
+      document.querySelectorAll('[data-radius]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-radius]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          State.r = parseFloat(btn.dataset.radius);
+          dom.inputRadius.value = State.r;
+          dom.valRadius.textContent = `${State.r} m`;
+          updatePhysicsCalculations();
+        });
+      });
+
+      // Friction Pills
+      document.querySelectorAll('[data-mu]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-mu]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          State.mu = parseFloat(btn.dataset.mu);
+          dom.inputMu.value = State.mu;
+          dom.valMu.textContent = State.mu.toFixed(2);
+          updatePhysicsCalculations();
+        });
+      });
+
+      // Banking Angle Pills
+      document.querySelectorAll('[data-bank]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-bank]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          State.thetaBankDeg = parseFloat(btn.dataset.bank);
+          dom.inputBankingAngle.value = State.thetaBankDeg;
+          dom.valBankingAngle.textContent = `${State.thetaBankDeg.toFixed(1)}°`;
+          updatePhysicsCalculations();
+        });
+      });
+
+      // Gravity Pills
+      document.querySelectorAll('[data-g]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-g]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          State.g = parseFloat(btn.dataset.g);
+          dom.valGravity.textContent = `${State.g} m/s²`;
+          updatePhysicsCalculations();
+          showToast(`Gravity set to: ${State.g} m/s²`);
+        });
+      });
+
+      // 5. Toggles
+      dom.toggleVectors.addEventListener('change', (e) => State.showVectors = e.target.checked);
+      dom.toggleComponents.addEventListener('change', (e) => State.showComponents = e.target.checked);
+      dom.toggleVelocityVector.addEventListener('change', (e) => State.showVelocityVector = e.target.checked);
+      dom.toggleSkidTraces.addEventListener('change', (e) => State.showSkidTraces = e.target.checked);
+      dom.toggleAutoLean.addEventListener('change', (e) => State.autoLeanCyclist = e.target.checked);
+
+      // Sound Toggle
+      dom.btnSound.addEventListener('click', () => {
+        sound.init();
+        State.soundEnabled = !State.soundEnabled;
+        dom.btnSound.textContent = State.soundEnabled ? '🔊' : '🔇';
+        dom.btnSound.title = State.soundEnabled ? 'Mute Sound Synthesizer' : 'Enable Sound Synthesizer';
+        showToast(State.soundEnabled ? 'Synthesized Audio ON' : 'Audio Muted');
+      });
+
+      // Dark / Light Theme Toggle
+      dom.btnTheme.addEventListener('click', () => {
+        const current = document.body.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.body.setAttribute('data-theme', next);
+        dom.btnTheme.textContent = next === 'dark' ? '🌙' : '☀️';
+      });
+
+      // Keyboard spacebar shortcut for Play/Pause
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+          e.preventDefault();
+          dom.btnPlayPause.click();
+        }
+      });
+
+      // 6. Modals (Theory & Quiz)
+      dom.btnTheory.addEventListener('click', () => dom.modalTheory.classList.add('open'));
+      dom.btnCloseTheory.addEventListener('click', () => dom.modalTheory.classList.remove('open'));
+      dom.btnQuiz.addEventListener('click', () => dom.modalQuiz.classList.add('open'));
+      dom.btnCloseQuiz.addEventListener('click', () => dom.modalQuiz.classList.remove('open'));
+
+      [dom.modalTheory, dom.modalQuiz].forEach(m => {
+        m.addEventListener('click', (e) => {
+          if (e.target === m) m.classList.remove('open');
+        });
+      });
+
+      // 7. Interactive Quiz Checking Logic
+      document.querySelectorAll('.quiz-card').forEach(card => {
+        const options = card.querySelectorAll('.quiz-opt');
+        const feedback = card.querySelector('.quiz-feedback');
+        
+        options.forEach(opt => {
+          opt.addEventListener('click', () => {
+            options.forEach(o => {
+              o.classList.remove('correct', 'incorrect');
+              o.disabled = true;
+            });
+            const isCorrect = opt.dataset.correct === 'true';
+            if (isCorrect) {
+              opt.classList.add('correct');
+              feedback.style.display = 'block';
+              feedback.style.background = 'rgba(34, 197, 94, 0.2)';
+              feedback.style.color = '#4ade80';
+              feedback.textContent = '✓ Correct! Exactly according to NCERT formula derivation.';
+            } else {
+              opt.classList.add('incorrect');
+              options.forEach(o => { if (o.dataset.correct === 'true') o.classList.add('correct'); });
+              feedback.style.display = 'block';
+              feedback.style.background = 'rgba(239, 68, 68, 0.2)';
+              feedback.style.color = '#f87171';
+              feedback.textContent = '✗ Incorrect. Review the formula in the theory drawer.';
+            }
+          });
+        });
+
+        // Scenario Preset Buttons
+        const presetBtn = card.querySelector('.btn-apply-preset');
+        if (presetBtn) {
+          presetBtn.addEventListener('click', () => {
+            const type = presetBtn.dataset.preset;
+            if (type === 'cyclist_45') {
+              document.getElementById('tabCyclist').click();
+              State.r = 20; dom.inputRadius.value = 20; dom.valRadius.textContent = '20 m';
+              State.v = 14; dom.inputSpeed.value = 14; dom.valSpeed.textContent = '14.0 m/s';
+              State.mu = 1.0; dom.inputMu.value = 1.0; dom.valMu.textContent = '1.00';
+            } else if (type === 'unbanked_50') {
+              document.getElementById('tabUnbanked').click();
+              State.r = 50; dom.inputRadius.value = 50; dom.valRadius.textContent = '50 m';
+              State.mu = 0.5; dom.inputMu.value = 0.5; dom.valMu.textContent = '0.50';
+              State.v = 15.65; dom.inputSpeed.value = 15.65; dom.valSpeed.textContent = '15.6 m/s';
+            } else if (type === 'banked_optimum') {
+              document.getElementById('tabBanked').click();
+              State.r = 100; dom.inputRadius.value = 100; dom.valRadius.textContent = '100 m';
+              State.thetaBankDeg = 15; dom.inputBankingAngle.value = 15; dom.valBankingAngle.textContent = '15.0°';
+              updatePhysicsCalculations();
+              State.v = Math.round(State.v0 * 10) / 10;
+              dom.inputSpeed.value = State.v; dom.valSpeed.textContent = `${State.v.toFixed(1)} m/s`;
+            }
+            dom.modalQuiz.classList.remove('open');
+            updatePhysicsCalculations();
+            showToast('Quiz scenario loaded into lab!');
+          });
+        }
+      });
+    }
+
+    // --- 8. INITIALIZATION BOOTSTRAP ---
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvases();
+      setupEventListeners();
+      updatePhysicsCalculations();
+      updateHUD();
+      requestAnimationFrame(physicsLoop);
+    });
+  </script>
+</body>
+</html>
