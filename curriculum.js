@@ -1,6 +1,6 @@
 // PRASANTH PHYSICS - Complete CBSE Class 11 & 12 Animated PPT Curriculum
 // 332 Interactive Animated PowerPoint Modules across all 30 Chapters
-const CURRICULUM = {
+var CURRICULUM = {
   "class-12": [
     {
       "id": "12-01",
@@ -2439,3 +2439,6 @@ const CURRICULUM = {
     }
   ]
 };
+if (typeof window !== 'undefined') {
+  window.CURRICULUM = CURRICULUM;
+}
