@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Physics Prasanth — Animated Physics Presentation Portal (Classes XI & XII)</title>
+  <meta name="description" content="Professional CBSE Class 11 and 12 Physics animated presentation teaching portal with step-by-step builds, interactive derivations, and teacher annotation tools.">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- KaTeX for math rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Content Catalogue Data Model -->
+  <script src="data/catalogue.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              400: '#38bdf8',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#034a70',
+              900: '#0c4a6e',
+            },
+            space: {
+              800: '#0f172a',
+              900: '#090d16',
+              950: '#05070d'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.3);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.5);
+    }
+
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Presentation Stage & Annotation Overlay */
+    #presentationContainer {
+      position: relative;
+      width: 100%;
+      background: #000000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
+
+    /* 16:9 Aspect Ratio Box */
+    .stage-ratio-box {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 ratio */
+      background: #000000;
+    }
+
+    .stage-ratio-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #presentationIframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #000000;
+      display: block;
+    }
+
+    #annotationCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 20;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Mode classes for Canvas pointer interaction */
+    .mode-browse #annotationCanvas {
+      pointer-events: none;
+      cursor: default;
+    }
+
+    .mode-annotate #annotationCanvas {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+
+    /* Persistent Watermark */
+    .portal-watermark {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      z-index: 25;
+      pointer-events: none;
+      user-select: none;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 5px 12px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* Fullscreen specifics */
+    :fullscreen #presentationContainer,
+    :-webkit-full-screen #presentationContainer {
+      border-radius: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    :fullscreen .stage-ratio-box,
+    :-webkit-full-screen .stage-ratio-box {
+      width: 100vw;
+      height: 56.25vw; /* Maintain 16:9 ratio */
+      max-height: 100vh;
+      max-width: 177.78vh;
+      padding-top: 0;
+      position: relative;
+    }
+
+    /* Floating Toolbar in Fullscreen */
+    :fullscreen #fullscreenFloatToolbar,
+    :-webkit-full-screen #fullscreenFloatToolbar {
+      display: flex !important;
+    }
+
+    /* Topic tree item transition */
+    .topic-btn {
+      transition: all 0.15s ease-in-out;
+    }
+    .topic-btn.active {
+      background: rgba(99, 102, 241, 0.18);
+      border-color: rgba(129, 140, 248, 0.45);
+      color: #e0e7ff;
+    }
+    .topic-btn.active .topic-dot {
+      background-color: #818cf8;
+      box-shadow: 0 0 8px #818cf8;
+    }
+
+    /* Chapter accordion transition */
+    .chapter-content {
+      transition: max-height 0.25s ease-out;
+    }
+
+    /* Color picker button */
+    .color-swatch.active {
+      ring-width: 2px;
+      transform: scale(1.15);
+    }
+  </style>
+</head>
+<body class="bg-space-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased overflow-x-hidden mode-browse">
+
+  <!-- ========================================================
+       TOP NAVIGATION BAR
+       ======================================================== -->
+  <header class="h-16 border-b border-slate-800/80 bg-space-900/95 sticky top-0 z-40 px-4 flex items-center justify-between shrink-0 backdrop-blur-md">
+    <!-- Brand / Title -->
+    <div class="flex items-center gap-3">
+      <button id="btnToggleMobileSidebar" class="p-2 lg:hidden text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition" aria-label="Toggle navigation catalogue">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+
+      <a href="/presentations" class="flex items-center gap-2.5 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-0.5 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+          <div class="w-full h-full bg-space-900 rounded-[10px] flex items-center justify-center">
+            <i data-lucide="presentation" class="w-4 h-4 text-indigo-400"></i>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-sm tracking-wide text-white group-hover:text-indigo-300 transition">Physics Prasanth</span>
+            <span class="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 rounded-full font-mono">Presentations</span>
+          </div>
+          <p class="text-[10px] text-slate-400 font-medium tracking-normal hidden sm:block">Interactive Physics Presentations | Classes XI &amp; XII</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Center Active Module Tracker (Desktop) -->
+    <div id="activeModuleTracker" class="hidden xl:flex items-center gap-2 px-3 py-1 bg-slate-900/90 border border-slate-800 rounded-lg text-xs font-mono text-slate-300">
+      <span class="text-indigo-400 font-semibold" id="trackerClassBadge">Class XII</span>
+      <span class="text-slate-600">›</span>
+      <span class="text-slate-300 truncate max-w-[200px]" id="trackerChapterName">Electric Charges</span>
+      <span class="text-slate-600">›</span>
+      <span class="text-cyan-400 font-medium truncate max-w-[240px]" id="trackerTopicName">Part 1: Electric Charge</span>
+    </div>
+
+    <!-- Right Controls & Switch to Sims -->
+    <div class="flex items-center gap-2.5">
+      <!-- Direct Link back to Simulations Lab -->
+      <a href="/" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700/60 transition shadow-sm" title="Open Interactive Simulations Lab">
+        <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span class="hidden sm:inline">Simulations Lab</span>
+        <span class="text-[10px] px-1.5 py-0.2 bg-cyan-500/20 text-cyan-300 rounded font-mono">17</span>
+      </a>
+
+      <!-- Quick Help modal toggle -->
+      <button id="btnOpenHelp" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Shortcuts & Instructions">
+        <i data-lucide="help-circle" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================
+       MAIN APP WORKSPACE
+       ======================================================== -->
+  <div class="flex-1 min-h-0 flex overflow-hidden relative">
+
+    <!-- ======================================================
+         LEFT SIDEBAR: DATA-DRIVEN CURRICULUM TREE
+         ====================================================== -->
+    <aside id="sidebarCatalogue" class="fixed inset-y-0 left-0 z-30 w-80 lg:static lg:w-84 xl:w-96 border-r border-slate-800/80 bg-space-900/95 flex flex-col shrink-0 transition-transform duration-300 -translate-x-full lg:translate-x-0">
+      
+      <!-- Search & Class Selector Header -->
+      <div class="p-3.5 border-b border-slate-800/90 space-y-3 bg-space-900/80 shrink-0">
+        <!-- Search Input -->
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400 pointer-events-none"></i>
+          <input type="text" id="catalogueSearch" placeholder="Search 332 topics or chapters..." 
+                 class="w-full bg-slate-950/80 text-slate-200 border border-slate-700/80 rounded-xl pl-9 pr-8 py-2 text-xs focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500 transition">
+          <button id="btnClearSearch" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-white hidden">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Class Filter Pill Tabs -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-medium">
+          <button data-class-filter="all" class="class-filter-btn flex-1 py-1 px-2 rounded-lg text-center transition bg-indigo-600 text-white shadow-sm font-semibold">
+            All <span class="text-[10px] opacity-80 font-mono ml-0.5">(332)</span>
+          </button>
+          <button data-class-filter="class-12" class="class-filter-btn flex-1 py-1 px-2 rounded-lg text-center transition text-slate-400 hover:text-slate-200">
+            Class XII <span class="text-[10px] opacity-75 font-mono ml-0.5">(188)</span>
+          </button>
+          <button data-class-filter="class-11" class="class-filter-btn flex-1 py-1 px-2 rounded-lg text-center transition text-slate-400 hover:text-slate-200">
+            Class XI <span class="text-[10px] opacity-75 font-mono ml-0.5">(144)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Tree View -->
+      <div id="treeContainer" class="flex-1 overflow-y-auto p-3 space-y-4">
+        <!-- Dynamically rendered Class -> Chapter -> Topic tree -->
+        <div id="treeLoading" class="py-12 text-center text-xs text-slate-400">
+          <i data-lucide="loader-2" class="w-6 h-6 animate-spin text-indigo-400 mx-auto mb-2"></i>
+          Loading Curriculum Catalogue...
+        </div>
+      </div>
+
+      <!-- Tree Bottom Meta Footer -->
+      <div class="p-3 border-t border-slate-800/90 bg-space-950/70 text-[11px] text-slate-400 flex items-center justify-between shrink-0">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Google Slides Office Engine</span>
+        </span>
+        <span class="font-mono text-indigo-400 font-semibold" id="totalModuleCounter">332 Modules</span>
+      </div>
+    </aside>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-20 hidden lg:hidden"></div>
+
+    <!-- ======================================================
+         CENTER / RIGHT WORKSPACE: PRESENTATION STAGE & TOOLS
+         ====================================================== -->
+    <main class="flex-1 min-w-0 flex flex-col overflow-y-auto bg-space-950">
+
+      <!-- ====================================================
+           VIEWER TOOLBAR (Mode Toggle, Navigation, Annotation, Fullscreen)
+           ==================================================== -->
+      <div class="p-3 border-b border-slate-800/80 bg-space-900/90 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 text-xs">
+        
+        <!-- Left: Mode Switcher (Browse vs Annotate) -->
+        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button id="btnModeBrowse" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition" title="Browse Mode: Clicks pass through to advance animations & slides (Press 'B')">
+            <i data-lucide="mouse-pointer" class="w-3.5 h-3.5"></i>
+            <span>Browse / Click</span>
+          </button>
+          <button id="btnModeAnnotate" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition" title="Annotate Mode: Draw temporary notes with pen/tablet (Press 'A')">
+            <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
+            <span>Annotate</span>
+          </button>
+        </div>
+
+        <!-- Middle: Annotation Toolset (visible in Annotate mode) -->
+        <div id="annotationToolsContainer" class="flex items-center gap-2 opacity-50 pointer-events-none transition-opacity">
+          <!-- Tool: Pen, Highlighter, Eraser -->
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button id="toolPen" class="p-1.5 rounded-lg bg-indigo-600 text-white" title="Pen (Fine drawing)">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            </button>
+            <button id="toolHighlighter" class="p-1.5 rounded-lg text-slate-400 hover:text-white" title="Highlighter (Semi-transparent)">
+              <i data-lucide="highlighter" class="w-3.5 h-3.5"></i>
+            </button>
+            <button id="toolEraser" class="p-1.5 rounded-lg text-slate-400 hover:text-white" title="Eraser">
+              <i data-lucide="eraser" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Color Swatches -->
+          <div class="flex items-center gap-1.5 bg-slate-950 px-2 py-1 rounded-xl border border-slate-800">
+            <button data-color="#ef4444" class="color-swatch w-4 h-4 rounded-full bg-red-500 hover:scale-110 transition" title="Red"></button>
+            <button data-color="#38bdf8" class="color-swatch w-4 h-4 rounded-full bg-sky-400 hover:scale-110 transition active ring-2 ring-white" title="Sky Blue"></button>
+            <button data-color="#10b981" class="color-swatch w-4 h-4 rounded-full bg-emerald-500 hover:scale-110 transition" title="Green"></button>
+            <button data-color="#fbbf24" class="color-swatch w-4 h-4 rounded-full bg-amber-400 hover:scale-110 transition" title="Yellow"></button>
+            <button data-color="#ffffff" class="color-swatch w-4 h-4 rounded-full bg-white hover:scale-110 transition" title="White"></button>
+          </div>
+
+          <!-- Stroke Size -->
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[10px] font-mono">
+            <button data-size="2" class="size-btn px-2 py-1 rounded hover:bg-slate-800 text-slate-300">2px</button>
+            <button data-size="4" class="size-btn px-2 py-1 rounded bg-indigo-600 text-white font-bold">4px</button>
+            <button data-size="8" class="size-btn px-2 py-1 rounded hover:bg-slate-800 text-slate-300">8px</button>
+          </div>
+
+          <!-- Undo / Redo / Clear -->
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button id="btnUndo" class="p-1.5 text-slate-400 hover:text-white rounded-lg disabled:opacity-30" title="Undo (Ctrl+Z)">
+              <i data-lucide="undo" class="w-3.5 h-3.5"></i>
+            </button>
+            <button id="btnRedo" class="p-1.5 text-slate-400 hover:text-white rounded-lg disabled:opacity-30" title="Redo (Ctrl+Y)">
+              <i data-lucide="redo" class="w-3.5 h-3.5"></i>
+            </button>
+            <button id="btnClearCanvas" class="p-1.5 text-slate-400 hover:text-red-400 rounded-lg" title="Clear All Annotations">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Topic Navigation & Presentation Actions -->
+        <div class="flex items-center gap-2">
+          <button id="btnPrevTopic" class="flex items-center gap-1 px-2.5 py-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs transition" title="Previous Topic Module">
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Prev</span>
+          </button>
+          <button id="btnNextTopic" class="flex items-center gap-1 px-2.5 py-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs transition" title="Next Topic Module">
+            <span class="hidden sm:inline">Next</span>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <button id="btnReloadSlide" class="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition" title="Reload Presentation">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <button id="btnFullscreen" class="flex items-center gap-1.5 px-3 py-1.5 text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold shadow transition" title="Enter Fullscreen Presentation (Press 'F')">
+            <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Fullscreen</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Mode Hint Alert Bar -->
+      <div id="modeHintBar" class="px-4 py-2 bg-indigo-950/40 border-b border-indigo-900/50 flex items-center justify-between text-xs text-indigo-300">
+        <div class="flex items-center gap-2">
+          <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
+          <span id="modeHintText">Browse Mode active: Click anywhere on the presentation to trigger step-by-step builds and animations.</span>
+        </div>
+        <div class="font-mono text-[11px] text-indigo-400/80 hidden sm:block">
+          Shortcut: Press <kbd class="px-1.5 py-0.5 bg-slate-900 border border-indigo-700/60 rounded">B</kbd> for Browse / <kbd class="px-1.5 py-0.5 bg-slate-900 border border-indigo-700/60 rounded">A</kbd> for Annotate
+        </div>
+      </div>
+
+      <!-- ====================================================
+           PRESENTATION STAGE AREA
+           ==================================================== -->
+      <div class="p-4 md:p-6 flex flex-col items-center justify-center">
+        
+        <div id="presentationContainer" class="w-full max-w-6xl">
+          
+          <!-- Persistent Physics Prasanth Brand Watermark -->
+          <div class="portal-watermark">
+            <i data-lucide="atom" class="w-3.5 h-3.5 text-indigo-400 animate-spin" style="animation-duration: 8s;"></i>
+            <span class="text-xs font-bold tracking-wide text-white">Physics Prasanth</span>
+          </div>
+
+          <!-- Aspect Ratio Container -->
+          <div class="stage-ratio-box">
+            <div class="stage-ratio-content">
+              
+              <!-- Loading Indicator -->
+              <div id="slideLoader" class="absolute inset-0 bg-space-950 flex flex-col items-center justify-center gap-3 z-10 transition-opacity duration-300">
+                <div class="relative">
+                  <div class="w-12 h-12 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+                  <div class="w-6 h-6 rounded-full border-2 border-cyan-400/20 border-b-cyan-400 animate-spin absolute inset-0 m-auto" style="animation-direction: reverse;"></div>
+                </div>
+                <div class="text-center">
+                  <p class="text-xs font-semibold text-slate-200" id="loaderTopicTitle">Streaming Animated Presentation...</p>
+                  <p class="text-[10px] text-slate-400 mt-1">Preserving PowerPoint builds, derivations &amp; animations</p>
+                </div>
+              </div>
+
+              <!-- Google Slides Office Embed Iframe -->
+              <iframe id="presentationIframe" 
+                      src="about:blank" 
+                      allowfullscreen="true" 
+                      mozallowfullscreen="true" 
+                      webkitallowfullscreen="true"
+                      loading="lazy">
+              </iframe>
+
+              <!-- Teacher Annotation Canvas Layer -->
+              <canvas id="annotationCanvas" width="1920" height="1080"></canvas>
+
+            </div>
+          </div>
+
+          <!-- Fullscreen Floating Toolbar (Only shown in Fullscreen mode) -->
+          <div id="fullscreenFloatToolbar" class="hidden absolute bottom-5 left-1/2 -translate-x-1/2 z-30 bg-space-900/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 shadow-2xl items-center gap-3 text-xs text-white">
+            <span class="font-bold text-indigo-400 flex items-center gap-1.5">
+              <i data-lucide="atom" class="w-3.5 h-3.5"></i> Physics Prasanth
+            </span>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <button id="fsBtnBrowse" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold">Browse</button>
+            <button id="fsBtnAnnotate" class="px-2.5 py-1 rounded-lg text-slate-300 hover:text-white">Annotate</button>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <button id="fsBtnPrev" class="p-1 hover:text-indigo-400" title="Prev Topic"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <button id="fsBtnNext" class="p-1 hover:text-indigo-400" title="Next Topic"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <button id="fsBtnClear" class="p-1 text-slate-400 hover:text-red-400" title="Clear Ink"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <button id="fsBtnExit" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1">
+              <i data-lucide="minimize" class="w-3 h-3"></i> Exit
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ====================================================
+           CHAPTER COMPANION & CBSE EXAM DERIVATIONS CARD
+           ==================================================== -->
+      <div class="px-4 md:px-6 pb-12 w-full max-w-6xl mx-auto space-y-4">
+        
+        <!-- Active Topic & Chapter Details Banner -->
+        <div class="glass-panel p-5 rounded-2xl border border-slate-800/80 space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span id="cardClassBadge" class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-md text-[11px] font-mono font-semibold">Class XII</span>
+                <span id="cardWeightageBadge" class="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-md text-[11px] font-mono">Weightage: 6–7 Marks</span>
+                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-md text-[11px] font-mono">Animated PPT</span>
+              </div>
+              <h2 id="cardTopicTitle" class="text-base md:text-lg font-bold text-white">Part 1: Electric Charge &amp; Conservation</h2>
+              <p id="cardChapterTitle" class="text-xs text-slate-400">Chapter 01: Electric Charges and Fields</p>
+            </div>
+
+            <!-- Quick Topic Jumper Navigation -->
+            <div class="flex items-center gap-2">
+              <button id="cardBtnPrev" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 flex items-center gap-1 transition">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Previous
+              </button>
+              <button id="cardBtnNext" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-xl font-semibold flex items-center gap-1 transition">
+                Next <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Formula Sheet & Exam Tips Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- High-Yield Formulas Card (KaTeX) -->
+            <div class="bg-space-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2.5">
+              <div class="flex items-center gap-2 text-indigo-400 font-semibold text-xs uppercase tracking-wide">
+                <i data-lucide="sigma" class="w-4 h-4"></i>
+                <span>Key Chapter Formulas &amp; Equations</span>
+              </div>
+              <div id="cardFormulasContainer" class="space-y-2 text-xs text-slate-300">
+                <!-- KaTeX formulas rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Board Exam Tips & Important Derivations -->
+            <div class="bg-space-900/60 p-4 rounded-xl border border-slate-800/80 space-y-2.5">
+              <div class="flex items-center gap-2 text-amber-400 font-semibold text-xs uppercase tracking-wide">
+                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                <span>CBSE Board Derivation Tips &amp; Insights</span>
+              </div>
+              <div id="cardTipsContainer" class="space-y-2 text-xs text-slate-300">
+                <!-- Derivation tips rendered dynamically -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Footer Callout for Simulations -->
+          <div class="p-3.5 rounded-xl bg-gradient-to-r from-cyan-950/40 to-indigo-950/40 border border-cyan-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 bg-cyan-500/20 text-cyan-400 rounded-lg shrink-0">
+                <i data-lucide="flask-conical" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <p class="font-semibold text-white">Want to experiment with live physics simulations?</p>
+                <p class="text-slate-400 text-[11px]">Interact with projectiles, double pendulums, electromagnetic induction, optics, and wave motion.</p>
+              </div>
+            </div>
+            <a href="/" class="shrink-0 px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-center transition">
+              Launch 17 Physics Labs &rarr;
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ========================================================
+       KEYBOARD SHORTCUTS & HELP MODAL
+       ======================================================== -->
+  <div id="helpModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-space-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="keyboard" class="w-5 h-5 text-indigo-400"></i>
+          <h3 class="font-semibold text-sm text-white">Presentation Portal Controls</h3>
+        </div>
+        <button id="btnCloseHelp" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        <div class="flex items-center justify-between py-1 border-b border-slate-800/60">
+          <span>Toggle Browse Mode (Click to advance)</span>
+          <kbd class="px-2 py-0.5 bg-slate-800 rounded font-mono text-indigo-300">B</kbd>
+        </div>
+        <div class="flex items-center justify-between py-1 border-b border-slate-800/60">
+          <span>Toggle Annotate Mode (Stylus/Pen)</span>
+          <kbd class="px-2 py-0.5 bg-slate-800 rounded font-mono text-indigo-300">A</kbd>
+        </div>
+        <div class="flex items-center justify-between py-1 border-b border-slate-800/60">
+          <span>Toggle Fullscreen</span>
+          <kbd class="px-2 py-0.5 bg-slate-800 rounded font-mono text-indigo-300">F</kbd>
+        </div>
+        <div class="flex items-center justify-between py-1 border-b border-slate-800/60">
+          <span>Undo Annotation</span>
+          <kbd class="px-2 py-0.5 bg-slate-800 rounded font-mono text-indigo-300">Ctrl + Z</kbd>
+        </div>
+        <div class="flex items-center justify-between py-1 border-b border-slate-800/60">
+          <span>Redo Annotation</span>
+          <kbd class="px-2 py-0.5 bg-slate-800 rounded font-mono text-indigo-300">Ctrl + Y</kbd>
+        </div>
+        <div class="flex items-center justify-between py-1 border-b border-slate-800/60">
+          <span>Previous / Next Topic</span>
+          <kbd class="px-2 py-0.5 bg-slate-800 rounded font-mono text-indigo-300">[ / ]</kbd>
+        </div>
+      </div>
+
+      <div class="p-3 bg-indigo-950/40 border border-indigo-800/40 rounded-xl text-[11px] text-indigo-300">
+        💡 <strong>Teacher Tip:</strong> In Browse Mode, clicking on the slide advances animated formulas and builds one by one. Switch to Annotate Mode to write directly on the slide.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       PORTAL CLIENT LOGIC & ANNOTATION ENGINE
+       ======================================================== -->
+  <script>
+    (function() {
+      // 1. Data Store & Global State
+      const catalogue = window.PHYSICS_CATALOGUE || { classes: [], totalModules: 0 };
+      
+      const state = {
+        activeClassId: 'class-12',
+        activeChapterId: '12-01',
+        activeTopicId: '12-01-t01',
+        filterClass: 'all',
+        searchQuery: '',
+        mode: 'browse', // 'browse' | 'annotate'
+        tool: 'pen',    // 'pen' | 'highlighter' | 'eraser'
+        color: '#38bdf8',
+        size: 4,
+        isDrawing: false,
+        // In-memory per-topic annotation strokes: { [topicId]: Array<Stroke> }
+        topicAnnotations: {},
+        currentStrokes: [],
+        undoneStrokes: []
+      };
+
+      // 2. DOM Elements
+      const treeContainer = document.getElementById('treeContainer');
+      const catalogueSearch = document.getElementById('catalogueSearch');
+      const btnClearSearch = document.getElementById('btnClearSearch');
+      const classFilterBtns = document.querySelectorAll('.class-filter-btn');
+      const sidebarCatalogue = document.getElementById('sidebarCatalogue');
+      const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+      const btnToggleMobileSidebar = document.getElementById('btnToggleMobileSidebar');
+
+      const presentationContainer = document.getElementById('presentationContainer');
+      const presentationIframe = document.getElementById('presentationIframe');
+      const slideLoader = document.getElementById('slideLoader');
+      const loaderTopicTitle = document.getElementById('loaderTopicTitle');
+      const annotationCanvas = document.getElementById('annotationCanvas');
+      const ctx = annotationCanvas.getContext('2d');
+
+      const btnModeBrowse = document.getElementById('btnModeBrowse');
+      const btnModeAnnotate = document.getElementById('btnModeAnnotate');
+      const annotationToolsContainer = document.getElementById('annotationToolsContainer');
+      const modeHintText = document.getElementById('modeHintText');
+
+      const toolPen = document.getElementById('toolPen');
+      const toolHighlighter = document.getElementById('toolHighlighter');
+      const toolEraser = document.getElementById('toolEraser');
+      const colorSwatches = document.querySelectorAll('.color-swatch');
+      const sizeBtns = document.querySelectorAll('.size-btn');
+      const btnUndo = document.getElementById('btnUndo');
+      const btnRedo = document.getElementById('btnRedo');
+      const btnClearCanvas = document.getElementById('btnClearCanvas');
+
+      const btnPrevTopic = document.getElementById('btnPrevTopic');
+      const btnNextTopic = document.getElementById('btnNextTopic');
+      const btnReloadSlide = document.getElementById('btnReloadSlide');
+      const btnFullscreen = document.getElementById('btnFullscreen');
+
+      // Tracker & Cards
+      const trackerClassBadge = document.getElementById('trackerClassBadge');
+      const trackerChapterName = document.getElementById('trackerChapterName');
+      const trackerTopicName = document.getElementById('trackerTopicName');
+
+      const cardClassBadge = document.getElementById('cardClassBadge');
+      const cardWeightageBadge = document.getElementById('cardWeightageBadge');
+      const cardTopicTitle = document.getElementById('cardTopicTitle');
+      const cardChapterTitle = document.getElementById('cardChapterTitle');
+      const cardFormulasContainer = document.getElementById('cardFormulasContainer');
+      const cardTipsContainer = document.getElementById('cardTipsContainer');
+      const cardBtnPrev = document.getElementById('cardBtnPrev');
+      const cardBtnNext = document.getElementById('cardBtnNext');
+
+      // Fullscreen toolbar elements
+      const fsBtnBrowse = document.getElementById('fsBtnBrowse');
+      const fsBtnAnnotate = document.getElementById('fsBtnAnnotate');
+      const fsBtnPrev = document.getElementById('fsBtnPrev');
+      const fsBtnNext = document.getElementById('fsBtnNext');
+      const fsBtnClear = document.getElementById('fsBtnClear');
+      const fsBtnExit = document.getElementById('fsBtnExit');
+
+      // Help Modal
+      const helpModal = document.getElementById('helpModal');
+      const btnOpenHelp = document.getElementById('btnOpenHelp');
+      const btnCloseHelp = document.getElementById('btnCloseHelp');
+
+      // 3. Helper: Flattened Topics List for Sequential Navigation
+      function getFlattenedTopics() {
+        const list = [];
+        catalogue.classes.forEach(cls => {
+          cls.chapters.forEach(ch => {
+            ch.topics.forEach(t => {
+              list.push({
+                classId: cls.id,
+                className: cls.shortName,
+                chapterId: ch.id,
+                chapterTitle: ch.title,
+                weightage: ch.weightage,
+                formulas: ch.formulas || [],
+                tips: ch.tips || [],
+                topic: t
+              });
+            });
+          });
+        });
+        return list;
+      }
+
+      // 4. Render Curriculum Tree in Sidebar
+      function renderTree() {
+        treeContainer.innerHTML = '';
+        const searchVal = state.searchQuery.toLowerCase().trim();
+
+        let visibleModulesCount = 0;
+
+        catalogue.classes.forEach(cls => {
+          // Check class filter
+          if (state.filterClass !== 'all' && state.filterClass !== cls.id) return;
+
+          // Filter chapters and topics
+          const matchingChapters = [];
+          cls.chapters.forEach(ch => {
+            const matchesChapterName = ch.title.toLowerCase().includes(searchVal);
+            const matchingTopics = ch.topics.filter(t => {
+              return matchesChapterName || t.title.toLowerCase().includes(searchVal);
+            });
+
+            if (matchingTopics.length > 0) {
+              matchingChapters.push({ chapter: ch, topics: matchingTopics });
+              visibleModulesCount += matchingTopics.length;
+            }
+          });
+
+          if (matchingChapters.length === 0) return;
+
+          // Create Class Section Container
+          const classSection = document.createElement('div');
+          classSection.className = 'space-y-2';
+
+          // Class Header
+          const classHeader = document.createElement('div');
+          classHeader.className = 'px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-indigo-400 font-bold flex items-center justify-between';
+          classHeader.innerHTML = `
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="book-marked" class="w-3.5 h-3.5"></i>
+              ${cls.name}
+            </span>
+            <span class="text-slate-500 font-normal lowercase">${cls.curriculum}</span>
+          `;
+          classSection.appendChild(classHeader);
+
+          // Render Chapters
+          matchingChapters.forEach(({ chapter, topics }) => {
+            const isChapterActive = state.activeChapterId === chapter.id;
+            const chapterWrap = document.createElement('div');
+            chapterWrap.className = 'rounded-xl border border-slate-800/70 bg-space-900/40 overflow-hidden';
+
+            // Chapter Accordion Header
+            const chBtn = document.createElement('button');
+            chBtn.className = `w-full px-3 py-2 text-left flex items-center justify-between text-xs font-medium transition ${
+              isChapterActive ? 'bg-indigo-950/30 text-white' : 'text-slate-300 hover:bg-slate-800/50'
+            }`;
+            chBtn.innerHTML = `
+              <div class="flex items-center gap-2 truncate pr-2">
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-indigo-400 shrink-0">Ch ${String(chapter.number).padStart(2, '0')}</span>
+                <span class="truncate font-semibold text-slate-200">${chapter.title}</span>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800/80 text-slate-400 font-mono">${topics.length}</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ch-chevron ${isChapterActive || searchVal ? 'rotate-180' : ''}"></i>
+              </div>
+            `;
+
+            // Chapter Topics Container
+            const topicsContainer = document.createElement('div');
+            topicsContainer.className = `chapter-content px-2 pb-2 pt-1 space-y-1 ${
+              isChapterActive || searchVal ? 'block' : 'hidden'
+            }`;
+
+            // Render Topic Items
+            topics.forEach(topic => {
+              const isTopicActive = state.activeTopicId === topic.id;
+              const topicBtn = document.createElement('button');
+              topicBtn.className = `topic-btn w-full px-2.5 py-2 rounded-lg text-left text-xs flex items-center justify-between gap-2 border border-transparent ${
+                isTopicActive ? 'active' : 'text-slate-300 hover:bg-slate-800/60'
+              }`;
+              topicBtn.dataset.topicId = topic.id;
+              topicBtn.dataset.chapterId = chapter.id;
+              topicBtn.dataset.classId = cls.id;
+
+              topicBtn.innerHTML = `
+                <div class="flex items-center gap-2 truncate">
+                  <span class="topic-dot w-1.5 h-1.5 rounded-full bg-slate-600 shrink-0"></span>
+                  <span class="truncate ${isTopicActive ? 'font-semibold text-indigo-200' : ''}">${topic.title}</span>
+                </div>
+                <span class="text-[9px] px-1 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono shrink-0">PPT</span>
+              `;
+
+              topicBtn.addEventListener('click', () => {
+                selectTopic(cls.id, chapter.id, topic.id);
+                // On mobile, close sidebar on selection
+                if (window.innerWidth < 1024) closeMobileSidebar();
+              });
+
+              topicsContainer.appendChild(topicBtn);
+            });
+
+            // Accordion Toggle
+            chBtn.addEventListener('click', () => {
+              const isHidden = topicsContainer.classList.contains('hidden');
+              topicsContainer.classList.toggle('hidden', !isHidden);
+              const chevron = chBtn.querySelector('.ch-chevron');
+              if (chevron) chevron.classList.toggle('rotate-180', isHidden);
+            });
+
+            chapterWrap.appendChild(chBtn);
+            chapterWrap.appendChild(topicsContainer);
+            classSection.appendChild(chapterWrap);
+          });
+
+          treeContainer.appendChild(classSection);
+        });
+
+        if (visibleModulesCount === 0) {
+          treeContainer.innerHTML = `
+            <div class="py-12 px-4 text-center text-xs text-slate-400 space-y-2">
+              <i data-lucide="file-question" class="w-8 h-8 mx-auto text-slate-500"></i>
+              <p class="font-medium text-slate-300">No presentations match your search</p>
+              <p class="text-[11px] text-slate-500">Try searching for keywords like "electric", "optics", "kinematics", or "wave".</p>
+            </div>
+          `;
+        }
+
+        lucide.createIcons();
+      }
+
+      // 5. Select Topic & Load Presentation
+      function selectTopic(classId, chapterId, topicId) {
+        // Save current canvas annotations into memory
+        saveCurrentTopicAnnotations();
+
+        state.activeClassId = classId;
+        state.activeChapterId = chapterId;
+        state.activeTopicId = topicId;
+
+        // Find details
+        const flat = getFlattenedTopics();
+        const current = flat.find(item => item.topic.id === topicId) || flat[0];
+        if (!current) return;
+
+        // Update Tracker Header
+        trackerClassBadge.textContent = current.className;
+        trackerChapterName.textContent = current.chapterTitle;
+        trackerTopicName.textContent = current.topic.title;
+
+        // Update Study Card
+        cardClassBadge.textContent = current.className;
+        cardWeightageBadge.textContent = `Weightage: ${current.weightage}`;
+        cardTopicTitle.textContent = current.topic.title;
+        cardChapterTitle.textContent = `${current.chapterTitle}`;
+        loaderTopicTitle.textContent = `Streaming ${current.topic.title}...`;
+
+        // Render Formulas
+        cardFormulasContainer.innerHTML = '';
+        if (current.formulas && current.formulas.length > 0) {
+          current.formulas.forEach(formulaText => {
+            const div = document.createElement('div');
+            div.className = 'p-2 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-[11px]';
+            div.innerHTML = formulaText;
+            cardFormulasContainer.appendChild(div);
+          });
+        } else {
+          cardFormulasContainer.innerHTML = '<p class="text-slate-500 italic text-[11px]">Core concept presentation; refer to live derivations inside the slide.</p>';
+        }
+
+        // Render Exam Tips
+        cardTipsContainer.innerHTML = '';
+        if (current.tips && current.tips.length > 0) {
+          current.tips.forEach(tipText => {
+            const div = document.createElement('div');
+            div.className = 'p-2 rounded-lg bg-slate-950/70 border border-slate-800/80 text-[11px] text-slate-300 leading-relaxed';
+            div.innerHTML = tipText;
+            cardTipsContainer.appendChild(div);
+          });
+        } else {
+          cardTipsContainer.innerHTML = '<p class="text-slate-500 italic text-[11px]">Focus on conceptual understanding and diagram label accuracy.</p>';
+        }
+
+        // Re-render KaTeX if available
+        if (window.renderMathInElement) {
+          window.renderMathInElement(cardFormulasContainer, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '$', right: '$', display: false }
+            ],
+            throwOnError: false
+          });
+        }
+
+        // Show Loading Overlay and Load Verified Embed URL
+        slideLoader.classList.remove('opacity-0', 'pointer-events-none');
+        presentationIframe.src = current.topic.embedUrl;
+
+        presentationIframe.onload = function() {
+          setTimeout(() => {
+            slideLoader.classList.add('opacity-0', 'pointer-events-none');
+          }, 350);
+        };
+
+        // Load annotations for this topic from memory
+        loadTopicAnnotations(topicId);
+
+        // Highlight in tree without re-rendering everything
+        document.querySelectorAll('.topic-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.topicId === topicId);
+        });
+
+        lucide.createIcons();
+      }
+
+      // 6. Navigation Helpers (Prev / Next)
+      function navigateTopic(direction) {
+        const flat = getFlattenedTopics();
+        const currentIndex = flat.findIndex(item => item.topic.id === state.activeTopicId);
+        if (currentIndex === -1) return;
+
+        let newIndex = currentIndex + direction;
+        if (newIndex < 0) newIndex = flat.length - 1;
+        if (newIndex >= flat.length) newIndex = 0;
+
+        const next = flat[newIndex];
+        selectTopic(next.classId, next.chapterId, next.topic.id);
+      }
+
+      // 7. Mode Switcher (Browse vs Annotate)
+      function setMode(newMode) {
+        state.mode = newMode;
+        if (newMode === 'browse') {
+          document.body.classList.remove('mode-annotate');
+          document.body.classList.add('mode-browse');
+
+          btnModeBrowse.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition';
+          btnModeAnnotate.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition';
+          annotationToolsContainer.classList.add('opacity-50', 'pointer-events-none');
+          modeHintText.textContent = "Browse Mode active: Click anywhere on the presentation to advance animations, step builds & derivations.";
+
+          fsBtnBrowse.className = 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold';
+          fsBtnAnnotate.className = 'px-2.5 py-1 rounded-lg text-slate-300 hover:text-white';
+        } else {
+          document.body.classList.remove('mode-browse');
+          document.body.classList.add('mode-annotate');
+
+          btnModeAnnotate.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition';
+          btnModeBrowse.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition';
+          annotationToolsContainer.classList.remove('opacity-50', 'pointer-events-none');
+          modeHintText.textContent = "Annotate Mode active: Stylus, pen tablet & mouse drawing enabled directly over the slide.";
+
+          fsBtnAnnotate.className = 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-semibold';
+          fsBtnBrowse.className = 'px-2.5 py-1 rounded-lg text-slate-300 hover:text-white';
+        }
+      }
+
+      // 8. Annotation Canvas Engine (Virtual 1920x1080 Coordinate System)
+      function resizeCanvasResolution() {
+        // We keep internal resolution at 1920x1080 so ink coordinates never drift across resizes or fullscreen!
+        annotationCanvas.width = 1920;
+        annotationCanvas.height = 1080;
+        redrawCanvas();
+      }
+
+      function getPointerVirtualCoords(e) {
+        const rect = annotationCanvas.getBoundingClientRect();
+        const scaleX = annotationCanvas.width / rect.width;
+        const scaleY = annotationCanvas.height / rect.height;
+        return {
+          x: (e.clientX - rect.left) * scaleX,
+          y: (e.clientY - rect.top) * scaleY,
+          pressure: e.pressure && e.pressure > 0 ? e.pressure : 0.5
+        };
+      }
+
+      function startDrawing(e) {
+        if (state.mode !== 'annotate') return;
+        state.isDrawing = true;
+        const point = getPointerVirtualCoords(e);
+        const newStroke = {
+          tool: state.tool,
+          color: state.color,
+          size: state.size,
+          points: [point]
+        };
+        state.currentStrokes.push(newStroke);
+        state.undoneStrokes = []; // Reset redo stack on new action
+        redrawCanvas();
+      }
+
+      function draw(e) {
+        if (!state.isDrawing || state.mode !== 'annotate') return;
+        const point = getPointerVirtualCoords(e);
+        const currentStroke = state.currentStrokes[state.currentStrokes.length - 1];
+        if (currentStroke) {
+          currentStroke.points.push(point);
+          redrawCanvas();
+        }
+      }
+
+      function stopDrawing() {
+        if (!state.isDrawing) return;
+        state.isDrawing = false;
+        updateUndoRedoButtons();
+      }
+
+      function redrawCanvas() {
+        ctx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height);
+
+        state.currentStrokes.forEach(stroke => {
+          if (stroke.points.length === 0) return;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          if (stroke.tool === 'eraser') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = stroke.size * 6;
+          } else if (stroke.tool === 'highlighter') {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = stroke.color;
+            ctx.globalAlpha = 0.35;
+            ctx.lineWidth = stroke.size * 3.5;
+          } else {
+            // Standard Pen
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = stroke.color;
+            ctx.globalAlpha = 1.0;
+            ctx.lineWidth = stroke.size;
+          }
+
+          const pts = stroke.points;
+          if (pts.length === 1) {
+            ctx.arc(pts[0].x, pts[0].y, ctx.lineWidth / 2, 0, Math.PI * 2);
+            ctx.fillStyle = ctx.strokeStyle;
+            ctx.fill();
+          } else {
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+              ctx.lineTo(pts[i].x, pts[i].y);
+            }
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        });
+      }
+
+      function saveCurrentTopicAnnotations() {
+        if (state.activeTopicId) {
+          state.topicAnnotations[state.activeTopicId] = [...state.currentStrokes];
+        }
+      }
+
+      function loadTopicAnnotations(topicId) {
+        state.currentStrokes = state.topicAnnotations[topicId] ? [...state.topicAnnotations[topicId]] : [];
+        state.undoneStrokes = [];
+        redrawCanvas();
+        updateUndoRedoButtons();
+      }
+
+      function undo() {
+        if (state.currentStrokes.length > 0) {
+          const popped = state.currentStrokes.pop();
+          state.undoneStrokes.push(popped);
+          redrawCanvas();
+          updateUndoRedoButtons();
+        }
+      }
+
+      function redo() {
+        if (state.undoneStrokes.length > 0) {
+          const restored = state.undoneStrokes.pop();
+          state.currentStrokes.push(restored);
+          redrawCanvas();
+          updateUndoRedoButtons();
+        }
+      }
+
+      function clearCanvas() {
+        if (state.currentStrokes.length > 0) {
+          state.undoneStrokes = [...state.currentStrokes];
+          state.currentStrokes = [];
+          redrawCanvas();
+          updateUndoRedoButtons();
+        }
+      }
+
+      function updateUndoRedoButtons() {
+        btnUndo.disabled = state.currentStrokes.length === 0;
+        btnRedo.disabled = state.undoneStrokes.length === 0;
+      }
+
+      // 9. Fullscreen Management
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          if (presentationContainer.requestFullscreen) {
+            presentationContainer.requestFullscreen();
+          } else if (presentationContainer.webkitRequestFullscreen) {
+            presentationContainer.webkitRequestFullscreen();
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          }
+        }
+      }
+
+      // 10. Mobile Sidebar Drawer Controls
+      function openMobileSidebar() {
+        sidebarCatalogue.classList.remove('-translate-x-full');
+        sidebarBackdrop.classList.remove('hidden');
+      }
+
+      function closeMobileSidebar() {
+        sidebarCatalogue.classList.add('-translate-x-full');
+        sidebarBackdrop.classList.add('hidden');
+      }
+
+      // 11. Event Listeners & Binding
+      btnModeBrowse.addEventListener('click', () => setMode('browse'));
+      btnModeAnnotate.addEventListener('click', () => setMode('annotate'));
+      fsBtnBrowse.addEventListener('click', () => setMode('browse'));
+      fsBtnAnnotate.addEventListener('click', () => setMode('annotate'));
+
+      toolPen.addEventListener('click', () => {
+        state.tool = 'pen';
+        toolPen.className = 'p-1.5 rounded-lg bg-indigo-600 text-white';
+        toolHighlighter.className = 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+        toolEraser.className = 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+      });
+
+      toolHighlighter.addEventListener('click', () => {
+        state.tool = 'highlighter';
+        toolHighlighter.className = 'p-1.5 rounded-lg bg-indigo-600 text-white';
+        toolPen.className = 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+        toolEraser.className = 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+      });
+
+      toolEraser.addEventListener('click', () => {
+        state.tool = 'eraser';
+        toolEraser.className = 'p-1.5 rounded-lg bg-indigo-600 text-white';
+        toolPen.className = 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+        toolHighlighter.className = 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+      });
+
+      colorSwatches.forEach(swatch => {
+        swatch.addEventListener('click', () => {
+          colorSwatches.forEach(s => s.classList.remove('ring-2', 'ring-white', 'scale-115'));
+          swatch.classList.add('ring-2', 'ring-white', 'scale-115');
+          state.color = swatch.dataset.color;
+        });
+      });
+
+      sizeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          sizeBtns.forEach(b => {
+            b.className = 'size-btn px-2 py-1 rounded hover:bg-slate-800 text-slate-300';
+          });
+          btn.className = 'size-btn px-2 py-1 rounded bg-indigo-600 text-white font-bold';
+          state.size = parseInt(btn.dataset.size, 10);
+        });
+      });
+
+      btnUndo.addEventListener('click', undo);
+      btnRedo.addEventListener('click', redo);
+      btnClearCanvas.addEventListener('click', clearCanvas);
+      fsBtnClear.addEventListener('click', clearCanvas);
+
+      btnPrevTopic.addEventListener('click', () => navigateTopic(-1));
+      btnNextTopic.addEventListener('click', () => navigateTopic(1));
+      cardBtnPrev.addEventListener('click', () => navigateTopic(-1));
+      cardBtnNext.addEventListener('click', () => navigateTopic(1));
+      fsBtnPrev.addEventListener('click', () => navigateTopic(-1));
+      fsBtnNext.addEventListener('click', () => navigateTopic(1));
+
+      btnReloadSlide.addEventListener('click', () => {
+        if (state.activeTopicId) {
+          const flat = getFlattenedTopics();
+          const current = flat.find(item => item.topic.id === state.activeTopicId);
+          if (current) {
+            slideLoader.classList.remove('opacity-0', 'pointer-events-none');
+            presentationIframe.src = current.topic.embedUrl;
+          }
+        }
+      });
+
+      btnFullscreen.addEventListener('click', toggleFullscreen);
+      fsBtnExit.addEventListener('click', () => {
+        if (document.fullscreenElement) document.exitFullscreen();
+      });
+
+      // Pointer events on Annotation Canvas
+      annotationCanvas.addEventListener('pointerdown', startDrawing);
+      annotationCanvas.addEventListener('pointermove', draw);
+      annotationCanvas.addEventListener('pointerup', stopDrawing);
+      annotationCanvas.addEventListener('pointercancel', stopDrawing);
+      annotationCanvas.addEventListener('pointerleave', stopDrawing);
+
+      // Search and Filter Events
+      catalogueSearch.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        btnClearSearch.classList.toggle('hidden', !state.searchQuery);
+        renderTree();
+      });
+
+      btnClearSearch.addEventListener('click', () => {
+        catalogueSearch.value = '';
+        state.searchQuery = '';
+        btnClearSearch.classList.add('hidden');
+        renderTree();
+      });
+
+      classFilterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          classFilterBtns.forEach(b => {
+            b.className = 'class-filter-btn flex-1 py-1 px-2 rounded-lg text-center transition text-slate-400 hover:text-slate-200';
+          });
+          btn.className = 'class-filter-btn flex-1 py-1 px-2 rounded-lg text-center transition bg-indigo-600 text-white shadow-sm font-semibold';
+          state.filterClass = btn.dataset.classFilter;
+          renderTree();
+        });
+      });
+
+      // Mobile Sidebar Events
+      btnToggleMobileSidebar.addEventListener('click', openMobileSidebar);
+      sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+
+      // Help Modal Events
+      btnOpenHelp.addEventListener('click', () => helpModal.classList.remove('hidden'));
+      btnCloseHelp.addEventListener('click', () => helpModal.classList.add('hidden'));
+      helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) helpModal.classList.add('hidden');
+      });
+
+      // Global Keyboard Shortcuts
+      window.addEventListener('keydown', (e) => {
+        // Ignore if user is typing in search input
+        if (document.activeElement === catalogueSearch) return;
+
+        if (e.key === 'b' || e.key === 'B') {
+          setMode('browse');
+        } else if (e.key === 'a' || e.key === 'A') {
+          setMode('annotate');
+        } else if (e.key === 'f' || e.key === 'F') {
+          toggleFullscreen();
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+          e.preventDefault();
+          if (e.shiftKey) redo(); else undo();
+        } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || e.key === 'Y')) {
+          e.preventDefault();
+          redo();
+        } else if (e.key === '[') {
+          navigateTopic(-1);
+        } else if (e.key === ']') {
+          navigateTopic(1);
+        } else if (e.key === 'Escape') {
+          helpModal.classList.add('hidden');
+          if (window.innerWidth < 1024) closeMobileSidebar();
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        resizeCanvasResolution();
+      });
+
+      // 12. Bootstrap Initialization
+      document.addEventListener('DOMContentLoaded', () => {
+        resizeCanvasResolution();
+        renderTree();
+        
+        // Select initial module (Class 12, Chapter 01, Part 1)
+        selectTopic('class-12', '12-01', '12-01-t01');
+        lucide.createIcons();
+      });
+
+    })();
+  </script>
+</body>
+</html>
