@@ -343,16 +343,31 @@
            ==================================================== -->
       <div class="p-3 border-b border-slate-800/80 bg-space-900/90 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 text-xs">
         
-        <!-- Left: Mode Switcher (Browse vs Annotate) -->
-        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button id="btnModeBrowse" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition" title="Browse Mode: Clicks pass through to advance animations & slides (Press 'B')">
-            <i data-lucide="mouse-pointer" class="w-3.5 h-3.5"></i>
-            <span>Browse / Click</span>
-          </button>
-          <button id="btnModeAnnotate" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition" title="Annotate Mode: Draw temporary notes with pen/tablet (Press 'A')">
-            <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
-            <span>Annotate</span>
-          </button>
+        <!-- Left: Mode Switcher & Viewer Engine -->
+        <div class="flex items-center gap-2">
+          <!-- Browse vs Annotate -->
+          <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button id="btnModeBrowse" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-sm transition" title="Browse Mode: Clicks pass through to advance animations & slides (Press 'B')">
+              <i data-lucide="mouse-pointer" class="w-3.5 h-3.5"></i>
+              <span>Browse</span>
+            </button>
+            <button id="btnModeAnnotate" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition" title="Annotate Mode: Draw temporary notes with pen/tablet (Press 'A')">
+              <i data-lucide="pen-tool" class="w-3.5 h-3.5"></i>
+              <span>Annotate</span>
+            </button>
+          </div>
+
+          <!-- Viewer Engine Switcher -->
+          <div class="hidden sm:flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-medium">
+            <button id="btnEngineStream" class="px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 bg-indigo-600 text-white font-semibold" title="Universal Presentation Stream: Loads all slides without requiring login">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>Stream</span>
+            </button>
+            <button id="btnEngineSlides" class="px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200" title="Google Slides Engine: Plays step-by-step builds and animated transitions (for converted presentations)">
+              <i data-lucide="play-circle" class="w-3.5 h-3.5 text-indigo-400"></i>
+              <span>Animated</span>
+            </button>
+          </div>
         </div>
 
         <!-- Middle: Annotation Toolset (visible in Annotate mode) -->
@@ -648,6 +663,8 @@
         filterClass: 'all',
         searchQuery: '',
         mode: 'browse', // 'browse' | 'annotate'
+        currentEngine: 'stream', // 'stream' | 'slides'
+        manualEngine: null,
         tool: 'pen',    // 'pen' | 'highlighter' | 'eraser'
         color: '#38bdf8',
         size: 4,
@@ -676,6 +693,8 @@
 
       const btnModeBrowse = document.getElementById('btnModeBrowse');
       const btnModeAnnotate = document.getElementById('btnModeAnnotate');
+      const btnEngineStream = document.getElementById('btnEngineStream');
+      const btnEngineSlides = document.getElementById('btnEngineSlides');
       const annotationToolsContainer = document.getElementById('annotationToolsContainer');
       const modeHintText = document.getElementById('modeHintText');
 
@@ -981,18 +1000,12 @@
           cardTipsContainer.innerHTML = '<p class="text-slate-500 italic text-[11px] p-2">Focus on conceptual understanding and diagram label accuracy.</p>';
         }
 
-        // Show Loading Overlay and Load Verified Embed URL
-        slideLoader.classList.remove('opacity-0', 'pointer-events-none');
-        presentationIframe.src = current.topic.embedUrl;
-        if (btnOpenExternal) {
-          btnOpenExternal.href = `https://docs.google.com/presentation/d/${current.topic.fileId}/edit?usp=sharing`;
-        }
-
-        presentationIframe.onload = function() {
-          setTimeout(() => {
-            slideLoader.classList.add('opacity-0', 'pointer-events-none');
-          }, 350);
-        };
+        // Determine optimal viewer engine
+        // Class 12 Chapters 1 & 2 are confirmed Google Slides format, so they default to slides.
+        // Other chapters default to stream (/preview) so raw PPTX files load directly without login.
+        const isSlidesChapter = current.chapterId === '12-01' || current.chapterId === '12-02';
+        const engineToUse = state.manualEngine || (isSlidesChapter ? 'slides' : 'stream');
+        applyEngine(engineToUse, current.topic.fileId);
 
         // Load annotations for this topic from memory
         loadTopicAnnotations(topicId);
@@ -1005,7 +1018,40 @@
         lucide.createIcons();
       }
 
-      // 6. Navigation Helpers (Prev / Next)
+      // 6. Presentation Viewer Engine Switcher
+      function applyEngine(engineType, fileId) {
+        state.currentEngine = engineType;
+        const flat = getFlattenedTopics();
+        const current = flat.find(item => item.topic.id === state.activeTopicId);
+        const id = fileId || (current ? current.topic.fileId : null);
+        if (!id) return;
+
+        slideLoader.classList.remove('opacity-0', 'pointer-events-none');
+
+        if (engineType === 'slides') {
+          presentationIframe.src = `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=3000&rtpof=true&sd=true`;
+          if (btnEngineSlides) btnEngineSlides.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 bg-indigo-600 text-white font-semibold shadow-sm';
+          if (btnEngineStream) btnEngineStream.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200';
+          modeHintText.textContent = "Animated Slides engine active: Step through animations, builds & transitions (requires Google Slides converted format).";
+        } else {
+          presentationIframe.src = `https://drive.google.com/file/d/${id}/preview`;
+          if (btnEngineStream) btnEngineStream.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 bg-indigo-600 text-white font-semibold shadow-sm';
+          if (btnEngineSlides) btnEngineSlides.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200';
+          modeHintText.textContent = "Presentation Stream engine active: Universal slide viewer; loads all PPTX presentations without requiring Google login.";
+        }
+
+        if (btnOpenExternal) {
+          btnOpenExternal.href = `https://docs.google.com/presentation/d/${id}/edit?usp=sharing`;
+        }
+
+        presentationIframe.onload = function() {
+          setTimeout(() => {
+            slideLoader.classList.add('opacity-0', 'pointer-events-none');
+          }, 350);
+        };
+      }
+
+      // 7. Navigation Helpers (Prev / Next)
       function navigateTopic(direction) {
         const flat = getFlattenedTopics();
         const currentIndex = flat.findIndex(item => item.topic.id === state.activeTopicId);
@@ -1269,14 +1315,22 @@
       fsBtnPrev.addEventListener('click', () => navigateTopic(-1));
       fsBtnNext.addEventListener('click', () => navigateTopic(1));
 
+      if (btnEngineStream) {
+        btnEngineStream.addEventListener('click', () => {
+          state.manualEngine = 'stream';
+          applyEngine('stream');
+        });
+      }
+      if (btnEngineSlides) {
+        btnEngineSlides.addEventListener('click', () => {
+          state.manualEngine = 'slides';
+          applyEngine('slides');
+        });
+      }
+
       btnReloadSlide.addEventListener('click', () => {
         if (state.activeTopicId) {
-          const flat = getFlattenedTopics();
-          const current = flat.find(item => item.topic.id === state.activeTopicId);
-          if (current) {
-            slideLoader.classList.remove('opacity-0', 'pointer-events-none');
-            presentationIframe.src = current.topic.embedUrl;
-          }
+          applyEngine(state.currentEngine);
         }
       });
 
@@ -1367,6 +1421,19 @@
         // Select initial module (Class 12, Chapter 01, Part 1)
         selectTopic('class-12', '12-01', '12-01-t01');
         lucide.createIcons();
+
+        // Ensure KaTeX re-renders formulas if it arrived after initial selection
+        if (!window.katex) {
+          const checkKaTeX = setInterval(() => {
+            if (window.katex) {
+              clearInterval(checkKaTeX);
+              const flat = getFlattenedTopics();
+              const current = flat.find(item => item.topic.id === state.activeTopicId);
+              if (current) updateActiveFormulas(current);
+            }
+          }, 150);
+          setTimeout(() => clearInterval(checkKaTeX), 10000);
+        }
       });
 
     })();
