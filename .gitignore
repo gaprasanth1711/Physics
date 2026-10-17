@@ -2,7 +2,3 @@
 node_modules
 .DS_Store
 Thumbs.db
-*.cjs
-*.ps1
-*.json
-!vercel.json
