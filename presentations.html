@@ -10,10 +10,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- KaTeX for math rendering -->
+  <!-- KaTeX for rendered math equations -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" onload="if(window.onKaTeXReady) window.onKaTeXReady()"></script>
 
   <!-- Content Catalogue Data Model -->
   <script src="data/catalogue.js"></script>
@@ -202,6 +201,24 @@
     .color-swatch.active {
       ring-width: 2px;
       transform: scale(1.15);
+    }
+
+    /* KaTeX Display in Formula Cards */
+    .formula-card {
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.2s ease-in-out;
+    }
+    .formula-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(15, 23, 42, 0.95);
+    }
+    .katex-display {
+      margin: 0.35rem 0 !important;
+    }
+    .katex {
+      font-size: 1.12em !important;
+      color: #f8fafc;
     }
   </style>
 </head>
@@ -397,6 +414,11 @@
           <button id="btnReloadSlide" class="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition" title="Reload Presentation">
             <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
           </button>
+
+          <a id="btnOpenExternal" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs transition" title="Open Presentation in Google Drive / Slides tab">
+            <i data-lucide="external-link" class="w-3.5 h-3.5 text-indigo-400"></i>
+            <span class="hidden md:inline">Open in Drive</span>
+          </a>
 
           <button id="btnFullscreen" class="flex items-center gap-1.5 px-3 py-1.5 text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold shadow transition" title="Enter Fullscreen Presentation (Press 'F')">
             <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
@@ -669,6 +691,7 @@
       const btnPrevTopic = document.getElementById('btnPrevTopic');
       const btnNextTopic = document.getElementById('btnNextTopic');
       const btnReloadSlide = document.getElementById('btnReloadSlide');
+      const btnOpenExternal = document.getElementById('btnOpenExternal');
       const btnFullscreen = document.getElementById('btnFullscreen');
 
       // Tracker & Cards
@@ -848,6 +871,74 @@
         lucide.createIcons();
       }
 
+      // Helper: Render individual formula with KaTeX math rendering
+      function renderFormulaCard(formulaText) {
+        let label = '';
+        let latex = formulaText.trim();
+        const colonIdx = formulaText.indexOf(':');
+        // Check if colon serves as a title label (e.g. "Coulomb's Law:")
+        if (colonIdx !== -1 && !formulaText.slice(0, colonIdx).includes('\\')) {
+          label = formulaText.slice(0, colonIdx).trim();
+          latex = formulaText.slice(colonIdx + 1).trim();
+        }
+
+        // Strip any wrapping $ or $$ or \[
+        latex = latex.replace(/^\$\$|^\\\[|^\$|\$\$$|\\\]$|\$$/g, '').trim();
+
+        let renderedMath = '';
+        if (window.katex && window.katex.renderToString) {
+          try {
+            renderedMath = window.katex.renderToString(latex, {
+              displayMode: true,
+              throwOnError: false
+            });
+          } catch (e) {
+            console.warn('KaTeX render error:', e);
+            renderedMath = `<span class="font-mono text-xs text-indigo-300">${latex}</span>`;
+          }
+        } else {
+          // If KaTeX CDN is still in flight
+          renderedMath = `<div class="katex-pending font-mono text-xs text-indigo-300 py-1" data-latex="${encodeURIComponent(latex)}">${latex}</div>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'formula-card p-3 rounded-xl space-y-1.5 shadow-sm';
+
+        if (label) {
+          const header = document.createElement('div');
+          header.className = 'text-[11px] font-semibold text-indigo-300 tracking-wide flex items-center gap-1.5';
+          header.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span><span>${label}</span>`;
+          card.appendChild(header);
+        }
+
+        const mathContainer = document.createElement('div');
+        mathContainer.className = 'overflow-x-auto py-1 text-slate-100 flex items-center justify-start sm:justify-center';
+        mathContainer.innerHTML = renderedMath;
+        card.appendChild(mathContainer);
+
+        return card;
+      }
+
+      function updateActiveFormulas(current) {
+        cardFormulasContainer.innerHTML = '';
+        if (current.formulas && current.formulas.length > 0) {
+          current.formulas.forEach(formulaText => {
+            cardFormulasContainer.appendChild(renderFormulaCard(formulaText));
+          });
+        } else {
+          cardFormulasContainer.innerHTML = '<p class="text-slate-500 italic text-[11px] p-2">Core concept presentation; refer to live derivations inside the slide.</p>';
+        }
+      }
+
+      // Global callback triggered when KaTeX library finishes loading
+      window.onKaTeXReady = function() {
+        const flat = getFlattenedTopics();
+        const current = flat.find(item => item.topic.id === state.activeTopicId);
+        if (current) {
+          updateActiveFormulas(current);
+        }
+      };
+
       // 5. Select Topic & Load Presentation
       function selectTopic(classId, chapterId, topicId) {
         // Save current canvas annotations into memory
@@ -874,46 +965,28 @@
         cardChapterTitle.textContent = `${current.chapterTitle}`;
         loaderTopicTitle.textContent = `Streaming ${current.topic.title}...`;
 
-        // Render Formulas
-        cardFormulasContainer.innerHTML = '';
-        if (current.formulas && current.formulas.length > 0) {
-          current.formulas.forEach(formulaText => {
-            const div = document.createElement('div');
-            div.className = 'p-2 rounded-lg bg-slate-950/70 border border-slate-800/80 font-mono text-[11px]';
-            div.innerHTML = formulaText;
-            cardFormulasContainer.appendChild(div);
-          });
-        } else {
-          cardFormulasContainer.innerHTML = '<p class="text-slate-500 italic text-[11px]">Core concept presentation; refer to live derivations inside the slide.</p>';
-        }
+        // Render Formulas with KaTeX Math Rendering
+        updateActiveFormulas(current);
 
         // Render Exam Tips
         cardTipsContainer.innerHTML = '';
         if (current.tips && current.tips.length > 0) {
           current.tips.forEach(tipText => {
             const div = document.createElement('div');
-            div.className = 'p-2 rounded-lg bg-slate-950/70 border border-slate-800/80 text-[11px] text-slate-300 leading-relaxed';
-            div.innerHTML = tipText;
+            div.className = 'p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] text-slate-300 leading-relaxed flex items-start gap-2.5 shadow-sm';
+            div.innerHTML = `<span class="text-amber-400 mt-0.5 shrink-0 text-xs">✦</span><span>${tipText}</span>`;
             cardTipsContainer.appendChild(div);
           });
         } else {
-          cardTipsContainer.innerHTML = '<p class="text-slate-500 italic text-[11px]">Focus on conceptual understanding and diagram label accuracy.</p>';
-        }
-
-        // Re-render KaTeX if available
-        if (window.renderMathInElement) {
-          window.renderMathInElement(cardFormulasContainer, {
-            delimiters: [
-              { left: '$$', right: '$$', display: true },
-              { left: '$', right: '$', display: false }
-            ],
-            throwOnError: false
-          });
+          cardTipsContainer.innerHTML = '<p class="text-slate-500 italic text-[11px] p-2">Focus on conceptual understanding and diagram label accuracy.</p>';
         }
 
         // Show Loading Overlay and Load Verified Embed URL
         slideLoader.classList.remove('opacity-0', 'pointer-events-none');
         presentationIframe.src = current.topic.embedUrl;
+        if (btnOpenExternal) {
+          btnOpenExternal.href = `https://docs.google.com/presentation/d/${current.topic.fileId}/edit?usp=sharing`;
+        }
 
         presentationIframe.onload = function() {
           setTimeout(() => {
