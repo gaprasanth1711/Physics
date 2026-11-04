@@ -209,7 +209,7 @@
         <div id="simHubLabel" class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-2 hidden lg:block">Simulations Hub</div>
         <div class="px-1 mb-2">
           <label for="simSearch" class="visually-hidden">Search simulations by name, topic, class or concept</label>
-          <input id="simSearch" type="text" placeholder="Search 17 simulations..." aria-label="Search simulations by name, topic, class or concept" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-400 placeholder:text-slate-400">
+          <input id="simSearch" type="text" placeholder="Search 22 simulations..." aria-label="Search simulations by name, topic, class or concept" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-cyan-400 placeholder:text-slate-400">
         </div>
         <nav aria-label="Simulations" class="flex lg:flex-col gap-1.5 min-w-max lg:min-w-0" id="simNavList">
           <button data-sim="projectile" class="sim-nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
@@ -345,6 +345,46 @@
             <div>
               <div class="font-semibold leading-snug">Circular Motion & Banking</div>
               <div class="text-[10px] text-slate-400 hidden lg:block">Cyclist, level & banked road · XI</div>
+            </div>
+          </button>
+
+          <button data-sim="galv" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="gauge" class="w-4 h-4 shrink-0 text-amber-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Moving Coil Galvanometer</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Radial B-field & dead-beat · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="acgen" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="zap" class="w-4 h-4 shrink-0 text-yellow-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">AC Generator & EMF</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Rotating armature & flux · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="lcr" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="activity" class="w-4 h-4 shrink-0 text-rose-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">LCR Series Resonance</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Phasors, impedance & Q-factor · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="huygens" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="waves" class="w-4 h-4 shrink-0 text-sky-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Huygens' Principle</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Wavefronts & Snell's Law · XII</div>
+            </div>
+          </button>
+
+          <button data-sim="rutherford" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="atom" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+            <div>
+              <div class="font-semibold leading-snug">Rutherford α-Scattering</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Impact parameter & nucleus · XII</div>
             </div>
           </button>
         </nav>
@@ -5302,6 +5342,3547 @@ const ohmsSim = {
       }
     };
 
+
+    /* ==========================================================
+       NEW SIMULATIONS: CLASS XII CURRICULUM
+       - Moving Coil Galvanometer & Dead-Beat Damping
+       - AC Generator Mechanism & Alternating EMF
+       - LCR Series Resonance & Phasor Dynamics
+       - Wavefront Propagation & Huygens' Construction
+       - Rutherford Alpha-Particle Scattering & Impact Parameter
+       ========================================================== */
+    // sim_galv.js - Moving Coil Galvanometer & Dead-Beat Damping
+const galvSim = {
+  name: "Moving Coil Galvanometer · XII",
+  
+  // Physical parameters (SI units)
+  I: 20.0,              // Current in mA (-40 to +40 mA)
+  B: 0.60,              // Radial Magnetic Field in Tesla (0.1 to 1.5 T)
+  N: 150,               // Number of turns (50 to 500)
+  A: 0.0012,            // Coil area in m^2 (4 cm x 3 cm)
+  C: 1.5e-5,            // Restoring couple per unit twist (N*m/rad)
+  RG: 50.0,             // Galvanometer coil resistance (Ohms)
+  J: 8.0e-7,            // Moment of inertia of coil assembly (kg*m^2)
+  deadBeat: true,       // Eddy current damping: true = Dead-beat (critical), false = Underdamped
+  scaleZero: 'center',  // 'center' (-30 to +30 div) or 'left' (0 to 60 div)
+  
+  // Dynamic state variables
+  theta: 0.0,           // Current deflection angle (rad)
+  omega: 0.0,           // Angular velocity dtheta/dt (rad/s)
+  targetTheta: 0.0,     // Static equilibrium deflection (rad)
+  time: 0.0,
+  history: [],          // Time-series points { t, theta, target } for damping curve
+  
+  // Web Audio
+  soundEnabled: true,
+  audioCtx: null,
+  lastTickDiv: 0,
+  
+  initAudio() {
+    if (this.audioCtx) {
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      return;
+    }
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      this.audioCtx = new AudioContext();
+    } catch (e) {}
+  },
+  
+  playTick(pitch = 800, vol = 0.05) {
+    if (!this.soundEnabled || !this.audioCtx) return;
+    try {
+      const now = this.audioCtx.currentTime;
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(pitch, now);
+      osc.frequency.exponentialRampToValueAtTime(pitch * 0.4, now + 0.04);
+      gain.gain.setValueAtTime(vol, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.045);
+    } catch (e) {}
+  },
+  
+  stopAudio() {
+    // One-shot sounds; no persistent loop
+  },
+  
+  init() {
+    this.reset();
+  },
+  
+  reset() {
+    this.theta = 0.0;
+    this.omega = 0.0;
+    this.time = 0.0;
+    this.history = [];
+    this.lastTickDiv = 0;
+    this.calcEquilibrium();
+  },
+  
+  calcEquilibrium() {
+    // Deflecting torque: tau_d = N * I_amps * A * B  (Radial field: sin(90) = 1)
+    const iAmps = this.I * 1e-3;
+    const tauD = this.N * iAmps * this.A * this.B;
+    // In equilibrium: tau_d = C * theta_eq => theta_eq = tau_d / C
+    this.targetTheta = tauD / this.C;
+  },
+  
+  update(dt) {
+    this.time += dt;
+    this.calcEquilibrium();
+    
+    // Equation of motion: J * d2theta/dt2 + b * dtheta/dt + C * theta = tau_d
+    // Critical damping constant: b_crit = 2 * sqrt(J * C)
+    const bCrit = 2 * Math.sqrt(this.J * this.C);
+    // Dead-beat damping (eddy currents in non-magnetic metallic frame):
+    // When active: b = 1.18 * bCrit (aperiodic, settles without oscillation)
+    // When inactive: b = 0.07 * bCrit (underdamped, oscillations with high Q)
+    const b = this.deadBeat ? (1.18 * bCrit) : (0.07 * bCrit);
+    
+    const iAmps = this.I * 1e-3;
+    const tauD = this.N * iAmps * this.A * this.B;
+    
+    // Semi-implicit Euler integration (sub-stepping for numerical stability)
+    const steps = 10;
+    const subDt = dt / steps;
+    for (let s = 0; s < steps; s++) {
+      const curTauRest = -this.C * this.theta;
+      const curTauDamp = -b * this.omega;
+      const curAlpha = (tauD + curTauRest + curTauDamp) / this.J;
+      this.omega += curAlpha * subDt;
+      this.theta += this.omega * subDt;
+    }
+    
+    // Audio tick on scale division crossing
+    const curDiv = Math.round((this.theta * 180 / Math.PI) * 1.5);
+    if (curDiv !== this.lastTickDiv) {
+      this.playTick(600 + Math.abs(curDiv) * 15, 0.03);
+      this.lastTickDiv = curDiv;
+    }
+    
+    // Record history for live damping curve
+    this.history.push({
+      t: this.time,
+      theta: this.theta,
+      target: this.targetTheta
+    });
+    if (this.history.length > 320) {
+      this.history.shift();
+    }
+  },
+  
+  drawArrow(x1, y1, x2, y2, color, label = '', valStr = '') {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    const head = 8;
+    const ang = Math.atan2(dy, dx);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.0;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    if (label) {
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillStyle = color;
+      ctx.fillText(label + (valStr ? ': ' + valStr : ''), x2 + 6, y2 + 3);
+    }
+    ctx.restore();
+  },
+  
+  render() {
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    
+    // Layout: Left 58% for Galvanometer cross-section & scale; Right 42% for Damping curve & HUD
+    const isNarrow = w < 720;
+    const galvW = isNarrow ? w : w * 0.58;
+    const plotX = isNarrow ? 12 : w * 0.58;
+    const plotY = isNarrow ? h * 0.60 : 16;
+    const plotW = isNarrow ? w - 24 : w * 0.40;
+    const plotH = isNarrow ? h * 0.38 : h - 32;
+    
+    // -------------------------------------------------------------
+    // PART 1: GALVANOMETER APPARATUS (Radial Field, Iron Core, Coil, Scale)
+    // -------------------------------------------------------------
+    const gcx = galvW * 0.50;
+    const gcy = isNarrow ? h * 0.30 : h * 0.52;
+    const coreR = Math.min(galvW * 0.16, isNarrow ? 55 : 75);
+    const poleInnerR = coreR + 18;
+    const poleOuterR = poleInnerR + 45;
+    const scaleRadius = isNarrow ? 130 : 175;
+    const scaleCenterY = gcy;
+    
+    // 1. Concave Magnetic Pole Pieces (North on Left, South on Right)
+    ctx.save();
+    
+    // North Pole (Crimson Gradient)
+    const gradN = ctx.createLinearGradient(gcx - poleOuterR - 20, gcy, gcx - poleInnerR, gcy);
+    gradN.addColorStop(0, '#991b1b');
+    gradN.addColorStop(1, '#ef4444');
+    ctx.fillStyle = gradN;
+    ctx.beginPath();
+    ctx.arc(gcx, gcy, poleOuterR, Math.PI * 0.65, Math.PI * 1.35, false);
+    ctx.lineTo(gcx - poleOuterR - 35, gcy - 65);
+    ctx.lineTo(gcx - poleOuterR - 35, gcy + 65);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // Concave face arc for N pole
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(gcx, gcy, poleInnerR, Math.PI * 0.68, Math.PI * 1.32, false);
+    ctx.arc(gcx, gcy, poleOuterR, Math.PI * 1.32, Math.PI * 0.68, true);
+    ctx.closePath();
+    ctx.fillStyle = gradN;
+    ctx.fill();
+    ctx.stroke();
+    
+    // South Pole (Cobalt Blue Gradient)
+    const gradS = ctx.createLinearGradient(gcx + poleInnerR, gcy, gcx + poleOuterR + 20, gcy);
+    gradS.addColorStop(0, '#3b82f6');
+    gradS.addColorStop(1, '#1e40af');
+    ctx.fillStyle = gradS;
+    ctx.beginPath();
+    ctx.arc(gcx, gcy, poleOuterR, -Math.PI * 0.35, Math.PI * 0.35, false);
+    ctx.lineTo(gcx + poleOuterR + 35, gcy + 65);
+    ctx.lineTo(gcx + poleOuterR + 35, gcy - 65);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // Concave face arc for S pole
+    ctx.beginPath();
+    ctx.arc(gcx, gcy, poleInnerR, -Math.PI * 0.32, Math.PI * 0.32, false);
+    ctx.arc(gcx, gcy, poleOuterR, Math.PI * 0.32, -Math.PI * 0.32, true);
+    ctx.closePath();
+    ctx.fillStyle = gradS;
+    ctx.fill();
+    ctx.stroke();
+    
+    // Pole labels
+    ctx.font = 'bold 18px "Inter", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', gcx - poleInnerR - 24, gcy);
+    ctx.fillText('S', gcx + poleInnerR + 24, gcy);
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#fca5a5';
+    ctx.fillText('Concave Pole', gcx - poleInnerR - 24, gcy + 18);
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillText('Concave Pole', gcx + poleInnerR + 24, gcy + 18);
+    
+    // 2. Radial Magnetic Field Lines (Passing through Soft Iron Core)
+    const numLines = 9;
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.75)';
+    ctx.setLineDash([4, 4]);
+    for (let i = 0; i < numLines; i++) {
+      const frac = (i / (numLines - 1)) - 0.5; // -0.5 to +0.5
+      const angleN = Math.PI + frac * (Math.PI * 0.55);
+      const angleS = -frac * (Math.PI * 0.55);
+      
+      const x1 = gcx + poleInnerR * Math.cos(angleN);
+      const y1 = gcy + poleInnerR * Math.sin(angleN);
+      const xCoreL = gcx + coreR * Math.cos(angleN);
+      const yCoreL = gcy + coreR * Math.sin(angleN);
+      
+      const xCoreR = gcx + coreR * Math.cos(angleS);
+      const yCoreR = gcy + coreR * Math.sin(angleS);
+      const x2 = gcx + poleInnerR * Math.cos(angleS);
+      const y2 = gcy + poleInnerR * Math.sin(angleS);
+      
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(xCoreL, yCoreL);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(xCoreR, yCoreR);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    
+    // Radial Field Markers
+    for (let i = 0; i < numLines; i += 2) {
+      const frac = (i / (numLines - 1)) - 0.5;
+      const angleS = -frac * (Math.PI * 0.55);
+      const ax = gcx + (poleInnerR - 6) * Math.cos(angleS);
+      const ay = gcy + (poleInnerR - 6) * Math.sin(angleS);
+      ctx.fillStyle = '#22d3ee';
+      ctx.beginPath();
+      ctx.arc(ax, ay, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // 3. Cylindrical Soft Iron Core (High Permeability mu_r >> 1)
+    const coreGrad = ctx.createRadialGradient(gcx - coreR * 0.3, gcy - coreR * 0.3, 4, gcx, gcy, coreR);
+    coreGrad.addColorStop(0, '#64748b');
+    coreGrad.addColorStop(0.7, '#334155');
+    coreGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(gcx, gcy, coreR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2.0;
+    ctx.stroke();
+    
+    // Soft iron core text
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'center';
+    ctx.fillText('Soft Iron Core', gcx, gcy - 8);
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('(μᵣ ≫ 1 Radial Field)', gcx, gcy + 7);
+    
+    // 4. Rectangular Coil & Non-Magnetic Frame (Rotating around central axis)
+    ctx.save();
+    ctx.translate(gcx, gcy);
+    ctx.rotate(this.theta); // Physical rotation of coil
+    
+    const coilW = coreR * 2 + 12;
+    const coilH = coreR * 0.70;
+    
+    // Aluminum Frame
+    ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2.0;
+    ctx.strokeRect(-coilW / 2, -coilH / 2, coilW, coilH);
+    ctx.fillRect(-coilW / 2, -coilH / 2, coilW, coilH);
+    
+    // Copper wire windings
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3.5;
+    ctx.strokeRect(-coilW / 2 + 3, -coilH / 2 + 3, coilW - 6, coilH - 6);
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-coilW / 2 + 5, -coilH / 2 + 5, coilW - 10, coilH - 10);
+    
+    // Eddy Current Loops (Visible when Dead-Beat is Active)
+    if (this.deadBeat) {
+      ctx.strokeStyle = 'rgba(234, 179, 8, 0.85)';
+      ctx.lineWidth = 1.6;
+      ctx.setLineDash([3, 3]);
+      // Left loop
+      ctx.beginPath();
+      ctx.ellipse(-coilW * 0.32, 0, coilW * 0.12, coilH * 0.32, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      // Right loop
+      ctx.beginPath();
+      ctx.ellipse(coilW * 0.32, 0, coilW * 0.12, coilH * 0.32, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    
+    // Central pivot jeweled bearing
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath();
+    ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    ctx.restore();
+    
+    // 5. Hairspring / Torsion Spring (at center base)
+    ctx.save();
+    ctx.strokeStyle = 'rgba(217, 119, 6, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let a = 0; a < Math.PI * 5; a += 0.2) {
+      const rSp = 8 + a * 2.2;
+      const sx = gcx + rSp * Math.cos(a + this.theta * 0.5);
+      const sy = gcy + rSp * Math.sin(a + this.theta * 0.5);
+      if (a === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+    ctx.restore();
+    
+    // 6. Circular Graduated Scale & Long Pointer Needle
+    const scaleArcAngle = Math.PI * 0.45; // ~81 degrees total span
+    const startAng = -Math.PI / 2 - scaleArcAngle / 2;
+    const endAng = -Math.PI / 2 + scaleArcAngle / 2;
+    
+    // Scale backing arc
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 18;
+    ctx.beginPath();
+    ctx.arc(gcx, scaleCenterY, scaleRadius, startAng - 0.05, endAng + 0.05);
+    ctx.stroke();
+    
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(gcx, scaleCenterY, scaleRadius, startAng, endAng);
+    ctx.stroke();
+    
+    // Divisions & Scale Numbers (-30 to +30 or 0 to 60)
+    const totalDivs = 30; // 30 on each side for center zero
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    for (let d = -totalDivs; d <= totalDivs; d++) {
+      const frac = d / totalDivs; // -1 to +1
+      const ang = -Math.PI / 2 + frac * (scaleArcAngle / 2);
+      const isMajor = (d % 10 === 0);
+      const isMid = (d % 5 === 0 && !isMajor);
+      const tickLen = isMajor ? 12 : (isMid ? 8 : 4);
+      
+      const tx1 = gcx + (scaleRadius - tickLen / 2) * Math.cos(ang);
+      const ty1 = scaleCenterY + (scaleRadius - tickLen / 2) * Math.sin(ang);
+      const tx2 = gcx + (scaleRadius + tickLen / 2) * Math.cos(ang);
+      const ty2 = scaleCenterY + (scaleRadius + tickLen / 2) * Math.sin(ang);
+      
+      ctx.strokeStyle = isMajor ? '#38bdf8' : (isMid ? '#94a3b8' : 'rgba(148, 163, 184, 0.4)');
+      ctx.lineWidth = isMajor ? 2.0 : 1.0;
+      ctx.beginPath();
+      ctx.moveTo(tx1, ty1);
+      ctx.lineTo(tx2, ty2);
+      ctx.stroke();
+      
+      if (isMajor) {
+        const numDist = scaleRadius - 20;
+        const nx = gcx + numDist * Math.cos(ang);
+        const ny = scaleCenterY + numDist * Math.sin(ang);
+        ctx.font = 'bold 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = d === 0 ? '#34d399' : '#cbd5e1';
+        let labelVal = d;
+        if (this.scaleZero === 'left') labelVal = d + 30;
+        ctx.fillText(labelVal, nx, ny);
+      }
+    }
+    
+    // Pointer Needle (Attached to Coil, points to the arc scale)
+    const pointerAng = -Math.PI / 2 + this.theta;
+    const pLen = scaleRadius + 6;
+    const pxEnd = gcx + pLen * Math.cos(pointerAng);
+    const pyEnd = scaleCenterY + pLen * Math.sin(pointerAng);
+    
+    // Needle Shadow
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(gcx + 3, scaleCenterY + 3);
+    ctx.lineTo(pxEnd + 3, pyEnd + 3);
+    ctx.stroke();
+    
+    // Needle Line (Glowing Red/Crimson with pointed tip)
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(gcx, scaleCenterY);
+    ctx.lineTo(pxEnd, pyEnd);
+    ctx.stroke();
+    
+    // Pointer tip bead
+    ctx.fillStyle = '#f87171';
+    ctx.beginPath();
+    ctx.arc(pxEnd, pyEnd, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    // Counterweight tail
+    const tailLen = 22;
+    const txEnd = gcx - tailLen * Math.cos(pointerAng);
+    const tyEnd = scaleCenterY - tailLen * Math.sin(pointerAng);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.moveTo(gcx, scaleCenterY);
+    ctx.lineTo(txEnd, tyEnd);
+    ctx.stroke();
+    ctx.fillStyle = '#64748b';
+    ctx.beginPath();
+    ctx.arc(txEnd, tyEnd, 5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+    
+    // -------------------------------------------------------------
+    // PART 2: RIGHT PANEL (Damping Oscilloscope & Educational Overlays)
+    // -------------------------------------------------------------
+    ctx.save();
+    // Frame background
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(plotX, plotY, plotW, plotH, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Header
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('DYNAMIC DAMPING RESPONSE θ(t)', plotX + 14, plotY + 24);
+    
+    // Status Badge
+    const badgeColor = this.deadBeat ? '#10b981' : '#f59e0b';
+    const badgeBg = this.deadBeat ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+    const badgeText = this.deadBeat ? 'DEAD-BEAT DAMPING (Eddy Current ON)' : 'UNDERDAMPED (Eddy Current OFF)';
+    
+    ctx.fillStyle = badgeBg;
+    ctx.strokeStyle = badgeColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(plotX + 14, plotY + 34, plotW - 28, 22, 6);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 10px "Inter", sans-serif';
+    ctx.fillStyle = badgeColor;
+    ctx.textAlign = 'center';
+    ctx.fillText(badgeText, plotX + plotW / 2, plotY + 49);
+    
+    // Plot Area Coordinates
+    const graphX = plotX + 16;
+    const graphY = plotY + 70;
+    const graphW = plotW - 32;
+    const graphH = plotH * 0.48;
+    const zeroY = graphY + graphH / 2;
+    
+    // Graph Box
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.6)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.fillRect(graphX, graphY, graphW, graphH);
+    ctx.strokeRect(graphX, graphY, graphW, graphH);
+    
+    // Graph zero line & target line
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(graphX, zeroY);
+    ctx.lineTo(graphX + graphW, zeroY);
+    ctx.stroke();
+    
+    // Equilibrium Target Dashed Line
+    const maxAngleRange = Math.PI * 0.25; // 45 deg max graph span
+    const targetY = zeroY - (this.targetTheta / maxAngleRange) * (graphH / 2);
+    ctx.strokeStyle = '#22c55e';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(graphX, targetY);
+    ctx.lineTo(graphX + graphW, targetY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#22c55e';
+    ctx.textAlign = 'right';
+    ctx.fillText("θ_eq = " + (this.targetTheta * 180 / Math.PI).toFixed(1) + "°", graphX + graphW - 6, targetY - 4);
+    
+    // Plot Real-Time Trail
+    if (this.history.length > 1) {
+      ctx.strokeStyle = this.deadBeat ? '#38bdf8' : '#f43f5e';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      for (let i = 0; i < this.history.length; i++) {
+        const pt = this.history[i];
+        const px = graphX + (i / (this.history.length - 1)) * graphW;
+        const py = zeroY - (pt.theta / maxAngleRange) * (graphH / 2);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      
+      // Current head dot
+      const lastPt = this.history[this.history.length - 1];
+      const curY = zeroY - (lastPt.theta / maxAngleRange) * (graphH / 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(graphX + graphW, curY, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Real-Time Torque Balance HUD below graph
+    const tbY = graphY + graphH + 18;
+    const iAmps = this.I * 1e-3;
+    const tauD = this.N * iAmps * this.A * this.B; // N*m
+    const tauR = this.C * this.theta;              // N*m
+    
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'left';
+    ctx.fillText('TORQUE EQUILIBRIUM: τ_deflecting = τ_restoring', graphX, tbY);
+    
+    // Torque bars
+    const maxTorque = 5e-5; // 50 uN*m
+    const barW = graphW - 100;
+    
+    // Deflecting Torque Bar
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText('τ_d (NIAB):', graphX, tbY + 22);
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+    ctx.fillRect(graphX + 90, tbY + 12, barW, 12);
+    const fillD = Math.max(0, Math.min(barW, (Math.abs(tauD) / maxTorque) * barW));
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(graphX + 90, tbY + 12, fillD, 12);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText((tauD * 1e6).toFixed(1) + " μN·m", graphX + 95 + barW, tbY + 22);
+    
+    // Restoring Torque Bar
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('τ_r (Cθ):', graphX, tbY + 42);
+    ctx.fillStyle = 'rgba(6, 182, 212, 0.2)';
+    ctx.fillRect(graphX + 90, tbY + 32, barW, 12);
+    const fillR = Math.max(0, Math.min(barW, (Math.abs(tauR) / maxTorque) * barW));
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillRect(graphX + 90, tbY + 32, fillR, 12);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText((tauR * 1e6).toFixed(1) + " μN·m", graphX + 95 + barW, tbY + 42);
+    
+    // Educational summary note
+    const noteY = tbY + 68;
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('• Radial field ensures plane of coil is ALWAYS parallel to B (sin 90° = 1)', graphX, noteY);
+    ctx.fillText('• Deflection θ is strictly linear with current: I = (C / NAB) · θ', graphX, noteY + 16);
+    ctx.fillText('• Eddy currents in metallic frame produce Lenz counter-torque to stop ringing', graphX, noteY + 32);
+    
+    ctx.restore();
+  },
+  
+  getMetrics() {
+    const iAmps = this.I * 1e-3;
+    const tauD = this.N * iAmps * this.A * this.B;
+    const tauR = this.C * this.theta;
+    const thetaDeg = this.theta * 180 / Math.PI;
+    const isDivPerMa = (this.N * this.A * this.B / this.C) * 1e-3 * (180 / Math.PI) * 1.5;
+    const vsDivPerV = isDivPerMa * 1000 / this.RG;
+    
+    return [
+      { label: "Current I", val: this.I.toFixed(1) + " mA" },
+      { label: "Deflection θ", val: thetaDeg.toFixed(2) + "° (" + (thetaDeg * 1.5).toFixed(1) + " div)" },
+      { label: "Current Sensitivity (Is)", val: isDivPerMa.toFixed(2) + " div/mA" },
+      { label: "Voltage Sensitivity (Vs)", val: vsDivPerV.toFixed(1) + " div/V" },
+      { label: "Deflecting Torque (NIAB)", val: (tauD * 1e6).toFixed(2) + " μN·m" },
+      { label: "Restoring Torque (Cθ)", val: (tauR * 1e6).toFixed(2) + " μN·m" },
+      { label: "Damping Mechanism", val: this.deadBeat ? "Dead-Beat (Eddy Current)" : "Underdamped Ringing" }
+    ];
+  },
+  
+  presets: {
+    "Dead-Beat Damping (Standard)": {
+      setup(sim) {
+        sim.I = 20.0;
+        sim.B = 0.60;
+        sim.N = 150;
+        sim.C = 1.5e-5;
+        sim.deadBeat = true;
+        sim.reset();
+      }
+    },
+    "Underdamped Ringing (Eddy Off)": {
+      setup(sim) {
+        sim.I = 25.0;
+        sim.B = 0.60;
+        sim.N = 150;
+        sim.C = 1.5e-5;
+        sim.deadBeat = false;
+        sim.reset();
+      }
+    },
+    "High Sensitivity Microammeter": {
+      setup(sim) {
+        sim.I = 8.0;
+        sim.B = 1.10;
+        sim.N = 350;
+        sim.C = 0.8e-5;
+        sim.deadBeat = true;
+        sim.reset();
+      }
+    },
+    "Stiff Spring / Low Sensitivity": {
+      setup(sim) {
+        sim.I = 35.0;
+        sim.B = 0.35;
+        sim.N = 80;
+        sim.C = 3.5e-5;
+        sim.deadBeat = true;
+        sim.reset();
+      }
+    },
+    "Negative Deflection (-25 mA)": {
+      setup(sim) {
+        sim.I = -25.0;
+        sim.B = 0.60;
+        sim.N = 150;
+        sim.C = 1.5e-5;
+        sim.deadBeat = true;
+        sim.reset();
+      }
+    }
+  },
+  
+  buildControls() {
+    return [
+      '<div class="space-y-4">',
+      '  <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">',
+      '    <div class="flex items-center gap-2">',
+      '      <span class="text-xs font-semibold text-slate-300">Eddy Current Damping:</span>',
+      '      <button id="btnToggleDeadBeat" class="px-3 py-1 rounded-lg text-xs font-bold border transition ' + (this.deadBeat ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40') + '">',
+      '        ' + (this.deadBeat ? '🛡️ Dead-Beat (ON)' : '〰️ Underdamped (OFF)'),
+      '      </button>',
+      '    </div>',
+      '    <div class="flex items-center gap-2">',
+      '      <button id="btnGalvSound" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        <span>' + (this.soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF') + '</span>',
+      '      </button>',
+      '      <button id="btnZeroCurrent" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">',
+      '        Zero I',
+      '      </button>',
+      '    </div>',
+      '  </div>',
+      '  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Current (I):</span>',
+      '        <span id="valGalvI" class="font-mono text-cyan-400 font-bold">' + this.I.toFixed(1) + ' mA</span>',
+      '      </div>',
+      '      <input id="ctrlGalvI" type="range" min="-40" max="40" step="0.5" value="' + this.I + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>-40 mA</span><span>0</span><span>+40 mA</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">B-Field (Radial):</span>',
+      '        <span id="valGalvB" class="font-mono text-amber-400 font-bold">' + this.B.toFixed(2) + ' T</span>',
+      '      </div>',
+      '      <input id="ctrlGalvB" type="range" min="0.10" max="1.50" step="0.05" value="' + this.B + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>0.10 T</span><span>1.50 T</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Coil Turns (N):</span>',
+      '        <span id="valGalvN" class="font-mono text-emerald-400 font-bold">' + this.N + '</span>',
+      '      </div>',
+      '      <input id="ctrlGalvN" type="range" min="50" max="500" step="10" value="' + this.N + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>50</span><span>500 turns</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Restoring Couple (C):</span>',
+      '        <span id="valGalvC" class="font-mono text-purple-400 font-bold">' + (this.C * 1e5).toFixed(1) + ' × 10⁻⁵</span>',
+      '      </div>',
+      '      <input id="ctrlGalvC" type="range" min="0.5" max="5.0" step="0.1" value="' + (this.C * 1e5).toFixed(1) + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>Soft (High S)</span><span>Stiff (Low S)</span></div>',
+      '    </div>',
+      '  </div>',
+      '  <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400 pt-1">',
+      '    <span class="font-mono text-slate-300">τ = NIAB = Cθ &ensp;⇒&ensp; θ = (NAB / C) · I &ensp;⇒&ensp; I_s = θ / I = NAB / C</span>',
+      '    <span class="font-mono text-[10px] text-slate-400">V_s = θ / V = NAB / (C · R_G)</span>',
+      '  </div>',
+      '</div>'
+    ].join('\n');
+  },
+  
+  bindControls() {
+    this.initAudio();
+    
+    document.getElementById('ctrlGalvI')?.addEventListener('input', (e) => {
+      this.initAudio();
+      this.I = parseFloat(e.target.value);
+      document.getElementById('valGalvI').textContent = this.I.toFixed(1) + ' mA';
+    });
+    
+    document.getElementById('ctrlGalvB')?.addEventListener('input', (e) => {
+      this.B = parseFloat(e.target.value);
+      document.getElementById('valGalvB').textContent = this.B.toFixed(2) + ' T';
+    });
+    
+    document.getElementById('ctrlGalvN')?.addEventListener('input', (e) => {
+      this.N = parseInt(e.target.value);
+      document.getElementById('valGalvN').textContent = this.N;
+    });
+    
+    document.getElementById('ctrlGalvC')?.addEventListener('input', (e) => {
+      this.C = parseFloat(e.target.value) * 1e-5;
+      document.getElementById('valGalvC').textContent = (this.C * 1e5).toFixed(1) + ' × 10⁻⁵';
+    });
+    
+    document.getElementById('btnToggleDeadBeat')?.addEventListener('click', () => {
+      this.deadBeat = !this.deadBeat;
+      controlsPanel.innerHTML = this.buildControls();
+      this.bindControls();
+      showToast(this.deadBeat ? "Dead-Beat Eddy Current Damping Activated" : "Underdamped Oscillation Mode", "info");
+    });
+    
+    document.getElementById('btnZeroCurrent')?.addEventListener('click', () => {
+      this.I = 0.0;
+      const ctrl = document.getElementById('ctrlGalvI');
+      if (ctrl) ctrl.value = 0;
+      const val = document.getElementById('valGalvI');
+      if (val) val.textContent = '0.0 mA';
+    });
+    
+    document.getElementById('btnGalvSound')?.addEventListener('click', () => {
+      this.soundEnabled = !this.soundEnabled;
+      const btn = document.getElementById('btnGalvSound');
+      if (btn) {
+        btn.innerHTML = '<span>' + (this.soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF') + '</span>';
+        btn.className = 'flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700');
+      }
+      showToast(this.soundEnabled ? "Galvanometer Audio Enabled" : "Audio Muted", "info");
+    });
+  }
+};
+
+    // sim_acgen.js - Mutual Induction & AC Generator Mechanism
+const acgenSim = {
+  name: "AC Generator & Alternating EMF · XII",
+  
+  // Physical parameters
+  rpm: 30.0,            // Armature rotation speed in RPM (0 to 120 RPM)
+  B: 0.80,              // Magnetic field in Tesla (0.1 to 2.0 T)
+  N: 100,               // Number of turns of armature coil (10 to 400)
+  area: 0.04,           // Coil loop area in m^2 (0.2 m x 0.2 m)
+  RLoad: 20.0,          // External circuit load resistance in Ohms
+  
+  // Dynamic state variables
+  theta: 0.0,           // Instantaneous coil angle in radians (theta = omega * t)
+  time: 0.0,
+  showVectors: true,    // Show Fleming's Right-Hand Rule vectors (v, B, I)
+  history: [],          // Waveform oscilloscope history { t, phi, emf }
+  
+  // Web Audio Dynamo Synthesizer
+  soundEnabled: true,
+  audioCtx: null,
+  oscNode: null,
+  gainNode: null,
+  audioInitialized: false,
+  
+  initAudio() {
+    if (this.audioInitialized) {
+      if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      return;
+    }
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      this.audioCtx = new AudioContext();
+      this.oscNode = this.audioCtx.createOscillator();
+      this.gainNode = this.audioCtx.createGain();
+      this.oscNode.type = 'sawtooth';
+      this.oscNode.frequency.value = 60;
+      this.gainNode.gain.value = 0.0;
+      this.oscNode.connect(this.gainNode);
+      this.gainNode.connect(this.audioCtx.destination);
+      this.oscNode.start();
+      this.audioInitialized = true;
+    } catch (e) {}
+  },
+  
+  updateAudio() {
+    if (!this.soundEnabled || !this.audioInitialized || !this.audioCtx) return;
+    const omega = (2 * Math.PI * this.rpm) / 60; // rad/s
+    const fHz = omega / (2 * Math.PI);            // electrical freq in Hz
+    const now = this.audioCtx.currentTime;
+    if (this.rpm <= 0.5) {
+      this.gainNode.gain.setTargetAtTime(0.0, now, 0.05);
+    } else {
+      const audioFreq = Math.max(45, Math.min(440, fHz * 50));
+      this.oscNode.frequency.setTargetAtTime(audioFreq, now, 0.05);
+      this.gainNode.gain.setTargetAtTime(0.04, now, 0.05);
+    }
+  },
+  
+  stopAudio() {
+    if (this.gainNode && this.audioCtx) {
+      this.gainNode.gain.setTargetAtTime(0.0, this.audioCtx.currentTime, 0.05);
+    }
+  },
+  
+  init() {
+    this.reset();
+  },
+  
+  reset() {
+    this.theta = 0.0;
+    this.time = 0.0;
+    this.history = [];
+    this.stopAudio();
+  },
+  
+  update(dt) {
+    const omega = (2 * Math.PI * this.rpm) / 60; // rad/s
+    this.theta += omega * dt;
+    this.time += dt;
+    
+    // Physics calculations:
+    // Magnetic Flux: Phi(t) = N * B * A * cos(theta)
+    // Induced EMF: e(t) = -dPhi/dt = N * B * A * omega * sin(theta) = e0 * sin(theta)
+    const peakEmf = this.N * this.B * this.area * omega;
+    const curFlux = this.N * this.B * this.area * Math.cos(this.theta);
+    const curEmf = peakEmf * Math.sin(this.theta);
+    
+    this.history.push({
+      t: this.time,
+      theta: this.theta,
+      phi: curFlux,
+      emf: curEmf,
+      e0: peakEmf
+    });
+    
+    if (this.history.length > 280) {
+      this.history.shift();
+    }
+    
+    this.updateAudio();
+  },
+  
+  drawArrow(x1, y1, x2, y2, color, label = '', valStr = '') {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    const head = 8;
+    const ang = Math.atan2(dy, dx);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.0;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    if (label) {
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillStyle = color;
+      ctx.fillText(label + (valStr ? ': ' + valStr : ''), x2 + 5, y2 + 3);
+    }
+    ctx.restore();
+  },
+  
+  render() {
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    
+    const isNarrow = w < 720;
+    const genW = isNarrow ? w : w * 0.55;
+    const plotX = isNarrow ? 12 : w * 0.55;
+    const plotY = isNarrow ? h * 0.58 : 16;
+    const plotW = isNarrow ? w - 24 : w * 0.43;
+    const plotH = isNarrow ? h * 0.40 : h - 32;
+    
+    // -------------------------------------------------------------
+    // PART 1: 3D-PERSPECTIVE ARMATURE COIL, POLES & SLIP RINGS
+    // -------------------------------------------------------------
+    const gcx = genW * 0.50;
+    const gcy = isNarrow ? h * 0.28 : h * 0.46;
+    
+    ctx.save();
+    
+    // 1. Permanent Magnet Pole Pieces (North on Left, South on Right)
+    const poleW = 65, poleH = 150, gap = 160;
+    
+    // North Pole (Left - Crimson)
+    const gradN = ctx.createLinearGradient(gcx - gap - poleW, gcy, gcx - gap, gcy);
+    gradN.addColorStop(0, '#7f1d1d');
+    gradN.addColorStop(0.4, '#dc2626');
+    gradN.addColorStop(1, '#ef4444');
+    ctx.fillStyle = gradN;
+    ctx.beginPath();
+    ctx.roundRect(gcx - gap - poleW, gcy - poleH / 2, poleW, poleH, [10, 0, 0, 10]);
+    ctx.fill();
+    ctx.strokeStyle = '#f87171';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    ctx.font = 'bold 22px "Inter", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', gcx - gap - poleW / 2, gcy - 20);
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#fca5a5';
+    ctx.fillText('North Pole', gcx - gap - poleW / 2, gcy + 15);
+    
+    // South Pole (Right - Cobalt)
+    const gradS = ctx.createLinearGradient(gcx + gap, gcy, gcx + gap + poleW, gcy);
+    gradS.addColorStop(0, '#3b82f6');
+    gradS.addColorStop(0.6, '#1d4ed8');
+    gradS.addColorStop(1, '#1e3a8a');
+    ctx.fillStyle = gradS;
+    ctx.beginPath();
+    ctx.roundRect(gcx + gap, gcy - poleH / 2, poleW, poleH, [0, 10, 10, 0]);
+    ctx.fill();
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    ctx.font = 'bold 22px "Inter", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('S', gcx + gap + poleW / 2, gcy - 20);
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillText('South Pole', gcx + gap + poleW / 2, gcy + 15);
+    
+    // 2. Uniform Magnetic Field Lines (Left to Right, N to S)
+    const bLineCount = 7;
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([5, 5]);
+    for (let i = 0; i < bLineCount; i++) {
+      const ly = gcy - poleH * 0.38 + i * (poleH * 0.76 / (bLineCount - 1));
+      ctx.beginPath();
+      ctx.moveTo(gcx - gap, ly);
+      ctx.lineTo(gcx + gap, ly);
+      ctx.stroke();
+      
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.8)';
+      ctx.beginPath();
+      ctx.arc(gcx, ly, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.setLineDash([]);
+    
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#22d3ee';
+    ctx.fillText("Uniform Field B = " + this.B.toFixed(2) + " T →", gcx, gcy - poleH / 2 - 12);
+    
+    // 3. Central Rotation Axis & Shaft
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(gcx, gcy - poleH * 0.65);
+    ctx.lineTo(gcx, gcy + poleH * 0.85);
+    ctx.stroke();
+    
+    // 4. Rotating Armature Rectangular Coil (Axonometric 3D projection)
+    const coilRadius = 90;
+    const coilHeight = 110;
+    const cosT = Math.cos(this.theta);
+    const sinT = Math.sin(this.theta);
+    
+    const pAx = gcx - coilRadius * cosT;
+    const pAy = gcy - coilHeight / 2 - 12 * sinT;
+    const pBx = gcx + coilRadius * cosT;
+    const pBy = gcy - coilHeight / 2 + 12 * sinT;
+    const pCx = gcx + coilRadius * cosT;
+    const pCy = gcy + coilHeight / 2 + 12 * sinT;
+    const pDx = gcx - coilRadius * cosT;
+    const pDy = gcy + coilHeight / 2 - 12 * sinT;
+    
+    // Coil Loop Polygon
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 3.5;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pAx, pAy);
+    ctx.lineTo(pBx, pBy);
+    ctx.lineTo(pCx, pCy);
+    ctx.lineTo(pDx, pDy);
+    ctx.closePath();
+    ctx.stroke();
+    
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
+    ctx.fill();
+    
+    // Normal vector
+    const normLen = 45;
+    const normAngle = this.theta + Math.PI / 2;
+    const nxEnd = gcx + normLen * Math.cos(normAngle);
+    const nyEnd = gcy + normLen * 0.5 * Math.sin(normAngle);
+    this.drawArrow(gcx, gcy, nxEnd, nyEnd, '#a855f7', 'n̂ (θ=ωt)');
+    
+    // Vectors on arms
+    if (this.showVectors && Math.abs(sinT) > 0.05) {
+      const vDir = sinT > 0 ? -1 : 1;
+      const vLen = 28;
+      this.drawArrow(pAx, (pAy + pDy) / 2, pAx, (pAy + pDy) / 2 + vDir * vLen, '#22c55e', 'v');
+      this.drawArrow(pBx, (pBy + pCy) / 2, pBx, (pBy + pCy) / 2 - vDir * vLen, '#22c55e', 'v');
+      
+      const curDir = sinT > 0 ? 1 : -1;
+      const iColor = '#e11d48';
+      if (curDir > 0) {
+        this.drawArrow(pDx, pDy - 15, pAx, pAy + 15, iColor, 'I');
+        this.drawArrow(pBx, pBy + 15, pCx, pCy - 15, iColor, 'I');
+      } else {
+        this.drawArrow(pAx, pAy + 15, pDx, pDy - 15, iColor, 'I');
+        this.drawArrow(pCx, pCy - 15, pBx, pBy + 15, iColor, 'I');
+      }
+    }
+    
+    // 5. Slip Rings & Carbon Brushes
+    const shaftBaseY = gcy + coilHeight / 2 + 35;
+    const ring1Y = shaftBaseY + 12;
+    const ring2Y = shaftBaseY + 34;
+    const ringR = 14;
+    
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.moveTo(pDx, pDy);
+    ctx.lineTo(gcx - 8, ring1Y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(pCx, pCy);
+    ctx.lineTo(gcx + 8, ring2Y);
+    ctx.stroke();
+    
+    // Slip Ring 1
+    ctx.fillStyle = '#b45309';
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(gcx, ring1Y, ringR, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Slip Ring 2
+    ctx.beginPath();
+    ctx.ellipse(gcx, ring2Y, ringR, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Carbon Brushes
+    ctx.fillStyle = '#334155';
+    ctx.strokeStyle = '#64748b';
+    ctx.fillRect(gcx - ringR - 10, ring1Y - 4, 10, 8);
+    ctx.strokeRect(gcx - ringR - 10, ring1Y - 4, 10, 8);
+    ctx.fillRect(gcx + ringR, ring2Y - 4, 10, 8);
+    ctx.strokeRect(gcx + ringR, ring2Y - 4, 10, 8);
+    
+    // Output circuit & bulb
+    const wireLeftX = gcx - ringR - 10;
+    const wireRightX = gcx + ringR + 10;
+    const bulbX = gcx;
+    const bulbY = shaftBaseY + 65;
+    
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(wireLeftX, ring1Y);
+    ctx.lineTo(gcx - 55, ring1Y);
+    ctx.lineTo(gcx - 55, bulbY);
+    ctx.lineTo(bulbX - 16, bulbY);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(wireRightX, ring2Y);
+    ctx.lineTo(gcx + 55, ring2Y);
+    ctx.lineTo(gcx + 55, bulbY);
+    ctx.lineTo(bulbX + 16, bulbY);
+    ctx.stroke();
+    
+    // Bulb glow
+    const omega = (2 * Math.PI * this.rpm) / 60;
+    const peakEmf = this.N * this.B * this.area * omega;
+    const curEmf = peakEmf * Math.sin(this.theta);
+    const curPower = (curEmf * curEmf) / this.RLoad;
+    const maxPower = ((peakEmf * peakEmf) / this.RLoad) || 1;
+    const glowFrac = Math.min(1.0, curPower / maxPower);
+    
+    if (glowFrac > 0.05) {
+      const glowGrad = ctx.createRadialGradient(bulbX, bulbY, 2, bulbX, bulbY, 26 * glowFrac);
+      glowGrad.addColorStop(0, 'rgba(253, 224, 71, 0.85)');
+      glowGrad.addColorStop(0.5, 'rgba(245, 158, 11, 0.4)');
+      glowGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(bulbX, bulbY, 26 * glowFrac, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    ctx.fillStyle = glowFrac > 0.2 ? 'rgba(254, 240, 138, 0.4)' : 'rgba(148, 163, 184, 0.2)';
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(bulbX, bulbY, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.strokeStyle = glowFrac > 0.1 ? '#fef08a' : '#64748b';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bulbX - 5, bulbY + 6);
+    ctx.lineTo(bulbX - 3, bulbY - 3);
+    ctx.lineTo(bulbX + 3, bulbY - 3);
+    ctx.lineTo(bulbX + 5, bulbY + 6);
+    ctx.stroke();
+    
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('External Load R', bulbX, bulbY + 24);
+    
+    ctx.restore();
+    
+    // -------------------------------------------------------------
+    // PART 2: DUAL SYNCHRONOUS WAVEFORM OSCILLOSCOPE (Phi & EMF)
+    // -------------------------------------------------------------
+    ctx.save();
+    
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(plotX, plotY, plotW, plotH, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Header
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('SYNCHRONOUS FLUX LINKAGE Φ(t) & INDUCED EMF e(t)', plotX + 14, plotY + 24);
+    
+    // Phase Banner
+    ctx.fillStyle = 'rgba(6, 182, 212, 0.15)';
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(plotX + 14, plotY + 34, plotW - 28, 22, 6);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#22d3ee';
+    ctx.textAlign = 'center';
+    ctx.fillText('Phase Difference = 90° (π/2) · When Φ = Max ⇒ e = 0 · When Φ = 0 ⇒ |e| = e₀', plotX + plotW / 2, plotY + 49);
+    
+    // Oscilloscope Screen Box
+    const oscX = plotX + 16;
+    const oscY = plotY + 68;
+    const oscW = plotW - 32;
+    const oscH = plotH * 0.58;
+    const zeroY = oscY + oscH / 2;
+    
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.7)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+    ctx.fillRect(oscX, oscY, oscW, oscH);
+    ctx.strokeRect(oscX, oscY, oscW, oscH);
+    
+    // Grid lines
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+    ctx.lineWidth = 1;
+    for (let g = 1; g < 4; g++) {
+      const gy = oscY + (g / 4) * oscH;
+      ctx.beginPath();
+      ctx.moveTo(oscX, gy);
+      ctx.lineTo(oscX + oscW, gy);
+      ctx.stroke();
+    }
+    
+    // Zero line
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(oscX, zeroY);
+    ctx.lineTo(oscX + oscW, zeroY);
+    ctx.stroke();
+    
+    // Waveform traces
+    if (this.history.length > 2) {
+      const maxPhi = Math.max(0.001, this.N * this.B * this.area);
+      const maxEmf = Math.max(0.001, peakEmf || 1.0);
+      
+      // 1. Flux Trace
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      for (let i = 0; i < this.history.length; i++) {
+        const pt = this.history[i];
+        const px = oscX + (i / (this.history.length - 1)) * oscW;
+        const py = zeroY - (pt.phi / maxPhi) * (oscH * 0.40);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      
+      // 2. EMF Trace
+      ctx.strokeStyle = '#06b6d4';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      for (let i = 0; i < this.history.length; i++) {
+        const pt = this.history[i];
+        const px = oscX + (i / (this.history.length - 1)) * oscW;
+        const py = zeroY - (pt.emf / maxEmf) * (oscH * 0.40);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      
+      // Cursor dots
+      const lastPt = this.history[this.history.length - 1];
+      const curPhiY = zeroY - (lastPt.phi / maxPhi) * (oscH * 0.40);
+      const curEmfY = zeroY - (lastPt.emf / maxEmf) * (oscH * 0.40);
+      
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(oscX + oscW, curPhiY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#06b6d4';
+      ctx.beginPath();
+      ctx.arc(oscX + oscW, curEmfY, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Legend
+    const legY = oscY + oscH + 18;
+    ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#f59e0b';
+    ctx.textAlign = 'left';
+    ctx.fillText('■ Φ(t) = NBA cos(ωt)', oscX, legY);
+    
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('■ e(t) = e₀ sin(ωt)', oscX + 160, legY);
+    
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText("Instantaneous: Φ = " + (this.N * this.B * this.area * Math.cos(this.theta) * 1e3).toFixed(1) + " mWb  |  e = " + curEmf.toFixed(1) + " V  |  i = " + (curEmf / this.RLoad).toFixed(2) + " A", oscX, legY + 20);
+    
+    ctx.restore();
+  },
+  
+  getMetrics() {
+    const omega = (2 * Math.PI * this.rpm) / 60;
+    const fHz = omega / (2 * Math.PI);
+    const peakEmf = this.N * this.B * this.area * omega;
+    const curFlux = this.N * this.B * this.area * Math.cos(this.theta);
+    const curEmf = peakEmf * Math.sin(this.theta);
+    const curI = curEmf / this.RLoad;
+    const curPower = curEmf * curI;
+    
+    return [
+      { label: "Rotation Speed", val: this.rpm.toFixed(0) + " RPM (" + fHz.toFixed(1) + " Hz)" },
+      { label: "Angular Speed (ω)", val: omega.toFixed(1) + " rad/s" },
+      { label: "Peak EMF (e₀ = NABω)", val: peakEmf.toFixed(1) + " V" },
+      { label: "Instantaneous EMF e(t)", val: curEmf.toFixed(1) + " V" },
+      { label: "Magnetic Flux Φ(t)", val: (curFlux * 1e3).toFixed(1) + " mWb" },
+      { label: "Output Current i(t)", val: curI.toFixed(2) + " A" },
+      { label: "Instantaneous Power P", val: curPower.toFixed(1) + " W" }
+    ];
+  },
+  
+  presets: {
+    "Classroom Slow Demo (15 RPM)": {
+      setup(sim) {
+        sim.rpm = 15.0;
+        sim.B = 0.80;
+        sim.N = 100;
+        sim.area = 0.04;
+        sim.reset();
+      }
+    },
+    "Commercial 50 Hz Grid Scaled": {
+      setup(sim) {
+        sim.rpm = 60.0;
+        sim.B = 1.20;
+        sim.N = 250;
+        sim.area = 0.05;
+        sim.reset();
+      }
+    },
+    "High-Flux Powerful Alternator": {
+      setup(sim) {
+        sim.rpm = 90.0;
+        sim.B = 1.80;
+        sim.N = 300;
+        sim.area = 0.08;
+        sim.reset();
+      }
+    },
+    "Single-Loop Faraday Demo": {
+      setup(sim) {
+        sim.rpm = 30.0;
+        sim.B = 0.50;
+        sim.N = 1;
+        sim.area = 0.04;
+        sim.reset();
+      }
+    },
+    "Static at Max Flux (0 RPM, e=0)": {
+      setup(sim) {
+        sim.rpm = 0.0;
+        sim.theta = 0.0;
+        sim.B = 0.80;
+        sim.reset();
+      }
+    }
+  },
+  
+  buildControls() {
+    return [
+      '<div class="space-y-4">',
+      '  <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">',
+      '    <div class="flex items-center gap-2">',
+      '      <span class="text-xs font-semibold text-slate-300">Quick Armature Control:</span>',
+      '      <button id="btnStepRot" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700">↻ Step 15°</button>',
+      '      <button id="btnStopGen" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">Stop (0 RPM)</button>',
+      '    </div>',
+      '    <div class="flex items-center gap-2">',
+      '      <button id="btnGenSound" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        <span>' + (this.soundEnabled ? '🔊 Dynamo Hum: ON' : '🔇 Muted') + '</span>',
+      '      </button>',
+      '      <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300">',
+      '        <input type="checkbox" id="chkGenVectors" ' + (this.showVectors ? 'checked' : '') + ' class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">',
+      '        <span>Fleming Vectors (v, B, I)</span>',
+      '      </label>',
+      '    </div>',
+      '  </div>',
+      '  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Rotation Speed:</span>',
+      '        <span id="valGenRpm" class="font-mono text-cyan-400 font-bold">' + this.rpm.toFixed(0) + ' RPM</span>',
+      '      </div>',
+      '      <input id="ctrlGenRpm" type="range" min="0" max="120" step="1" value="' + this.rpm + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>0 RPM</span><span>60 (1 Hz)</span><span>120 RPM</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Magnetic Field (B):</span>',
+      '        <span id="valGenB" class="font-mono text-amber-400 font-bold">' + this.B.toFixed(2) + ' T</span>',
+      '      </div>',
+      '      <input id="ctrlGenB" type="range" min="0.10" max="2.00" step="0.05" value="' + this.B + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>0.10 T</span><span>2.00 T</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Coil Turns (N):</span>',
+      '        <span id="valGenN" class="font-mono text-emerald-400 font-bold">' + this.N + '</span>',
+      '      </div>',
+      '      <input id="ctrlGenN" type="range" min="10" max="400" step="5" value="' + this.N + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>10</span><span>400 turns</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Load Resistance (R):</span>',
+      '        <span id="valGenR" class="font-mono text-purple-400 font-bold">' + this.RLoad.toFixed(0) + ' Ω</span>',
+      '      </div>',
+      '      <input id="ctrlGenR" type="range" min="5" max="100" step="1" value="' + this.RLoad + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>5 Ω (High I)</span><span>100 Ω</span></div>',
+      '    </div>',
+      '  </div>',
+      '  <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400 pt-1">',
+      '    <span class="font-mono text-slate-300">Φ(t) = NBA cos(ωt) &ensp;⇒&ensp; e(t) = -dΦ/dt = NBAω sin(ωt) = e₀ sin(ωt)</span>',
+      '    <span class="font-mono text-[10px] text-slate-400">Fleming\'s Right Hand: Thumb = Motion (v), Forefinger = Field (B), Center = Induced Current (I)</span>',
+      '  </div>',
+      '</div>'
+    ].join('\n');
+  },
+  
+  bindControls() {
+    this.initAudio();
+    
+    document.getElementById('ctrlGenRpm')?.addEventListener('input', (e) => {
+      this.initAudio();
+      this.rpm = parseFloat(e.target.value);
+      document.getElementById('valGenRpm').textContent = this.rpm.toFixed(0) + ' RPM';
+    });
+    
+    document.getElementById('ctrlGenB')?.addEventListener('input', (e) => {
+      this.B = parseFloat(e.target.value);
+      document.getElementById('valGenB').textContent = this.B.toFixed(2) + ' T';
+    });
+    
+    document.getElementById('ctrlGenN')?.addEventListener('input', (e) => {
+      this.N = parseInt(e.target.value);
+      document.getElementById('valGenN').textContent = this.N;
+    });
+    
+    document.getElementById('ctrlGenR')?.addEventListener('input', (e) => {
+      this.RLoad = parseFloat(e.target.value);
+      document.getElementById('valGenR').textContent = this.RLoad.toFixed(0) + ' Ω';
+    });
+    
+    document.getElementById('chkGenVectors')?.addEventListener('change', (e) => {
+      this.showVectors = e.target.checked;
+    });
+    
+    document.getElementById('btnStepRot')?.addEventListener('click', () => {
+      this.theta += (15 * Math.PI) / 180;
+      this.update(0.001);
+    });
+    
+    document.getElementById('btnStopGen')?.addEventListener('click', () => {
+      this.rpm = 0.0;
+      const ctrl = document.getElementById('ctrlGenRpm');
+      if (ctrl) ctrl.value = 0;
+      const val = document.getElementById('valGenRpm');
+      if (val) val.textContent = '0 RPM';
+      this.stopAudio();
+    });
+    
+    document.getElementById('btnGenSound')?.addEventListener('click', () => {
+      this.soundEnabled = !this.soundEnabled;
+      const btn = document.getElementById('btnGenSound');
+      if (btn) {
+        btn.innerHTML = '<span>' + (this.soundEnabled ? '🔊 Dynamo Hum: ON' : '🔇 Muted') + '</span>';
+        btn.className = 'flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700');
+      }
+      if (!this.soundEnabled) this.stopAudio();
+      showToast(this.soundEnabled ? "Dynamo Hum Synthesizer Active" : "Audio Muted", "info");
+    });
+  }
+};
+
+    // sim_lcr.js - LCR Series Resonance & Phasor Dynamics
+const lcrSim = {
+  name: "LCR Series Resonance & Phasors · XII",
+  
+  // Circuit components (SI Units)
+  omega: 316.2,         // Source angular frequency in rad/s (50 to 2000 rad/s)
+  L: 0.10,              // Inductance in Henrys (0.01 to 0.50 H, 10 to 500 mH)
+  C: 1.0e-5,            // Capacitance in Farads (1 to 100 uF, 10 uF default => omega_r = 1/sqrt(0.1*1e-5) = 1000)
+  R: 15.0,              // Resistance in Ohms (2 to 100 Ohms)
+  Vrms: 100.0,          // Source RMS voltage in Volts (10 to 230 V)
+  
+  // Dynamic state variables
+  time: 0.0,
+  waveHistory: [],      // History for dual oscilloscope trace { t, v, i }
+  
+  // Web Audio AC Resonance Synthesizer
+  soundEnabled: true,
+  audioCtx: null,
+  oscNode: null,
+  gainNode: null,
+  audioInitialized: false,
+  
+  initAudio() {
+    if (this.audioInitialized) {
+      if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      return;
+    }
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      this.audioCtx = new AudioContext();
+      this.oscNode = this.audioCtx.createOscillator();
+      this.gainNode = this.audioCtx.createGain();
+      this.oscNode.type = 'sine';
+      this.oscNode.frequency.value = 440;
+      this.gainNode.gain.value = 0.0;
+      this.oscNode.connect(this.gainNode);
+      this.gainNode.connect(this.audioCtx.destination);
+      this.oscNode.start();
+      this.audioInitialized = true;
+    } catch (e) {}
+  },
+  
+  updateAudio() {
+    if (!this.soundEnabled || !this.audioInitialized || !this.audioCtx) return;
+    const now = this.audioCtx.currentTime;
+    const p = this.calc();
+    const audioFreq = Math.max(65, Math.min(900, p.f));
+    this.oscNode.frequency.setTargetAtTime(audioFreq, now, 0.03);
+    const maxI = this.Vrms / this.R;
+    const iFrac = Math.min(1.0, p.Irms / maxI);
+    const targetVol = 0.005 + 0.055 * (iFrac * iFrac);
+    this.gainNode.gain.setTargetAtTime(targetVol, now, 0.03);
+  },
+  
+  stopAudio() {
+    if (this.gainNode && this.audioCtx) {
+      this.gainNode.gain.setTargetAtTime(0.0, this.audioCtx.currentTime, 0.04);
+    }
+  },
+  
+  init() {
+    this.L = 0.10;
+    this.C = 1.0e-5;
+    this.omega = 1000.0;
+    this.R = 15.0;
+    this.Vrms = 100.0;
+    this.reset();
+  },
+  
+  reset() {
+    this.time = 0.0;
+    this.waveHistory = [];
+    this.stopAudio();
+  },
+  
+  calc() {
+    const XL = this.omega * this.L;
+    const XC = 1.0 / (this.omega * this.C);
+    const Xnet = XL - XC;
+    const Z = Math.sqrt(this.R * this.R + Xnet * Xnet);
+    const phi = Math.atan2(Xnet, this.R); // phase angle in rad (V leads I by phi)
+    const Irms = this.Vrms / Z;
+    const I0 = Irms * Math.SQRT2;
+    const V0 = this.Vrms * Math.SQRT2;
+    
+    const omegaR = 1.0 / Math.sqrt(this.L * this.C);
+    const fR = omegaR / (2 * Math.PI);
+    const f = this.omega / (2 * Math.PI);
+    const Q = (omegaR * this.L) / this.R; // Sharpness
+    const bandwidth = this.R / this.L;   // Delta omega
+    
+    const VR = Irms * this.R;
+    const VL = Irms * XL;
+    const VC = Irms * XC;
+    
+    return {
+      XL, XC, Xnet, Z, phi, Irms, I0, V0,
+      omegaR, fR, f, Q, bandwidth, VR, VL, VC
+    };
+  },
+  
+  update(dt) {
+    this.time += dt;
+    const p = this.calc();
+    
+    const curAngle = (this.omega * this.time) % (Math.PI * 2);
+    const curV = p.V0 * Math.sin(curAngle);
+    const curI = p.I0 * Math.sin(curAngle - p.phi);
+    
+    this.waveHistory.push({
+      t: this.time,
+      angle: curAngle,
+      v: curV,
+      i: curI
+    });
+    
+    if (this.waveHistory.length > 260) {
+      this.waveHistory.shift();
+    }
+    
+    this.updateAudio();
+  },
+  
+  drawArrow(x1, y1, x2, y2, color, label = '', valStr = '') {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    const head = 8;
+    const ang = Math.atan2(dy, dx);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    if (label) {
+      ctx.font = 'bold 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = color;
+      ctx.fillText(label + (valStr ? ': ' + valStr : ''), x2 + 5, y2 + 3);
+    }
+    ctx.restore();
+  },
+  
+  render() {
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    const p = this.calc();
+    
+    const isNarrow = w < 860;
+    const colW = isNarrow ? w : w / 3;
+    
+    const phX = 12;
+    const phY = 16;
+    const phW = isNarrow ? w - 24 : colW - 18;
+    const phH = isNarrow ? h * 0.32 : h - 32;
+    
+    const oscX = isNarrow ? 12 : phX + phW + 12;
+    const oscY = isNarrow ? phY + phH + 12 : 16;
+    const oscW = isNarrow ? w - 24 : colW - 12;
+    const oscH = isNarrow ? h * 0.32 : h - 32;
+    
+    const resX = isNarrow ? 12 : oscX + oscW + 12;
+    const resY = isNarrow ? oscY + oscH + 12 : 16;
+    const resW = isNarrow ? w - 24 : w - resX - 16;
+    const resH = isNarrow ? h * 0.32 : h - 32;
+    
+    // -------------------------------------------------------------
+    // PANEL 1: ROTATING PHASOR DIAGRAM
+    // -------------------------------------------------------------
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(phX, phY, phW, phH, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('DYNAMIC ROTATING PHASORS', phX + 14, phY + 24);
+    
+    const phcx = phX + phW / 2;
+    const phcy = phY + phH * 0.52;
+    const maxPhasorPx = Math.min(phW * 0.40, phH * 0.38);
+    
+    // Cartesian axes
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(phcx - maxPhasorPx - 15, phcy);
+    ctx.lineTo(phcx + maxPhasorPx + 15, phcy);
+    ctx.moveTo(phcx, phcy - maxPhasorPx - 15);
+    ctx.lineTo(phcx, phcy + maxPhasorPx + 15);
+    ctx.stroke();
+    
+    const rotAngle = (this.omega * this.time);
+    const cosR = Math.cos(rotAngle);
+    const sinR = Math.sin(rotAngle);
+    
+    const maxVComp = Math.max(p.V0, p.VR * Math.SQRT2, p.VL * Math.SQRT2, p.VC * Math.SQRT2, 10);
+    const vScale = maxPhasorPx / maxVComp;
+    
+    // 1. Current Phasor I (White)
+    const iPxLen = maxPhasorPx * 0.70;
+    const ixEnd = phcx + iPxLen * cosR;
+    const iyEnd = phcy - iPxLen * sinR;
+    this.drawArrow(phcx, phcy, ixEnd, iyEnd, '#ffffff', 'I');
+    
+    // 2. Resistor Voltage Phasor VR (Emerald)
+    const vrLen = (p.VR * Math.SQRT2) * vScale;
+    const vrxEnd = phcx + vrLen * cosR;
+    const vryEnd = phcy - vrLen * sinR;
+    this.drawArrow(phcx, phcy, vrxEnd, vryEnd, '#10b981', 'V_R');
+    
+    // 3. Inductor Voltage Phasor VL (Amber)
+    const vlLen = (p.VL * Math.SQRT2) * vScale;
+    const vlxEnd = phcx - vlLen * sinR;
+    const vlyEnd = phcy - vlLen * cosR;
+    this.drawArrow(phcx, phcy, vlxEnd, vlyEnd, '#f59e0b', 'V_L (+90°)');
+    
+    // 4. Capacitor Voltage Phasor VC (Violet)
+    const vcLen = (p.VC * Math.SQRT2) * vScale;
+    const vcxEnd = phcx + vcLen * sinR;
+    const vcyEnd = phcy + vcLen * cosR;
+    this.drawArrow(phcx, phcy, vcxEnd, vcyEnd, '#a855f7', 'V_C (-90°)');
+    
+    // 5. Total Voltage Phasor V (Cyan)
+    const vLen = p.V0 * vScale;
+    const vxEnd = phcx + vLen * Math.cos(rotAngle + p.phi);
+    const vyEnd = phcy - vLen * Math.sin(rotAngle + p.phi);
+    this.drawArrow(phcx, phcy, vxEnd, vyEnd, '#06b6d4', 'V_source');
+    
+    const legY1 = phY + phH - 32;
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText("Phase Angle ϕ = " + (p.phi * 180 / Math.PI).toFixed(1) + "°", phX + 14, legY1);
+    ctx.fillText(p.phi > 0.05 ? '• Inductive: Current Lags Voltage' : (p.phi < -0.05 ? '• Capacitive: Current Leads Voltage' : '• Purely Resistive (Resonance)'), phX + 14, legY1 + 16);
+    
+    ctx.restore();
+    
+    // -------------------------------------------------------------
+    // PANEL 2: REAL-TIME OSCILLOSCOPE WAVEFORMS v(t) & i(t)
+    // -------------------------------------------------------------
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(oscX, oscY, oscW, oscH, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('WAVEFORMS: v(t) & i(t)', oscX + 14, oscY + 24);
+    
+    let regimeBadge = 'RESONANCE (ϕ = 0°)';
+    let regimeColor = '#10b981';
+    if (p.phi > 0.05) {
+      regimeBadge = "INDUCTIVE (I lags by " + (p.phi * 180 / Math.PI).toFixed(1) + "°)";
+      regimeColor = '#f59e0b';
+    } else if (p.phi < -0.05) {
+      regimeBadge = "CAPACITIVE (I leads by " + (Math.abs(p.phi) * 180 / Math.PI).toFixed(1) + "°)";
+      regimeColor = '#a855f7';
+    }
+    
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.7)';
+    ctx.strokeStyle = regimeColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(oscX + 14, oscY + 34, oscW - 28, 22, 6);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 10px "Inter", sans-serif';
+    ctx.fillStyle = regimeColor;
+    ctx.textAlign = 'center';
+    ctx.fillText(regimeBadge, oscX + oscW / 2, oscY + 49);
+    
+    // Scope Box
+    const scopeX = oscX + 14;
+    const scopeY = oscY + 68;
+    const scopeW = oscW - 28;
+    const scopeH = oscH * 0.60;
+    const scopeZeroY = scopeY + scopeH / 2;
+    
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+    ctx.fillRect(scopeX, scopeY, scopeW, scopeH);
+    ctx.strokeRect(scopeX, scopeY, scopeW, scopeH);
+    
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(scopeX, scopeZeroY);
+    ctx.lineTo(scopeX + scopeW, scopeZeroY);
+    ctx.stroke();
+    
+    if (this.waveHistory.length > 2) {
+      const maxWaveV = Math.max(p.V0, 1.0);
+      const maxWaveI = Math.max(p.I0, 0.1);
+      
+      // 1. Voltage v(t) - Cyan
+      ctx.strokeStyle = '#06b6d4';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      for (let i = 0; i < this.waveHistory.length; i++) {
+        const pt = this.waveHistory[i];
+        const px = scopeX + (i / (this.waveHistory.length - 1)) * scopeW;
+        const py = scopeZeroY - (pt.v / maxWaveV) * (scopeH * 0.42);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      
+      // 2. Current i(t) - Lime Green
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      for (let i = 0; i < this.waveHistory.length; i++) {
+        const pt = this.waveHistory[i];
+        const px = scopeX + (i / (this.waveHistory.length - 1)) * scopeW;
+        const py = scopeZeroY - (pt.i / maxWaveI) * (scopeH * 0.42);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    
+    const wLegY = scopeY + scopeH + 18;
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#06b6d4';
+    ctx.textAlign = 'left';
+    ctx.fillText("■ v(t) [V₀ = " + p.V0.toFixed(1) + " V]", scopeX, wLegY);
+    ctx.fillStyle = '#22c55e';
+    ctx.fillText("■ i(t) [I₀ = " + p.I0.toFixed(2) + " A]", scopeX + 130, wLegY);
+    
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText("Z = " + p.Z.toFixed(1) + " Ω  |  X_L = " + p.XL.toFixed(1) + " Ω  |  X_C = " + p.XC.toFixed(1) + " Ω", scopeX, wLegY + 18);
+    
+    ctx.restore();
+    
+    // -------------------------------------------------------------
+    // PANEL 3: RESONANCE CURVE & SHARPNESS (Q-FACTOR)
+    // -------------------------------------------------------------
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(resX, resY, resW, resH, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('RESONANCE CURVE & Q-FACTOR', resX + 14, resY + 24);
+    
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText("ωᵣ = 1/√(LC) = " + p.omegaR.toFixed(1) + " rad/s (" + p.fR.toFixed(1) + " Hz)", resX + 14, resY + 44);
+    
+    const rcX = resX + 14;
+    const rcY = resY + 58;
+    const rcW = resW - 28;
+    const rcH = resH * 0.60;
+    
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+    ctx.fillRect(rcX, rcY, rcW, rcH);
+    ctx.strokeRect(rcX, rcY, rcW, rcH);
+    
+    const minW = Math.max(20, p.omegaR * 0.2);
+    const maxW = p.omegaR * 2.2;
+    const maxIrms = this.Vrms / this.R;
+    
+    const halfPowerY = rcY + rcH - (0.707 * rcH * 0.85);
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(rcX, halfPowerY);
+    ctx.lineTo(rcX + rcW, halfPowerY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#f59e0b';
+    ctx.textAlign = 'right';
+    ctx.fillText('I_max / √2', rcX + rcW - 4, halfPowerY - 3);
+    
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    const steps = 100;
+    for (let i = 0; i <= steps; i++) {
+      const testW = minW + (i / steps) * (maxW - minW);
+      const tXL = testW * this.L;
+      const tXC = 1.0 / (testW * this.C);
+      const tZ = Math.sqrt(this.R * this.R + (tXL - tXC) * (tXL - tXC));
+      const tI = this.Vrms / tZ;
+      
+      const px = rcX + ((testW - minW) / (maxW - minW)) * rcW;
+      const py = rcY + rcH - (tI / maxIrms) * (rcH * 0.85);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    
+    const peakX = rcX + ((p.omegaR - minW) / (maxW - minW)) * rcW;
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.5)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(peakX, rcY);
+    ctx.lineTo(peakX, rcY + rcH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    const curPx = rcX + Math.max(0, Math.min(rcW, ((this.omega - minW) / (maxW - minW)) * rcW));
+    const curPy = rcY + rcH - (p.Irms / maxIrms) * (rcH * 0.85);
+    
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(curPx, curPy, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    const qY = rcY + rcH + 18;
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'left';
+    ctx.fillText("Quality Factor Q = " + p.Q.toFixed(2), rcX, qY);
+    
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText("Bandwidth Δω = R/L = " + p.bandwidth.toFixed(1) + " rad/s", rcX, qY + 16);
+    ctx.fillText(this.R <= 8 ? '• Sharp resonance: High selectivity tuning circuit' : '• Broad resonance: Highly damped circuit', rcX, qY + 30);
+    
+    ctx.restore();
+  },
+  
+  getMetrics() {
+    const p = this.calc();
+    return [
+      { label: "Resonant Freq (ωᵣ)", val: p.omegaR.toFixed(1) + " rad/s (" + p.fR.toFixed(1) + " Hz)" },
+      { label: "Operating Freq (ω)", val: this.omega.toFixed(1) + " rad/s (" + p.f.toFixed(1) + " Hz)" },
+      { label: "Total Impedance (Z)", val: p.Z.toFixed(1) + " Ω" },
+      { label: "Inductive Reactance (XL)", val: p.XL.toFixed(1) + " Ω" },
+      { label: "Capacitive Reactance (XC)", val: p.XC.toFixed(1) + " Ω" },
+      { label: "Phase Difference (ϕ)", val: (p.phi * 180 / Math.PI).toFixed(1) + "° (" + (p.phi > 0.05 ? 'I lags V' : p.phi < -0.05 ? 'I leads V' : 'In Phase') + ")" },
+      { label: "RMS Current (I_rms)", val: p.Irms.toFixed(2) + " A" },
+      { label: "Quality Factor (Q)", val: p.Q.toFixed(2) }
+    ];
+  },
+  
+  presets: {
+    "Exact Resonance (ω = ωᵣ)": {
+      setup(sim) {
+        sim.L = 0.10;
+        sim.C = 1.0e-5;
+        sim.R = 10.0;
+        sim.omega = 1.0 / Math.sqrt(sim.L * sim.C);
+        sim.reset();
+      }
+    },
+    "Inductive Regime (ω > ωᵣ, Current Lags)": {
+      setup(sim) {
+        sim.L = 0.10;
+        sim.C = 1.0e-5;
+        sim.R = 15.0;
+        sim.omega = 1600.0;
+        sim.reset();
+      }
+    },
+    "Capacitive Regime (ω < ωᵣ, Current Leads)": {
+      setup(sim) {
+        sim.L = 0.10;
+        sim.C = 1.0e-5;
+        sim.R = 15.0;
+        sim.omega = 550.0;
+        sim.reset();
+      }
+    },
+    "High-Q Sharp Tuning (R = 3 Ω, Q > 30)": {
+      setup(sim) {
+        sim.L = 0.15;
+        sim.C = 1.0e-5;
+        sim.R = 3.0;
+        sim.omega = 1.0 / Math.sqrt(sim.L * sim.C);
+        sim.reset();
+      }
+    },
+    "Broad Bandwidth Low-Q (R = 50 Ω)": {
+      setup(sim) {
+        sim.L = 0.10;
+        sim.C = 1.0e-5;
+        sim.R = 50.0;
+        sim.omega = 1000.0;
+        sim.reset();
+      }
+    }
+  },
+  
+  buildControls() {
+    const p = this.calc();
+    return [
+      '<div class="space-y-4">',
+      '  <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">',
+      '    <div class="flex items-center gap-2">',
+      '      <span class="text-xs font-semibold text-slate-300">Resonance Condition:</span>',
+      '      <button id="btnSnapResonance" class="px-3 py-1 rounded-lg text-xs font-bold bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 transition">',
+      '        🎯 Snap to Resonance (ω = ' + p.omegaR.toFixed(0) + ' rad/s)',
+      '      </button>',
+      '    </div>',
+      '    <div class="flex items-center gap-2">',
+      '      <button id="btnLcrSound" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        <span>' + (this.soundEnabled ? '🔊 AC Tone: ON' : '🔇 Muted') + '</span>',
+      '      </button>',
+      '    </div>',
+      '  </div>',
+      '  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Frequency (ω):</span>',
+      '        <span id="valLcrOmega" class="font-mono text-cyan-400 font-bold">' + this.omega.toFixed(0) + ' rad/s</span>',
+      '      </div>',
+      '      <input id="ctrlLcrOmega" type="range" min="100" max="2500" step="10" value="' + this.omega + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>100 rad/s</span><span>2500 rad/s</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Inductance (L):</span>',
+      '        <span id="valLcrL" class="font-mono text-amber-400 font-bold">' + (this.L * 1000).toFixed(0) + ' mH</span>',
+      '      </div>',
+      '      <input id="ctrlLcrL" type="range" min="10" max="400" step="5" value="' + (this.L * 1000) + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>10 mH</span><span>400 mH</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Capacitance (C):</span>',
+      '        <span id="valLcrC" class="font-mono text-purple-400 font-bold">' + (this.C * 1e6).toFixed(1) + ' μF</span>',
+      '      </div>',
+      '      <input id="ctrlLcrC" type="range" min="1.0" max="50.0" step="0.5" value="' + (this.C * 1e6) + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>1.0 μF</span><span>50.0 μF</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Resistance (R):</span>',
+      '        <span id="valLcrR" class="font-mono text-emerald-400 font-bold">' + this.R.toFixed(1) + ' Ω</span>',
+      '      </div>',
+      '      <input id="ctrlLcrR" type="range" min="2" max="80" step="1" value="' + this.R + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>2 Ω (High Q)</span><span>80 Ω</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Supply (V_rms):</span>',
+      '        <span id="valLcrV" class="font-mono text-rose-400 font-bold">' + this.Vrms.toFixed(0) + ' V</span>',
+      '      </div>',
+      '      <input id="ctrlLcrV" type="range" min="20" max="230" step="5" value="' + this.Vrms + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-rose-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>20 V</span><span>230 V</span></div>',
+      '    </div>',
+      '  </div>',
+      '  <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400 pt-1">',
+      '    <span class="font-mono text-slate-300">Z = √(R² + (X_L - X_C)²) &ensp;•&ensp; tan ϕ = (X_L - X_C) / R &ensp;•&ensp; ωᵣ = 1/√(LC)</span>',
+      '    <span class="font-mono text-[10px] text-slate-400">Q = (ωᵣ L)/R = (1/R)√(L/C) &ensp;•&ensp; Bandwidth Δω = R/L</span>',
+      '  </div>',
+      '</div>'
+    ].join('\n');
+  },
+  
+  bindControls() {
+    this.initAudio();
+    
+    document.getElementById('ctrlLcrOmega')?.addEventListener('input', (e) => {
+      this.initAudio();
+      this.omega = parseFloat(e.target.value);
+      document.getElementById('valLcrOmega').textContent = this.omega.toFixed(0) + ' rad/s';
+    });
+    
+    document.getElementById('ctrlLcrL')?.addEventListener('input', (e) => {
+      this.L = parseFloat(e.target.value) / 1000;
+      document.getElementById('valLcrL').textContent = (this.L * 1000).toFixed(0) + ' mH';
+    });
+    
+    document.getElementById('ctrlLcrC')?.addEventListener('input', (e) => {
+      this.C = parseFloat(e.target.value) * 1e-6;
+      document.getElementById('valLcrC').textContent = (this.C * 1e6).toFixed(1) + ' μF';
+    });
+    
+    document.getElementById('ctrlLcrR')?.addEventListener('input', (e) => {
+      this.R = parseFloat(e.target.value);
+      document.getElementById('valLcrR').textContent = this.R.toFixed(1) + ' Ω';
+    });
+    
+    document.getElementById('ctrlLcrV')?.addEventListener('input', (e) => {
+      this.Vrms = parseFloat(e.target.value);
+      document.getElementById('valLcrV').textContent = this.Vrms.toFixed(0) + ' V';
+    });
+    
+    document.getElementById('btnSnapResonance')?.addEventListener('click', () => {
+      this.initAudio();
+      const p = this.calc();
+      this.omega = Math.round(p.omegaR * 10) / 10;
+      controlsPanel.innerHTML = this.buildControls();
+      this.bindControls();
+      showToast("Frequency snapped to exact resonance ωᵣ = " + this.omega.toFixed(1) + " rad/s", "success");
+    });
+    
+    document.getElementById('btnLcrSound')?.addEventListener('click', () => {
+      this.soundEnabled = !this.soundEnabled;
+      const btn = document.getElementById('btnLcrSound');
+      if (btn) {
+        btn.innerHTML = '<span>' + (this.soundEnabled ? '🔊 AC Tone: ON' : '🔇 Muted') + '</span>';
+        btn.className = 'flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700');
+      }
+      if (!this.soundEnabled) this.stopAudio();
+      showToast(this.soundEnabled ? "AC Resonance Tone Active" : "Audio Muted", "info");
+    });
+  }
+};
+
+    // sim_huygens.js - Wavefront Propagation & Huygens' Construction
+const huygensSim = {
+  name: "Huygens' Principle & Wavefronts · XII",
+  
+  // Optical parameters
+  mode: 'refraction',   // 'refraction' or 'reflection'
+  iDeg: 45.0,           // Angle of incidence in degrees (0 to 75 deg)
+  n1: 1.00,             // Refractive index of Medium 1 (1.00 to 2.42)
+  n2: 1.50,             // Refractive index of Medium 2 (1.00 to 2.42)
+  showWavelets: true,   // Display secondary circular wavelets
+  showEnvelope: true,   // Display common tangent envelope
+  showRays: true,       // Display wave normals (incident & refracted/reflected light rays)
+  showTriangles: true,  // Display right triangles ABC and AEC proving Snell's law
+  waveletCount: 9,      // Number of wavelet emitters along interface
+  
+  // Dynamic animation state
+  phase: 0.0,           // Animation progress cycle (0 to 1)
+  speed: 0.35,          // Cycle speed
+  
+  // Web Audio Wave Shimmer
+  soundEnabled: true,
+  audioCtx: null,
+  lastChimeCycle: -1,
+  
+  initAudio() {
+    if (this.audioCtx) {
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      return;
+    }
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      this.audioCtx = new AudioContext();
+    } catch (e) {}
+  },
+  
+  playWavePulse(freq = 520) {
+    if (!this.soundEnabled || !this.audioCtx) return;
+    try {
+      const now = this.audioCtx.currentTime;
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.7, now + 0.12);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+    } catch (e) {}
+  },
+  
+  stopAudio() {
+    // One-shot audio pulses; nothing persistent
+  },
+  
+  init() {
+    this.reset();
+  },
+  
+  reset() {
+    this.phase = 0.0;
+    this.lastChimeCycle = -1;
+  },
+  
+  calc() {
+    const iRad = (this.iDeg * Math.PI) / 180;
+    const cBase = 1.0;
+    const v1 = cBase / this.n1;
+    const v2 = cBase / this.n2;
+    
+    // Critical angle for Total Internal Reflection (TIR)
+    let isTIR = false;
+    let criticalAngleDeg = null;
+    if (this.n1 > this.n2) {
+      criticalAngleDeg = (Math.asin(this.n2 / this.n1) * 180) / Math.PI;
+      if (this.iDeg > criticalAngleDeg && this.mode === 'refraction') {
+        isTIR = true;
+      }
+    }
+    
+    // Refraction angle via Snell's Law: n1 * sin(i) = n2 * sin(r)
+    let rRad = 0;
+    let rDeg = 0;
+    const sinR = (this.n1 / this.n2) * Math.sin(iRad);
+    if (this.mode === 'reflection' || isTIR) {
+      rRad = iRad;
+      rDeg = this.iDeg;
+    } else {
+      if (sinR <= 1.0) {
+        rRad = Math.asin(sinR);
+        rDeg = (rRad * 180) / Math.PI;
+      } else {
+        isTIR = true;
+        rRad = iRad;
+        rDeg = this.iDeg;
+      }
+    }
+    
+    return {
+      iRad, rRad, rDeg, v1, v2, isTIR, criticalAngleDeg, sinR
+    };
+  },
+  
+  update(dt) {
+    this.phase += this.speed * dt;
+    if (this.phase >= 1.0) {
+      this.phase = this.phase % 1.0;
+      this.playWavePulse(this.mode === 'reflection' ? 620 : 480);
+    }
+  },
+  
+  drawArrow(x1, y1, x2, y2, color, label = '', valStr = '') {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    const head = 8;
+    const ang = Math.atan2(dy, dx);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.0;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    if (label) {
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillStyle = color;
+      ctx.fillText(label + (valStr ? ': ' + valStr : ''), x2 + 6, y2 + 3);
+    }
+    ctx.restore();
+  },
+  
+  render() {
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    const p = this.calc();
+    
+    const isNarrow = w < 720;
+    const mainW = isNarrow ? w : w * 0.62;
+    const panelX = isNarrow ? 12 : w * 0.62;
+    const panelY = isNarrow ? h * 0.62 : 16;
+    const panelW = isNarrow ? w - 24 : w * 0.36;
+    const panelH = isNarrow ? h * 0.36 : h - 32;
+    
+    // -------------------------------------------------------------
+    // PART 1: HUYGENS WAVEFRONT & SECONDARY WAVELETS ON CANVAS
+    // -------------------------------------------------------------
+    const boundaryY = isNarrow ? h * 0.31 : h * 0.50;
+    
+    ctx.save();
+    
+    // Background for Medium 1 (Top)
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+    ctx.fillRect(0, 0, mainW, boundaryY);
+    
+    // Background for Medium 2 (Bottom - tinted by optical density n2)
+    const n2Alpha = Math.min(0.5, 0.15 + (this.n2 - 1.0) * 0.2);
+    ctx.fillStyle = "rgba(30, 58, 138, " + n2Alpha + ")";
+    ctx.fillRect(0, boundaryY, mainW, h - boundaryY);
+    
+    // Boundary Interface Line
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(10, boundaryY);
+    ctx.lineTo(mainW - 10, boundaryY);
+    ctx.stroke();
+    
+    // Interface labels
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'left';
+    ctx.fillText("Medium 1: n₁ = " + this.n1.toFixed(2) + "  (Speed v₁ = c/n₁)", 24, boundaryY - 14);
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillText(this.mode === 'reflection' ? "Reflecting Surface (Medium 1: v₁ = c/n₁)" : "Medium 2: n₂ = " + this.n2.toFixed(2) + "  (Speed v₂ = c/n₂)", 24, boundaryY + 22);
+    
+    // Geometry Setup on Interface
+    const spanAC = Math.min(mainW * 0.50, 240);
+    const ptAx = mainW * 0.24;
+    const ptCx = ptAx + spanAC;
+    const ptAy = boundaryY;
+    const ptCy = boundaryY;
+    
+    // Normal Line (Perpendicular to Interface at A)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(ptAx, boundaryY - 120);
+    ctx.lineTo(ptAx, boundaryY + 120);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('Normal (N)', ptAx + 6, boundaryY - 105);
+    
+    const bcDist = spanAC * Math.sin(p.iRad);
+    const aeDist = (this.mode === 'reflection' || p.isTIR) ? bcDist : spanAC * Math.sin(p.rRad);
+    
+    const ptBx = ptCx - bcDist * Math.sin(p.iRad);
+    const ptBy = boundaryY - bcDist * Math.cos(p.iRad);
+    
+    let ptEx = ptAx + aeDist * Math.sin(p.rRad);
+    let ptEy = boundaryY + aeDist * Math.cos(p.rRad);
+    if (this.mode === 'reflection' || p.isTIR) {
+      ptEx = ptAx + aeDist * Math.sin(p.rRad);
+      ptEy = boundaryY - aeDist * Math.cos(p.rRad);
+    }
+    
+    // 1. Shaded NCERT Right Triangles (ABC in Med 1, AEC in Med 2)
+    if (this.showTriangles) {
+      // Triangle ABC (Incident)
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.12)';
+      ctx.strokeStyle = '#06b6d4';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ptAx, ptAy);
+      ctx.lineTo(ptBx, ptBy);
+      ctx.lineTo(ptCx, ptCy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      ctx.strokeRect(ptBx - 5, ptBy - 5, 8, 8);
+      
+      // Triangle AEC (Refracted / Reflected)
+      ctx.fillStyle = (this.mode === 'reflection' || p.isTIR) ? 'rgba(244, 63, 94, 0.12)' : 'rgba(34, 197, 94, 0.12)';
+      ctx.strokeStyle = (this.mode === 'reflection' || p.isTIR) ? '#f43f5e' : '#22c55e';
+      ctx.beginPath();
+      ctx.moveTo(ptAx, ptAy);
+      ctx.lineTo(ptEx, ptEy);
+      ctx.lineTo(ptCx, ptCy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
+    
+    // 2. Incident Plane Wavefronts (Cyan lines advancing toward boundary)
+    const waveSpacing = 32;
+    for (let k = 0; k < 4; k++) {
+      const off = ((this.phase + k * 0.25) % 1.0) * waveSpacing * 3;
+      const wx1 = ptAx - off * Math.sin(p.iRad) - 70 * Math.cos(p.iRad);
+      const wy1 = boundaryY - off * Math.cos(p.iRad) + 70 * Math.sin(p.iRad);
+      const wx2 = ptAx - off * Math.sin(p.iRad) + 70 * Math.cos(p.iRad);
+      const wy2 = boundaryY - off * Math.cos(p.iRad) - 70 * Math.sin(p.iRad);
+      
+      ctx.strokeStyle = "rgba(56, 189, 248, " + (0.7 - k * 0.15) + ")";
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.moveTo(wx1, wy1);
+      ctx.lineTo(wx2, wy2);
+      ctx.stroke();
+    }
+    
+    // 3. Secondary Circular Wavelets (Huygens' Construction)
+    if (this.showWavelets) {
+      const numSources = this.waveletCount;
+      for (let s = 0; s < numSources; s++) {
+        const frac = s / (numSources - 1);
+        const sx = ptAx + frac * spanAC;
+        const sy = boundaryY;
+        
+        const maxRAtSrc = aeDist * (1.0 - frac);
+        const curR = maxRAtSrc * this.phase;
+        
+        if (curR > 2) {
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.65)';
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          if (this.mode === 'reflection' || p.isTIR) {
+            ctx.arc(sx, sy, curR, Math.PI, Math.PI * 2);
+          } else {
+            ctx.arc(sx, sy, curR, 0, Math.PI);
+          }
+          ctx.stroke();
+        }
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    // 4. Common Tangent Envelope
+    if (this.showEnvelope) {
+      ctx.strokeStyle = (this.mode === 'reflection' || p.isTIR) ? '#f43f5e' : '#22c55e';
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      const dxEC = ptCx - ptEx;
+      const dyEC = ptCy - ptEy;
+      ctx.moveTo(ptEx - dxEC * 0.3, ptEy - dyEC * 0.3);
+      ctx.lineTo(ptCx + dxEC * 0.3, ptCy + dyEC * 0.3);
+      ctx.stroke();
+      
+      ctx.font = 'bold 11px "Inter", sans-serif';
+      ctx.fillStyle = (this.mode === 'reflection' || p.isTIR) ? '#f43f5e' : '#22c55e';
+      ctx.fillText(this.mode === 'reflection' ? 'Reflected Wavefront (Tangent)' : (p.isTIR ? 'TIR Wavefront' : 'Refracted Wavefront (Tangent Envelope)'), ptEx + 8, ptEy + 14);
+    }
+    
+    // 5. Light Rays (Normals to Wavefronts)
+    if (this.showRays) {
+      const rayLen = 95;
+      const rIncX = ptAx - rayLen * Math.sin(p.iRad);
+      const rIncY = boundaryY - rayLen * Math.cos(p.iRad);
+      this.drawArrow(rIncX, rIncY, ptAx, boundaryY, '#38bdf8', 'Incident Ray');
+      
+      if (this.mode === 'reflection' || p.isTIR) {
+        const rRefX = ptAx + rayLen * Math.sin(p.rRad);
+        const rRefY = boundaryY - rayLen * Math.cos(p.rRad);
+        this.drawArrow(ptAx, boundaryY, rRefX, rRefY, '#f43f5e', 'Reflected Ray');
+      } else {
+        const rRefrX = ptAx + rayLen * Math.sin(p.rRad);
+        const rRefrY = boundaryY + rayLen * Math.cos(p.rRad);
+        this.drawArrow(ptAx, boundaryY, rRefrX, rRefrY, '#22c55e', 'Refracted Ray');
+      }
+    }
+    
+    // Angle Arc Labels
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(ptAx, boundaryY, 32, -Math.PI / 2, -Math.PI / 2 + p.iRad);
+    ctx.stroke();
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText("i = " + this.iDeg.toFixed(1) + "°", ptAx + 8, boundaryY - 38);
+    
+    ctx.strokeStyle = (this.mode === 'reflection' || p.isTIR) ? '#f43f5e' : '#22c55e';
+    ctx.beginPath();
+    if (this.mode === 'reflection' || p.isTIR) {
+      ctx.arc(ptAx, boundaryY, 32, -Math.PI / 2 - p.rRad, -Math.PI / 2);
+    } else {
+      ctx.arc(ptAx, boundaryY, 32, Math.PI / 2 - p.rRad, Math.PI / 2);
+    }
+    ctx.stroke();
+    ctx.fillStyle = (this.mode === 'reflection' || p.isTIR) ? '#f43f5e' : '#22c55e';
+    ctx.fillText("r = " + p.rDeg.toFixed(1) + "°", ptAx + 8, boundaryY + 42);
+    
+    // Vertex labels A, B, C, E
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('A', ptAx - 14, ptAy - 4);
+    ctx.fillText('B', ptBx - 12, ptBy - 8);
+    ctx.fillText('C', ptCx + 8, ptCy - 4);
+    ctx.fillText('E', ptEx - 14, ptEy + 8);
+    
+    ctx.restore();
+    
+    // -------------------------------------------------------------
+    // PART 2: MATHEMATICAL PROOF & HUYGENS HUD PANEL
+    // -------------------------------------------------------------
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(panelX, panelY, panelW, panelH, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText("HUYGENS' GEOMETRIC PROOF", panelX + 14, panelY + 24);
+    
+    let statusTitle = "SNELL'S LAW VERIFIED";
+    let statusColor = "#22c55e";
+    if (this.mode === 'reflection') {
+      statusTitle = "LAW OF REFLECTION (∠i = ∠r)";
+      statusColor = "#38bdf8";
+    } else if (p.isTIR) {
+      statusTitle = "TOTAL INTERNAL REFLECTION (TIR)";
+      statusColor = "#ef4444";
+    }
+    
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.7)';
+    ctx.strokeStyle = statusColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(panelX + 14, panelY + 34, panelW - 28, 22, 6);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 10px "Inter", sans-serif';
+    ctx.fillStyle = statusColor;
+    ctx.textAlign = 'center';
+    ctx.fillText(statusTitle, panelX + panelW / 2, panelY + 49);
+    
+    const textY = panelY + 76;
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText('1. Triangle ΔABC in Medium 1:', panelX + 16, textY);
+    
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText("sin i = BC / AC = (v₁ · τ) / AC", panelX + 28, textY + 18);
+    
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillText(this.mode === 'reflection' ? '2. Triangle ΔAEC in Medium 1:' : '2. Triangle ΔAEC in Medium 2:', panelX + 16, textY + 44);
+    
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#22c55e';
+    const med2SpeedStr = this.mode === 'reflection' ? '(v₁ · τ) / AC' : '(v₂ · τ) / AC';
+    ctx.fillText("sin r = AE / AC = " + med2SpeedStr, panelX + 28, textY + 62);
+    
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillText("3. Ratio of Sines (Snell's Law):", panelX + 16, textY + 88);
+    
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#fef08a';
+    if (this.mode === 'reflection') {
+      ctx.fillText('sin i / sin r = v₁ / v₁ = 1  ⇒  ∠i = ∠r', panelX + 28, textY + 106);
+    } else {
+      ctx.fillText("sin i / sin r = v₁ / v₂ = n₂ / n₁", panelX + 28, textY + 106);
+      const ratioSin = (Math.sin(p.iRad) / Math.sin(p.rRad || 0.001)).toFixed(3);
+      const ratioN = (this.n2 / this.n1).toFixed(3);
+      ctx.fillText(Math.sin(p.iRad).toFixed(3) + " / " + Math.sin(p.rRad).toFixed(3) + " = " + ratioSin + "  (n₂/n₁ = " + ratioN + ")", panelX + 28, textY + 124);
+    }
+    
+    if (p.criticalAngleDeg) {
+      ctx.font = '10px "Inter", sans-serif';
+      ctx.fillStyle = p.isTIR ? '#f87171' : '#94a3b8';
+      ctx.fillText("• Critical angle i_c = arcsin(n₂/n₁) = " + p.criticalAngleDeg.toFixed(1) + "°", panelX + 16, textY + 154);
+      if (p.isTIR) {
+        ctx.fillText('• Since i > i_c, no refracted ray can enter medium 2!', panelX + 16, textY + 170);
+      }
+    }
+    
+    ctx.restore();
+  },
+  
+  getMetrics() {
+    const p = this.calc();
+    const sinI = Math.sin(p.iRad);
+    const sinR = Math.sin(p.rRad);
+    const ratioSin = (sinI / (sinR || 0.001)).toFixed(3);
+    const ratioN = (this.n2 / this.n1).toFixed(3);
+    
+    return [
+      { label: "Angle of Incidence (i)", val: this.iDeg.toFixed(1) + "°" },
+      { label: this.mode === 'reflection' ? "Angle of Reflection (r)" : "Angle of Refraction (r)", val: p.rDeg.toFixed(1) + "°" },
+      { label: "Refractive Indices", val: "n₁ = " + this.n1.toFixed(2) + ", n₂ = " + this.n2.toFixed(2) },
+      { label: "Ratio sin(i) / sin(r)", val: p.isTIR ? "TIR (No Refraction)" : ratioSin },
+      { label: "Ratio n₂ / n₁", val: ratioN },
+      { label: "Medium 1 Speed v₁", val: (p.v1).toFixed(2) + " c" },
+      { label: "Medium 2 Speed v₂", val: (p.v2).toFixed(2) + " c" },
+      { label: "Optical Regime", val: this.mode === 'reflection' ? "Reflection" : (p.isTIR ? "Total Internal Reflection" : "Refraction") }
+    ];
+  },
+  
+  presets: {
+    "Air to Glass Refraction (n₁=1.0, n₂=1.5)": {
+      setup(sim) {
+        sim.mode = 'refraction';
+        sim.n1 = 1.00;
+        sim.n2 = 1.50;
+        sim.iDeg = 45.0;
+        sim.reset();
+      }
+    },
+    "Glass to Air (i = 30° < Critical)": {
+      setup(sim) {
+        sim.mode = 'refraction';
+        sim.n1 = 1.50;
+        sim.n2 = 1.00;
+        sim.iDeg = 30.0;
+        sim.reset();
+      }
+    },
+    "Total Internal Reflection TIR (i = 60° > 41.8°)": {
+      setup(sim) {
+        sim.mode = 'refraction';
+        sim.n1 = 1.50;
+        sim.n2 = 1.00;
+        sim.iDeg = 60.0;
+        sim.reset();
+      }
+    },
+    "Law of Reflection (i = r = 45°)": {
+      setup(sim) {
+        sim.mode = 'reflection';
+        sim.iDeg = 45.0;
+        sim.reset();
+      }
+    },
+    "Water to Diamond (n₁=1.33, n₂=2.42)": {
+      setup(sim) {
+        sim.mode = 'refraction';
+        sim.n1 = 1.33;
+        sim.n2 = 2.42;
+        sim.iDeg = 50.0;
+        sim.reset();
+      }
+    }
+  },
+  
+  buildControls() {
+    return [
+      '<div class="space-y-4">',
+      '  <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">',
+      '    <div class="flex items-center gap-2">',
+      '      <span class="text-xs font-semibold text-slate-300">Mode:</span>',
+      '      <button id="btnHuyModeRefr" class="px-3 py-1 rounded-lg text-xs font-bold border transition ' + (this.mode === 'refraction' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        Refraction & Snell\'s Law',
+      '      </button>',
+      '      <button id="btnHuyModeRefl" class="px-3 py-1 rounded-lg text-xs font-bold border transition ' + (this.mode === 'reflection' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        Reflection (∠i = ∠r)',
+      '      </button>',
+      '    </div>',
+      '    <div class="flex items-center gap-2">',
+      '      <button id="btnHuySound" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        <span>' + (this.soundEnabled ? '🔊 Sound: ON' : '🔇 Muted') + '</span>',
+      '      </button>',
+      '    </div>',
+      '  </div>',
+      '  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Angle of Incidence (i):</span>',
+      '        <span id="valHuyI" class="font-mono text-cyan-400 font-bold">' + this.iDeg.toFixed(1) + '°</span>',
+      '      </div>',
+      '      <input id="ctrlHuyI" type="range" min="5" max="75" step="0.5" value="' + this.iDeg + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>5°</span><span>45°</span><span>75°</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Medium 1 (n₁):</span>',
+      '        <span id="valHuyN1" class="font-mono text-amber-400 font-bold">' + this.n1.toFixed(2) + '</span>',
+      '      </div>',
+      '      <input id="ctrlHuyN1" type="range" min="1.00" max="2.42" step="0.02" value="' + this.n1 + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>1.00 (Air)</span><span>1.50 (Glass)</span><span>2.42</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 ' + (this.mode === 'reflection' ? 'opacity-40 pointer-events-none' : '') + '">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Medium 2 (n₂):</span>',
+      '        <span id="valHuyN2" class="font-mono text-emerald-400 font-bold">' + this.n2.toFixed(2) + '</span>',
+      '      </div>',
+      '      <input id="ctrlHuyN2" type="range" min="1.00" max="2.42" step="0.02" value="' + this.n2 + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>1.00 (Air)</span><span>1.50 (Glass)</span><span>2.42</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Wavefront Speed:</span>',
+      '        <span id="valHuySpeed" class="font-mono text-purple-400 font-bold">' + (this.speed * 100).toFixed(0) + '%</span>',
+      '      </div>',
+      '      <input id="ctrlHuySpeed" type="range" min="0.10" max="0.80" step="0.05" value="' + this.speed + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>Slow</span><span>Fast</span></div>',
+      '    </div>',
+      '  </div>',
+      '  <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400 pt-1">',
+      '    <div class="flex items-center gap-3">',
+      '      <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">',
+      '        <input type="checkbox" id="chkHuyWavelets" ' + (this.showWavelets ? 'checked' : '') + ' class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">',
+      '        <span>Secondary Wavelets</span>',
+      '      </label>',
+      '      <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">',
+      '        <input type="checkbox" id="chkHuyEnvelope" ' + (this.showEnvelope ? 'checked' : '') + ' class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">',
+      '        <span>Tangent Envelope</span>',
+      '      </label>',
+      '      <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">',
+      '        <input type="checkbox" id="chkHuyTriangles" ' + (this.showTriangles ? 'checked' : '') + ' class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">',
+      '        <span>Proof Triangles (ABC, AEC)</span>',
+      '      </label>',
+      '    </div>',
+      '    <span class="font-mono text-slate-300">v₁/v₂ = sin(i)/sin(r) = n₂/n₁</span>',
+      '  </div>',
+      '</div>'
+    ].join('\n');
+  },
+  
+  bindControls() {
+    this.initAudio();
+    
+    document.getElementById('ctrlHuyI')?.addEventListener('input', (e) => {
+      this.iDeg = parseFloat(e.target.value);
+      document.getElementById('valHuyI').textContent = this.iDeg.toFixed(1) + '°';
+    });
+    
+    document.getElementById('ctrlHuyN1')?.addEventListener('input', (e) => {
+      this.n1 = parseFloat(e.target.value);
+      document.getElementById('valHuyN1').textContent = this.n1.toFixed(2);
+    });
+    
+    document.getElementById('ctrlHuyN2')?.addEventListener('input', (e) => {
+      this.n2 = parseFloat(e.target.value);
+      document.getElementById('valHuyN2').textContent = this.n2.toFixed(2);
+    });
+    
+    document.getElementById('ctrlHuySpeed')?.addEventListener('input', (e) => {
+      this.speed = parseFloat(e.target.value);
+      document.getElementById('valHuySpeed').textContent = (this.speed * 100).toFixed(0) + '%';
+    });
+    
+    document.getElementById('btnHuyModeRefr')?.addEventListener('click', () => {
+      this.mode = 'refraction';
+      controlsPanel.innerHTML = this.buildControls();
+      this.bindControls();
+      showToast("Refraction Mode: Demonstrating Snell's Law", "info");
+    });
+    
+    document.getElementById('btnHuyModeRefl')?.addEventListener('click', () => {
+      this.mode = 'reflection';
+      controlsPanel.innerHTML = this.buildControls();
+      this.bindControls();
+      showToast("Reflection Mode: Law of Reflection (∠i = ∠r)", "info");
+    });
+    
+    document.getElementById('chkHuyWavelets')?.addEventListener('change', (e) => {
+      this.showWavelets = e.target.checked;
+    });
+    
+    document.getElementById('chkHuyEnvelope')?.addEventListener('change', (e) => {
+      this.showEnvelope = e.target.checked;
+    });
+    
+    document.getElementById('chkHuyTriangles')?.addEventListener('change', (e) => {
+      this.showTriangles = e.target.checked;
+    });
+    
+    document.getElementById('btnHuySound')?.addEventListener('click', () => {
+      this.soundEnabled = !this.soundEnabled;
+      const btn = document.getElementById('btnHuySound');
+      if (btn) {
+        btn.innerHTML = '<span>' + (this.soundEnabled ? '🔊 Sound: ON' : '🔇 Muted') + '</span>';
+        btn.className = 'flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700');
+      }
+      showToast(this.soundEnabled ? "Wave Shimmer Audio Active" : "Audio Muted", "info");
+    });
+  }
+};
+
+    // sim_rutherford.js - Rutherford Alpha-Particle Scattering & Impact Parameter
+const rutherfordSim = {
+  name: "Rutherford α-Scattering & Nucleus · XII",
+  
+  // Physical parameters (Nuclear SI / scaled units: 1 unit = 1 fm = 10^-15 m)
+  b_fm: 12.0,           // Impact parameter in fm (0 to 50 fm; b = 0 => head-on rebound!)
+  Ek_MeV: 5.5,          // Alpha particle kinetic energy in MeV (1.0 to 10.0 MeV)
+  targetZ: 79,          // Target nucleus atomic number (Gold = 79, Silver = 47, Cu = 29, Al = 13)
+  targetName: 'Gold (Au-79)',
+  mode: 'single',       // 'single' precision hyperbola or 'stream' multi-particle shower
+  
+  // Visual toggles
+  showField: true,      // Coulomb equipotential / repulsive force field rings
+  showHyperbola: true,  // Full hyperbolic trajectory curve & asymptotes
+  showApproach: true,   // Distance of closest approach r_min marker
+  
+  // Particle simulation state
+  particles: [],        // Flying alpha particles: { x, y, vx, vy, trail: [], b, color, alive }
+  scintillations: [],   // Detector flashes: { x, y, angle, age, isBackscatter }
+  time: 0.0,
+  streamTimer: 0.0,
+  stats: { totalFired: 0, backscattered: 0, forward: 0 },
+  
+  // Web Audio Scintillation Detector Click
+  soundEnabled: true,
+  audioCtx: null,
+  
+  initAudio() {
+    if (this.audioCtx) {
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      return;
+    }
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      this.audioCtx = new AudioContext();
+    } catch (e) {}
+  },
+  
+  playScintillationClick(isBackscatter = false) {
+    if (!this.soundEnabled || !this.audioCtx) return;
+    try {
+      const now = this.audioCtx.currentTime;
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      if (isBackscatter) {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.19);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.exponentialRampToValueAtTime(200, now + 0.025);
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.035);
+      }
+    } catch (e) {}
+  },
+  
+  stopAudio() {
+    // One-shot audio pulses; nothing persistent
+  },
+  
+  init() {
+    this.reset();
+  },
+  
+  reset() {
+    this.time = 0.0;
+    this.streamTimer = 0.0;
+    this.particles = [];
+    this.scintillations = [];
+    this.stats = { totalFired: 0, backscattered: 0, forward: 0 };
+    this.spawnSingleParticle();
+  },
+  
+  calc() {
+    const d_fm = (2.8797 * this.targetZ) / this.Ek_MeV;
+    
+    let thetaRad = 0;
+    let thetaDeg = 0;
+    if (this.b_fm < 0.001) {
+      thetaRad = Math.PI;
+      thetaDeg = 180.0;
+    } else {
+      thetaRad = 2.0 * Math.atan(d_fm / (2.0 * this.b_fm));
+      thetaDeg = (thetaRad * 180.0) / Math.PI;
+    }
+    
+    const rMin_fm = (d_fm + Math.sqrt(d_fm * d_fm + 4.0 * this.b_fm * this.b_fm)) / 2.0;
+    const halfTheta = Math.max(0.02, thetaRad / 2.0);
+    const rutherfordFactor = 1.0 / Math.pow(Math.sin(halfTheta), 4);
+    
+    return {
+      d_fm, thetaRad, thetaDeg, rMin_fm, rutherfordFactor
+    };
+  },
+  
+  spawnSingleParticle() {
+    this.particles = [{
+      x: -180,
+      y: this.b_fm,
+      vx: 120,
+      vy: 0,
+      trail: [],
+      b: this.b_fm,
+      color: '#38bdf8',
+      alive: true
+    }];
+    this.stats.totalFired++;
+  },
+  
+  spawnStreamParticle() {
+    const sign = Math.random() < 0.5 ? -1 : 1;
+    const b = sign * Math.sqrt(Math.random()) * 42;
+    this.particles.push({
+      x: -180,
+      y: b,
+      vx: 130 + (Math.random() * 10 - 5),
+      vy: 0,
+      trail: [],
+      b: b,
+      color: Math.abs(b) < 6 ? '#f43f5e' : (Math.abs(b) < 18 ? '#f59e0b' : '#38bdf8'),
+      alive: true
+    });
+    this.stats.totalFired++;
+  },
+  
+  update(dt) {
+    this.time += dt;
+    const p = this.calc();
+    
+    const v0 = 120;
+    const cRep = (p.d_fm * v0 * v0) / 2.0;
+    
+    if (this.mode === 'stream') {
+      this.streamTimer += dt;
+      if (this.streamTimer > 0.08 && this.particles.length < 45) {
+        this.spawnStreamParticle();
+        this.streamTimer = 0.0;
+      }
+    } else {
+      if (this.particles.length === 0 || !this.particles[0].alive) {
+        this.spawnSingleParticle();
+      }
+    }
+    
+    const subSteps = 6;
+    const subDt = dt / subSteps;
+    const maxDist = 220;
+    
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const pt = this.particles[i];
+      if (!pt.alive) continue;
+      
+      for (let s = 0; s < subSteps; s++) {
+        const r2 = pt.x * pt.x + pt.y * pt.y;
+        const r = Math.sqrt(r2);
+        
+        if (r > 1.5) {
+          const a = cRep / (r * r2);
+          pt.vx += a * pt.x * subDt;
+          pt.vy += a * pt.y * subDt;
+        }
+        pt.x += pt.vx * subDt;
+        pt.y += pt.vy * subDt;
+      }
+      
+      if (pt.trail.length === 0 || Math.hypot(pt.x - pt.trail[pt.trail.length - 1].x, pt.y - pt.trail[pt.trail.length - 1].y) > 3) {
+        pt.trail.push({ x: pt.x, y: pt.y });
+        if (pt.trail.length > 70) pt.trail.shift();
+      }
+      
+      const distFromNucleus = Math.hypot(pt.x, pt.y);
+      if (distFromNucleus >= maxDist) {
+        pt.alive = false;
+        let scAngle = Math.atan2(pt.vy, pt.vx);
+        if (scAngle < 0) scAngle += Math.PI * 2;
+        const isBack = (pt.x < 0);
+        
+        if (isBack) this.stats.backscattered++;
+        else this.stats.forward++;
+        
+        this.scintillations.push({
+          x: pt.x,
+          y: pt.y,
+          angle: scAngle,
+          age: 0,
+          isBackscatter: isBack
+        });
+        
+        this.playScintillationClick(isBack);
+      }
+    }
+    
+    this.particles = this.particles.filter(p => p.alive);
+    
+    for (let i = this.scintillations.length - 1; i >= 0; i--) {
+      this.scintillations[i].age += dt;
+      if (this.scintillations[i].age > 0.45) {
+        this.scintillations.splice(i, 1);
+      }
+    }
+  },
+  
+  drawArrow(x1, y1, x2, y2, color, label = '', valStr = '') {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 2) return;
+    const head = 8;
+    const ang = Math.atan2(dy, dx);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.0;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+    ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+    if (label) {
+      ctx.font = '10px "JetBrains Mono", monospace';
+      ctx.fillStyle = color;
+      ctx.fillText(label + (valStr ? ': ' + valStr : ''), x2 + 6, y2 + 3);
+    }
+    ctx.restore();
+  },
+  
+  render() {
+    const w = canvas.width / dpr;
+    const h = canvas.height / dpr;
+    const p = this.calc();
+    
+    const isNarrow = w < 720;
+    const mainW = isNarrow ? w : w * 0.62;
+    const hudX = isNarrow ? 12 : w * 0.62;
+    const hudY = isNarrow ? h * 0.60 : 16;
+    const hudW = isNarrow ? w - 24 : w * 0.36;
+    const hudH = isNarrow ? h * 0.38 : h - 32;
+    
+    // -------------------------------------------------------------
+    // PART 1: NUCLEUS, TRAJECTORIES & SCINTILLATION SCREEN
+    // -------------------------------------------------------------
+    const ncx = mainW * 0.50;
+    const ncy = isNarrow ? h * 0.28 : h * 0.48;
+    const detectorR = Math.min(mainW * 0.44, ncy - 20, 200);
+    
+    ctx.save();
+    
+    // 1. Circular Zinc Sulfide (ZnS) Detector Screen Ring
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(ncx, ncy, detectorR, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.arc(ncx, ncy, detectorR + 10, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Angular markings
+    for (let deg = 0; deg <= 180; deg += 30) {
+      const ang = (deg * Math.PI) / 180;
+      const tx1 = ncx + detectorR * Math.cos(Math.PI - ang);
+      const ty1 = ncy - detectorR * Math.sin(Math.PI - ang);
+      ctx.fillStyle = deg === 180 ? '#ef4444' : (deg >= 90 ? '#f59e0b' : '#34d399');
+      ctx.beginPath();
+      ctx.arc(tx1, ty1, 3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.font = '9px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const lx = ncx + (detectorR + 18) * Math.cos(Math.PI - ang);
+      const ly = ncy - (detectorR + 18) * Math.sin(Math.PI - ang);
+      ctx.fillText(deg + "°", lx, ly);
+    }
+    
+    // Central Axis Line
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ncx - detectorR - 20, ncy);
+    ctx.lineTo(ncx + detectorR + 20, ncy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // 2. Repulsive Coulomb Equipotential Field Rings
+    if (this.showField) {
+      const ringRadii = [25, 50, 85, 130];
+      for (let r of ringRadii) {
+        ctx.strokeStyle = 'rgba(234, 179, 8, 0.18)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(ncx, ncy, r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.font = '9px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(234, 179, 8, 0.6)';
+      ctx.fillText('Coulomb 1/r² Repulsive Field', ncx, ncy - ringRadii[2] - 4);
+    }
+    
+    // 3. Central Target Nucleus (+Ze)
+    const nuclGrad = ctx.createRadialGradient(ncx - 2, ncy - 2, 2, ncx, ncy, 16);
+    nuclGrad.addColorStop(0, '#fef08a');
+    nuclGrad.addColorStop(0.4, '#eab308');
+    nuclGrad.addColorStop(1, '#ca8a04');
+    
+    const auraGrad = ctx.createRadialGradient(ncx, ncy, 8, ncx, ncy, 35);
+    auraGrad.addColorStop(0, 'rgba(234, 179, 8, 0.5)');
+    auraGrad.addColorStop(1, 'rgba(234, 179, 8, 0)');
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(ncx, ncy, 35, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.fillStyle = nuclGrad;
+    ctx.beginPath();
+    ctx.arc(ncx, ncy, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    ctx.font = 'bold 9px "Inter", sans-serif';
+    ctx.fillStyle = '#0f172a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText("+" + this.targetZ + "e", ncx, ncy);
+    
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText(this.targetName + " Nucleus", ncx, ncy + 22);
+    
+    // 4. Single-Particle Overlay
+    if (this.mode === 'single') {
+      const bY = ncy - this.b_fm;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(ncx - detectorR, bY);
+      ctx.lineTo(ncx, bY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      this.drawArrow(ncx - 120, ncy, ncx - 120, bY, '#f59e0b', 'b', this.b_fm.toFixed(1) + " fm");
+      
+      if (this.showApproach) {
+        const turnAngle = Math.PI - p.thetaRad / 2.0;
+        const rMinPx = Math.min(detectorR * 0.9, p.rMin_fm);
+        const rmx = ncx + rMinPx * Math.cos(turnAngle);
+        const rmy = ncy - rMinPx * Math.sin(turnAngle);
+        this.drawArrow(ncx, ncy, rmx, rmy, '#ec4899', 'r_min', p.rMin_fm.toFixed(1) + " fm");
+      }
+      
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(ncx, ncy);
+      ctx.lineTo(ncx + detectorR * Math.cos(-p.thetaRad), ncy - detectorR * Math.sin(-p.thetaRad));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    
+    // 5. Alpha Particle Trajectories
+    for (let pt of this.particles) {
+      if (pt.trail.length > 1) {
+        ctx.strokeStyle = pt.color;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        for (let t = 0; t < pt.trail.length; t++) {
+          const px = ncx + pt.trail[t].x;
+          const py = ncy - pt.trail[t].y;
+          if (t === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+      
+      const px = ncx + pt.x;
+      const py = ncy - pt.y;
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    
+    // 6. Scintillation Flashes
+    for (let sc of this.scintillations) {
+      const frac = 1.0 - (sc.age / 0.45);
+      const flashR = (sc.isBackscatter ? 16 : 9) * frac;
+      const sx = ncx + sc.x;
+      const sy = ncy - sc.y;
+      
+      ctx.fillStyle = sc.isBackscatter ? "rgba(244, 63, 94, " + frac + ")" : "rgba(52, 211, 153, " + frac + ")";
+      ctx.beginPath();
+      ctx.arc(sx, sy, flashR, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    ctx.restore();
+    
+    // -------------------------------------------------------------
+    // PART 2: GEIGER-MARSDEN DISTRIBUTION & RUTHERFORD HUD
+    // -------------------------------------------------------------
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(hudX, hudY, hudW, hudH, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'left';
+    ctx.fillText('RUTHERFORD SCATTERING DYNAMICS', hudX + 14, hudY + 24);
+    
+    const isBack = p.thetaDeg >= 90.0;
+    ctx.fillStyle = isBack ? 'rgba(239, 68, 68, 0.15)' : 'rgba(56, 189, 248, 0.15)';
+    ctx.strokeStyle = isBack ? '#ef4444' : '#38bdf8';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(hudX + 14, hudY + 34, hudW - 28, 22, 6);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.font = 'bold 10px "Inter", sans-serif';
+    ctx.fillStyle = isBack ? '#f87171' : '#38bdf8';
+    ctx.textAlign = 'center';
+    ctx.fillText(isBack ? '⚠️ BACKSCATTERING REGIME (θ ≥ 90°)' : 'FORWARD SCATTERING REGIME', hudX + hudW / 2, hudY + 49);
+    
+    // Plot of theta vs b
+    const plotGraphX = hudX + 14;
+    const plotGraphY = hudY + 68;
+    const plotGraphW = hudW - 28;
+    const plotGraphH = hudH * 0.44;
+    
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.7)';
+    ctx.strokeStyle = 'rgba(51, 65, 85, 0.6)';
+    ctx.fillRect(plotGraphX, plotGraphY, plotGraphW, plotGraphH);
+    ctx.strokeRect(plotGraphX, plotGraphY, plotGraphW, plotGraphH);
+    
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(plotGraphX, plotGraphY + plotGraphH);
+    ctx.lineTo(plotGraphX + plotGraphW, plotGraphY + plotGraphH);
+    ctx.stroke();
+    
+    const y90 = plotGraphY + plotGraphH - (90 / 180) * plotGraphH;
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(plotGraphX, y90);
+    ctx.lineTo(plotGraphX + plotGraphW, y90);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#f87171';
+    ctx.textAlign = 'right';
+    ctx.fillText('90°', plotGraphX + plotGraphW - 4, y90 - 2);
+    
+    // Draw Curve theta(b)
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    const bMax = 50.0;
+    const pts = 80;
+    for (let i = 0; i <= pts; i++) {
+      const testB = (i / pts) * bMax;
+      let testTheta = 180;
+      if (testB > 0.001) {
+        testTheta = (2.0 * Math.atan(p.d_fm / (2.0 * testB)) * 180) / Math.PI;
+      }
+      const px = plotGraphX + (testB / bMax) * plotGraphW;
+      const py = plotGraphY + plotGraphH - (testTheta / 180) * plotGraphH;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    
+    const curPx = plotGraphX + (this.b_fm / bMax) * plotGraphW;
+    const curPy = plotGraphY + plotGraphH - (p.thetaDeg / 180) * plotGraphH;
+    ctx.fillStyle = isBack ? '#ef4444' : '#22c55e';
+    ctx.beginPath();
+    ctx.arc(curPx, curPy, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    
+    const readY = plotGraphY + plotGraphH + 18;
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.textAlign = 'left';
+    ctx.fillText("Scattering Angle θ = " + p.thetaDeg.toFixed(1) + "°", plotGraphX, readY);
+    
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText("Head-On Dist d = " + p.d_fm.toFixed(1) + " fm  |  r_min = " + p.rMin_fm.toFixed(1) + " fm", plotGraphX, readY + 16);
+    
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('• Geiger-Marsden Probability N(θ) ∝ 1 / sin⁴(θ/2)', plotGraphX, readY + 32);
+    ctx.fillText("• Fired: " + this.stats.totalFired + "  |  Backscattered (θ>90°): " + this.stats.backscattered + " (" + ((this.stats.backscattered / (this.stats.totalFired || 1)) * 100).toFixed(1) + "%)", plotGraphX, readY + 48);
+    
+    ctx.restore();
+  },
+  
+  getMetrics() {
+    const p = this.calc();
+    return [
+      { label: "Impact Parameter (b)", val: this.b_fm.toFixed(1) + " fm" },
+      { label: "Scattering Angle (θ)", val: p.thetaDeg.toFixed(1) + "°" },
+      { label: "Head-On Distance (d)", val: p.d_fm.toFixed(1) + " fm" },
+      { label: "Closest Approach (r_min)", val: p.rMin_fm.toFixed(1) + " fm" },
+      { label: "Alpha Energy (Ek)", val: this.Ek_MeV.toFixed(1) + " MeV" },
+      { label: "Target Nucleus", val: "Z = " + this.targetZ + " (" + this.targetName + ")" },
+      { label: "Rutherford Factor", val: "csc⁴(θ/2) = " + (p.rutherfordFactor > 1e4 ? '> 10000' : p.rutherfordFactor.toFixed(1)) },
+      { label: "Scattering Regime", val: p.thetaDeg >= 90.0 ? "Backscattering (Rare Rebound)" : "Forward Deflection" }
+    ];
+  },
+  
+  presets: {
+    "Direct Head-On Rebound (b = 0 fm, θ = 180°)": {
+      setup(sim) {
+        sim.b_fm = 0.0;
+        sim.Ek_MeV = 5.5;
+        sim.targetZ = 79;
+        sim.targetName = 'Gold (Au-79)';
+        sim.mode = 'single';
+        sim.reset();
+      }
+    },
+    "Geiger-Marsden Benchmark (Au-79, 5.5 MeV)": {
+      setup(sim) {
+        sim.b_fm = 15.0;
+        sim.Ek_MeV = 5.5;
+        sim.targetZ = 79;
+        sim.targetName = 'Gold (Au-79)';
+        sim.mode = 'single';
+        sim.reset();
+      }
+    },
+    "Right-Angle Scattering (θ = 90°, b = d/2)": {
+      setup(sim) {
+        sim.Ek_MeV = 5.5;
+        sim.targetZ = 79;
+        sim.targetName = 'Gold (Au-79)';
+        const d = (2.8797 * 79) / 5.5;
+        sim.b_fm = d / 2.0;
+        sim.mode = 'single';
+        sim.reset();
+      }
+    },
+    "Glancing Deflection (Large b = 42 fm, Small θ)": {
+      setup(sim) {
+        sim.b_fm = 42.0;
+        sim.Ek_MeV = 5.5;
+        sim.targetZ = 79;
+        sim.mode = 'single';
+        sim.reset();
+      }
+    },
+    "Multi-Alpha Shower Continuous Stream": {
+      setup(sim) {
+        sim.mode = 'stream';
+        sim.targetZ = 79;
+        sim.targetName = 'Gold (Au-79)';
+        sim.reset();
+      }
+    }
+  },
+  
+  buildControls() {
+    return [
+      '<div class="space-y-4">',
+      '  <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">',
+      '    <div class="flex items-center gap-2">',
+      '      <span class="text-xs font-semibold text-slate-300">Beam Mode:</span>',
+      '      <button id="btnRuthModeSingle" class="px-3 py-1 rounded-lg text-xs font-bold border transition ' + (this.mode === 'single' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        Single Precision Trajectory',
+      '      </button>',
+      '      <button id="btnRuthModeStream" class="px-3 py-1 rounded-lg text-xs font-bold border transition ' + (this.mode === 'stream' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        Continuous Stream Shower',
+      '      </button>',
+      '    </div>',
+      '    <div class="flex items-center gap-2">',
+      '      <button id="btnRuthFire" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40">',
+      '        🎯 Fire α Pulse',
+      '      </button>',
+      '      <button id="btnRuthSound" class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700') + '">',
+      '        <span>' + (this.soundEnabled ? '🔊 Scintillation: ON' : '🔇 Muted') + '</span>',
+      '      </button>',
+      '    </div>',
+      '  </div>',
+      '  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 ' + (this.mode === 'stream' ? 'opacity-40 pointer-events-none' : '') + '">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Impact Parameter (b):</span>',
+      '        <span id="valRuthB" class="font-mono text-cyan-400 font-bold">' + this.b_fm.toFixed(1) + ' fm</span>',
+      '      </div>',
+      '      <input id="ctrlRuthB" type="range" min="0" max="45" step="0.5" value="' + this.b_fm + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>0 (Head-on)</span><span>20 fm</span><span>45 fm</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Kinetic Energy (E_k):</span>',
+      '        <span id="valRuthEk" class="font-mono text-amber-400 font-bold">' + this.Ek_MeV.toFixed(1) + ' MeV</span>',
+      '      </div>',
+      '      <input id="ctrlRuthEk" type="range" min="1.0" max="10.0" step="0.5" value="' + this.Ek_MeV + '" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>1.0 MeV</span><span>5.5 MeV (Standard)</span><span>10.0 MeV</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">',
+      '      <div class="flex justify-between items-center text-xs mb-1">',
+      '        <span class="text-slate-300 font-medium">Target Nucleus (Z):</span>',
+      '        <span id="valRuthZ" class="font-mono text-emerald-400 font-bold">Z = ' + this.targetZ + '</span>',
+      '      </div>',
+      '      <select id="selRuthTarget" class="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1 text-xs">',
+      '        <option value="79" ' + (this.targetZ === 79 ? 'selected' : '') + '>Gold (Au - 79)</option>',
+      '        <option value="47" ' + (this.targetZ === 47 ? 'selected' : '') + '>Silver (Ag - 47)</option>',
+      '        <option value="29" ' + (this.targetZ === 29 ? 'selected' : '') + '>Copper (Cu - 29)</option>',
+      '        <option value="13" ' + (this.targetZ === 13 ? 'selected' : '') + '>Aluminum (Al - 13)</option>',
+      '      </select>',
+      '      <div class="flex justify-between text-[10px] text-slate-400 mt-1"><span>Al (Z=13)</span><span>Au (Z=79)</span></div>',
+      '    </div>',
+      '    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex flex-col justify-center gap-1.5">',
+      '      <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300">',
+      '        <input type="checkbox" id="chkRuthField" ' + (this.showField ? 'checked' : '') + ' class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">',
+      '        <span>Coulomb Field Rings</span>',
+      '      </label>',
+      '      <label class="flex items-center gap-1.5 cursor-pointer text-xs text-slate-300">',
+      '        <input type="checkbox" id="chkRuthApproach" ' + (this.showApproach ? 'checked' : '') + ' class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">',
+      '        <span>Closest Approach r_min</span>',
+      '      </label>',
+      '    </div>',
+      '  </div>',
+      '  <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400 pt-1">',
+      '    <span class="font-mono text-slate-300">cot(θ/2) = (2b)/d &ensp;•&ensp; d = (1/4πε₀) · (2Ze²)/E_k &ensp;•&ensp; r_min = [d + √(d² + 4b²)] / 2</span>',
+      '    <span class="font-mono text-[10px] text-slate-400">Geiger-Marsden Distribution: N(θ) ∝ 1 / sin⁴(θ/2)</span>',
+      '  </div>',
+      '</div>'
+    ].join('\n');
+  },
+  
+  bindControls() {
+    this.initAudio();
+    
+    document.getElementById('ctrlRuthB')?.addEventListener('input', (e) => {
+      this.b_fm = parseFloat(e.target.value);
+      document.getElementById('valRuthB').textContent = this.b_fm.toFixed(1) + ' fm';
+      if (this.mode === 'single') this.spawnSingleParticle();
+    });
+    
+    document.getElementById('ctrlRuthEk')?.addEventListener('input', (e) => {
+      this.Ek_MeV = parseFloat(e.target.value);
+      document.getElementById('valRuthEk').textContent = this.Ek_MeV.toFixed(1) + ' MeV';
+    });
+    
+    document.getElementById('selRuthTarget')?.addEventListener('change', (e) => {
+      this.targetZ = parseInt(e.target.value);
+      const names = { 79: 'Gold (Au-79)', 47: 'Silver (Ag-47)', 29: 'Copper (Cu-29)', 13: 'Aluminum (Al-13)' };
+      this.targetName = names[this.targetZ] || 'Target';
+      document.getElementById('valRuthZ').textContent = 'Z = ' + this.targetZ;
+      if (this.mode === 'single') this.spawnSingleParticle();
+    });
+    
+    document.getElementById('btnRuthModeSingle')?.addEventListener('click', () => {
+      this.mode = 'single';
+      this.reset();
+      controlsPanel.innerHTML = this.buildControls();
+      this.bindControls();
+      showToast("Single Particle Precision Trajectory Mode", "info");
+    });
+    
+    document.getElementById('btnRuthModeStream')?.addEventListener('click', () => {
+      this.mode = 'stream';
+      this.reset();
+      controlsPanel.innerHTML = this.buildControls();
+      this.bindControls();
+      showToast("Multi-Particle Stream Shower Active", "info");
+    });
+    
+    document.getElementById('btnRuthFire')?.addEventListener('click', () => {
+      this.spawnSingleParticle();
+    });
+    
+    document.getElementById('chkRuthField')?.addEventListener('change', (e) => {
+      this.showField = e.target.checked;
+    });
+    
+    document.getElementById('chkRuthApproach')?.addEventListener('change', (e) => {
+      this.showApproach = e.target.checked;
+    });
+    
+    document.getElementById('btnRuthSound')?.addEventListener('click', () => {
+      this.soundEnabled = !this.soundEnabled;
+      const btn = document.getElementById('btnRuthSound');
+      if (btn) {
+        btn.innerHTML = '<span>' + (this.soundEnabled ? '🔊 Scintillation: ON' : '🔇 Muted') + '</span>';
+        btn.className = 'flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition ' + (this.soundEnabled ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' : 'bg-slate-800 text-slate-400 border-slate-700');
+      }
+      showToast(this.soundEnabled ? "Scintillation Audio Active" : "Audio Muted", "info");
+    });
+  }
+};
+
     // Registry of simulations
     const simulations = {
       projectile: projectileSim,
@@ -5320,7 +8901,12 @@ const ohmsSim = {
       col: colSim,
       wave: waveSim,
       ohms: ohmsSim,
-      circular: circularSim
+      circular: circularSim,
+      galv: galvSim,
+      acgen: acgenSim,
+      lcr: lcrSim,
+      huygens: huygensSim,
+      rutherford: rutherfordSim
     };
 
     /* ==========================================================
@@ -5328,6 +8914,9 @@ const ohmsSim = {
        ========================================================== */
     function switchSimulation(simKey) {
       if (!simulations[simKey]) return;
+      if (simulations[state.activeSim]?.stopAudio) {
+        simulations[state.activeSim].stopAudio();
+      }
       state.activeSim = simKey;
       const sim = simulations[simKey];
       sim.init();
@@ -5396,6 +8985,16 @@ const ohmsSim = {
         hudHintText.textContent = "Slide voltage and resistance — bulb brightness follows power P = VI.";
       } else if (simKey === 'circular') {
         hudHintText.textContent = "CBSE XI Circular Motion: Switch Cyclist / Level / Banked road; test safe speeds and skidding.";
+      } else if (simKey === 'galv') {
+        hudHintText.textContent = "CBSE XII Moving Charges: Observe radial B-field torque τ = NIAB = Cθ; toggle eddy currents to contrast dead-beat vs underdamped motion.";
+      } else if (simKey === 'acgen') {
+        hudHintText.textContent = "CBSE XII EMI: Watch rotating coil generate Φ = BA cos(ωt) and e = e₀ sin(ωt) with an exact 90° phase difference.";
+      } else if (simKey === 'lcr') {
+        hudHintText.textContent = "CBSE XII AC: Adjust ω, L, C, R to reach resonance ωᵣ = 1/√(LC); watch rotating phasors and Q-factor sharpness.";
+      } else if (simKey === 'huygens') {
+        hudHintText.textContent = "CBSE XII Wave Optics: Secondary wavelets envelope proves Snell's Law v₁/v₂ = sin i / sin r; test reflection and TIR.";
+      } else if (simKey === 'rutherford') {
+        hudHintText.textContent = "CBSE XII Atoms: Vary impact parameter b to observe Coulomb hyperbola trajectories and backscattering at b → 0.";
       } else {
         hudHintText.textContent = "Use real-time sliders below to explore parameters and observe physical behavior.";
       }
@@ -5715,7 +9314,7 @@ const ohmsSim = {
       switchSimulation(simulations[initialSim] ? initialSim : 'circular');
       lucide.createIcons();
       if ((window.matchMedia && window.matchMedia('(max-width:1023px)').matches) || document.body.classList.contains('view-mobile')) {
-        showToast('17 simulations here — tap Sims below or the SIM box above to switch', 'info');
+        showToast('22 simulations here — tap Sims below or the SIM box above to switch', 'info');
       }
       requestAnimationFrame(gameLoop);
     };
