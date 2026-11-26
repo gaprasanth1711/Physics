@@ -474,21 +474,30 @@
       <div class="relative flex-1 min-h-0 bg-space-950 flex items-center justify-center overflow-hidden" id="canvasContainer">
         <canvas id="simCanvas" class="w-full h-full cursor-crosshair" role="img" aria-label="Interactive physics simulation canvas" tabindex="0">Your browser does not support canvas. All simulations remain listed in the Simulations panel.</canvas>
 
-        <!-- Dynamic On-Canvas Telemetry HUD -->
-        <div id="hudBox" class="absolute top-3 left-3 pointer-events-none glass-panel px-3 py-2 rounded-xl text-[11px] font-mono border border-white/10 space-y-1 shadow-lg max-w-[280px]">
-          <div class="text-cyan-400 font-bold flex items-center gap-1.5 border-b border-white/10 pb-1">
-            <i data-lucide="gauge" class="w-3.5 h-3.5"></i>
-            <span id="hudSimTitle">Projectile Dynamics</span>
-          </div>
-          <div id="hudMetrics" class="text-slate-300 space-y-0.5">
-            <!-- Dynamic stats filled by engine -->
-          </div>
+        <!-- Hidden legacy HUD container for backward compatibility -->
+        <div id="hudBox" class="hidden">
+          <span id="hudSimTitle"></span>
+          <div id="hudMetrics"></div>
         </div>
 
         <!-- Floating Hint or Mode Indicator -->
-        <div id="hudHint" class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-sm border border-slate-800 px-3 py-1.5 rounded-lg text-[11px] text-slate-400 flex items-center gap-2 pointer-events-none">
+        <div id="hudHint" class="absolute bottom-2 left-3 bg-slate-900/80 backdrop-blur-sm border border-slate-800 px-2.5 py-1 rounded-lg text-[10px] text-slate-400 flex items-center gap-1.5 pointer-events-none">
           <i data-lucide="mouse-pointer-click" class="w-3 h-3 text-cyan-400"></i>
           <span id="hudHintText">Click & drag on canvas to adjust trajectory vector or spawn objects</span>
+        </div>
+      </div>
+
+      <!-- Dedicated Bottom Data Box (Separated cleanly below the simulation) -->
+      <div id="bottomDataBox" class="border-t border-slate-800/80 bg-space-900/95 px-4 py-2.5 shrink-0 select-none">
+        <div class="flex items-center justify-between gap-3 mb-2 pb-1 border-b border-slate-800/80">
+          <div class="flex items-center gap-2">
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span id="bottomDataTitle" class="text-xs font-bold text-cyan-300 font-mono tracking-tight uppercase">SIMULATION DATA &amp; LIVE READINGS</span>
+          </div>
+          <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Independent Data Panel</span>
+        </div>
+        <div id="bottomDataMetrics" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs font-mono">
+          <!-- Populated dynamically with live metrics -->
         </div>
       </div>
 
@@ -2926,99 +2935,33 @@ const photoSim = {
       }
     }
 
-    // 5. Educational Telemetry Header (Number Ratio & Speed Ratio clearly shown)
-    ctx.save();
-    const infoY = cy - 110;
-    ctx.font = "bold 11px 'JetBrains Mono', monospace";
-    // Number ratio badge
-    ctx.fillStyle = "#38bdf8";
-    ctx.fillText("● NUMBER RATIO (Flux ∝ Intensity):", cx0 - 20, infoY);
-    ctx.fillStyle = "#e2e8f0";
-    ctx.font = "11px 'JetBrains Mono', monospace";
-    ctx.fillText(`${this.intensity}% intensity → ${this.electrons.length} visible e⁻ (${photoEmitRate().toFixed(0)} e⁻/s)`, cx0 + 230, infoY);
+    // 5. External Circuit & Photocurrent Ammeter (Centered cleanly below the vacuum tube)
+    const gx = (cx0 + cx1) / 2;
+    const gy = Math.min(h - 22, cy + 130);
+    const gr = Math.max(28, Math.min(46, h * 0.10));
 
-    // Speed ratio badge
-    ctx.font = "bold 11px 'JetBrains Mono', monospace";
-    ctx.fillStyle = "#34d399";
-    ctx.fillText("● SPEED RATIO (v ∝ √Kmax):", cx0 - 20, infoY + 16);
-    ctx.fillStyle = "#e2e8f0";
-    ctx.font = "11px 'JetBrains Mono', monospace";
-    if (kMax > 0) {
-      ctx.fillText(`√Kmax = ${Math.sqrt(kMax).toFixed(2)} → vmax ≈ ${(realV / 1e5).toFixed(2)}×10⁵ m/s (Fast e⁻)`, cx0 + 230, infoY + 16);
-    } else {
-      ctx.fillStyle = "#f87171";
-      ctx.fillText("0.00 (No emission: hν < Φ₀)", cx0 + 230, infoY + 16);
-    }
+    // Circuit wires connecting plates to ammeter
+    ctx.strokeStyle = "#475569";
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    // Cathode wire down to ammeter
+    ctx.moveTo(cx0 - 2, cy + 85);
+    ctx.lineTo(cx0 - 2, gy);
+    ctx.lineTo(gx - gr - 8, gy);
+    // Anode wire down to ammeter
+    ctx.moveTo(cx1 + 2, cy + 85);
+    ctx.lineTo(cx1 + 2, gy);
+    ctx.lineTo(gx + gr + 8, gy);
+    ctx.stroke();
 
-    // Special status banner when cut off or below threshold
-    if (kMax <= 0) {
-      ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
-      ctx.fillRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
-      ctx.strokeStyle = "#fecaca"; ctx.lineWidth = 1.5;
-      ctx.strokeRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 13px 'JetBrains Mono', monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("🚫 NO EMISSION: Photon Energy (hν) < Work Function (Φ₀)", (cx0 + cx1) / 2, cy - 2);
-      ctx.font = "11px 'JetBrains Mono', monospace";
-      ctx.fillText(`Wavelength ${this.lambdaNm} nm is below threshold frequency ν₀! Decrease λ to UV/Blue`, (cx0 + cx1) / 2, cy + 16);
-      ctx.textAlign = "left";
-    } else if (this.voltage < 0 && Math.abs(this.voltage) >= v0 - 1e-4) {
-      ctx.fillStyle = "rgba(234, 88, 12, 0.9)";
-      ctx.fillRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
-      ctx.strokeStyle = "#fed7aa"; ctx.lineWidth = 1.5;
-      ctx.strokeRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 13px 'JetBrains Mono', monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("🛑 STOPPING POTENTIAL REACHED: V ≤ −V₀", (cx0 + cx1) / 2, cy - 2);
-      ctx.font = "11px 'JetBrains Mono', monospace";
-      ctx.fillText(`Retarding field stops all photoelectrons before anode · Current = 0.00 µA`, (cx0 + cx1) / 2, cy + 16);
-      ctx.textAlign = "left";
-    }
-    ctx.restore();
+    // Battery / potential indicator on circuit line
+    ctx.fillStyle = this.voltage >= 0 ? "#15803d" : "#b91c1c";
+    ctx.fillRect(cx1 - 24, gy - 6, 16, 12);
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 9px 'JetBrains Mono', monospace";
+    ctx.fillText(this.voltage >= 0 ? "+V" : "−V", cx1 - 22, gy + 3);
 
-    // 6. Energy diagram panel: hν = Φ₀ + Kmax
-    const bw = 240, bh = 150;
-    const x0 = Math.max(8, w - bw - 12);
-    const y0 = Math.max(26, h - bh - 12);
-    if (this.showDiag) {
-      ctx.fillStyle = "rgba(15,23,42,0.95)"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.roundRect(x0, y0, bw, bh, 12); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "#e2e8f0"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
-      ctx.fillText("EINSTEIN EQUATION: hν = Φ₀ + Kmax", x0 + 10, y0 + 16);
-      const Emax = Math.max(4, hnu, this.phi0ev + kMax);
-      const Y = (e) => y0 + bh - 16 - (e / Emax) * (bh - 42);
-
-      // hν bar
-      ctx.strokeStyle = "#60a5fa"; ctx.lineWidth = 6;
-      ctx.beginPath(); ctx.moveTo(x0 + 35, Y(hnu)); ctx.lineTo(x0 + 85, Y(hnu)); ctx.stroke();
-      ctx.fillStyle = "#60a5fa"; ctx.font = "10px 'JetBrains Mono', monospace";
-      ctx.fillText("hν=" + hnu.toFixed(2), x0 + 32, Y(hnu) - 6);
-
-      // Φ₀ bar
-      ctx.strokeStyle = "#f87171"; ctx.lineWidth = 6;
-      ctx.beginPath(); ctx.moveTo(x0 + 105, Y(this.phi0ev)); ctx.lineTo(x0 + 155, Y(this.phi0ev)); ctx.stroke();
-      ctx.fillStyle = "#f87171";
-      ctx.fillText("Φ₀=" + this.phi0ev.toFixed(2), x0 + 105, Y(this.phi0ev) - 6);
-
-      // Kmax bar
-      if (kMax > 0) {
-        ctx.strokeStyle = "#34d399"; ctx.lineWidth = 6;
-        ctx.beginPath(); ctx.moveTo(x0 + 185, Y(0)); ctx.lineTo(x0 + 185, Y(kMax)); ctx.stroke();
-        ctx.fillStyle = "#34d399"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
-        ctx.fillText("Kmax=" + kMax.toFixed(2) + "eV", x0 + 155, Y(kMax) - 6);
-      } else {
-        ctx.fillStyle = "#f87171"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
-        ctx.fillText("NO EMISSION", x0 + 60, y0 + bh - 24);
-      }
-    }
-
-    // 7. Photocurrent meter (scaled gauge)
+    // Ammeter dial
     const IuA = photoCurrentUA();
-    const gr = Math.max(30, Math.min(54, h * 0.12));
-    const gx = Math.max(gr + 14, Math.min(w * 0.40, x0 - gr - 24));
-    const gy = h - 16;
     ctx.fillStyle = "#0f172a"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(gx, gy, gr, Math.PI, 0); ctx.fill(); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(gx - gr, gy); ctx.lineTo(gx + gr, gy); ctx.stroke();
@@ -3028,24 +2971,24 @@ const photoSim = {
       const aTick = Math.PI + (t / 5) * Math.PI;
       const xT1 = gx + Math.cos(aTick) * (gr - 2);
       const yT1 = gy + Math.sin(aTick) * (gr - 2);
-      const xT2 = gx + Math.cos(aTick) * (gr - 8);
-      const yT2 = gy + Math.sin(aTick) * (gr - 8);
+      const xT2 = gx + Math.cos(aTick) * (gr - 7);
+      const yT2 = gy + Math.sin(aTick) * (gr - 7);
       ctx.strokeStyle = "#64748b"; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(xT1, yT1); ctx.lineTo(xT2, yT2); ctx.stroke();
     }
 
     // Needle deflection
-    const maxI = 4.0;
+    const maxI = 3.5;
     const frac = Math.max(0, Math.min(1, IuA / maxI));
     const ang = Math.PI + frac * Math.PI;
-    ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 3; ctx.shadowColor = "#f59e0b"; ctx.shadowBlur = 6;
-    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(ang) * (gr - 10), gy + Math.sin(ang) * (gr - 10)); ctx.stroke();
+    ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 2.5; ctx.shadowColor = "#f59e0b"; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(ang) * (gr - 8), gy + Math.sin(ang) * (gr - 8)); ctx.stroke();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "#e2e8f0"; ctx.beginPath(); ctx.arc(gx, gy, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#94a3b8"; ctx.font = "bold 10px 'JetBrains Mono', monospace";
-    ctx.fillText("AMMETER (µA)", gx - 36, gy - gr - 22);
-    ctx.fillStyle = "#38bdf8"; ctx.font = "bold 12px 'JetBrains Mono', monospace";
-    ctx.fillText("I = " + IuA.toFixed(2) + " µA", gx - 38, gy - gr - 8);
+    ctx.fillStyle = "#e2e8f0"; ctx.beginPath(); ctx.arc(gx, gy, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#94a3b8"; ctx.font = "bold 9px 'JetBrains Mono', monospace";
+    ctx.fillText("AMMETER (µA)", gx - 32, gy - gr - 16);
+    ctx.fillStyle = "#38bdf8"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
+    ctx.fillText("I = " + IuA.toFixed(2) + " µA", gx - 34, gy - gr - 4);
   },
 
   getMetrics() {
@@ -9529,12 +9472,27 @@ const rutherfordSim = {
 
     function renderHUD(metrics) {
       if (!metrics) return;
-      hudMetrics.innerHTML = metrics.map(m => `
-        <div class="flex items-center justify-between gap-4">
-          <span class="text-slate-400">${m.label}:</span>
-          <span class="text-cyan-300 font-bold">${m.val}</span>
-        </div>
-      `).join('');
+      const bMetrics = document.getElementById('bottomDataMetrics');
+      if (bMetrics) {
+        bMetrics.innerHTML = metrics.map(m => `
+          <div class="bg-slate-950/70 p-2 rounded-lg border border-slate-800/80 flex flex-col justify-between shadow-sm">
+            <span class="text-slate-400 text-[10px] leading-tight mb-1 truncate">${m.label}</span>
+            <span class="text-cyan-300 font-bold text-xs truncate">${m.val}</span>
+          </div>
+        `).join('');
+      }
+      const bTitle = document.getElementById('bottomDataTitle');
+      if (bTitle && simulations[state.activeSim]) {
+        bTitle.textContent = `${simulations[state.activeSim].name} · Telemetry`;
+      }
+      if (hudMetrics) {
+        hudMetrics.innerHTML = metrics.map(m => `
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-slate-400">${m.label}:</span>
+            <span class="text-cyan-300 font-bold">${m.val}</span>
+          </div>
+        `).join('');
+      }
       const tl = document.getElementById('teleList');
       if (tl) tl.innerHTML = metrics.map(m => `
         <div class="flex items-center justify-between gap-2 py-1 border-b border-white/5">
@@ -9608,20 +9566,6 @@ const rutherfordSim = {
       requestAnimationFrame(gameLoop);
     };
   </script>
-
-  <!-- Clapping Hands and WOW Floating Widget (Right Side of Page) -->
-  <div id="clapping-wow-container" style="position: fixed; right: 24px; bottom: 24px; z-index: 9999; display: flex; flex-direction: column; align-items: center; user-select: none;">
-    <div style="position: relative; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); padding: 12px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border: 2px solid #fbbf24; max-width: 240px; text-align: center; display: flex; flex-direction: column; align-items: center;">
-      <button onclick="document.getElementById('clapping-wow-container').remove()" style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%; background: #334155; color: #f1f5f9; border: 1px solid #64748b; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;" title="Close">✕</button>
-      <span style="position: absolute; top: -12px; background: linear-gradient(to right, #f59e0b, #ec4899); color: white; font-size: 11px; font-weight: 900; padding: 2px 12px; border-radius: 9999px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); text-transform: uppercase; letter-spacing: 0.05em;">
-        ✨ WOW! CLAP! ✨
-      </span>
-      <img src="/clapping_wow.gif" alt="She claps hands and says WOW" style="width: 180px; height: 180px; object-fit: contain; border-radius: 16px;" />
-      <div style="margin-top: 8px; font-weight: 800; font-size: 12px; color: #f8fafc; display: flex; align-items: center; gap: 4px;">
-        <span>👏 She Claps Hands & Says WOW!</span>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
 
