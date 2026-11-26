@@ -9319,6 +9319,20 @@ const rutherfordSim = {
       requestAnimationFrame(gameLoop);
     };
   </script>
+
+  <!-- Clapping Hands and WOW Floating Widget (Right Side of Page) -->
+  <div id="clapping-wow-container" style="position: fixed; right: 24px; bottom: 24px; z-index: 9999; display: flex; flex-direction: column; align-items: center; user-select: none;">
+    <div style="position: relative; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); padding: 12px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); border: 2px solid #fbbf24; max-width: 240px; text-align: center; display: flex; flex-direction: column; align-items: center;">
+      <button onclick="document.getElementById('clapping-wow-container').remove()" style="position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; border-radius: 50%; background: #334155; color: #f1f5f9; border: 1px solid #64748b; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;" title="Close">✕</button>
+      <span style="position: absolute; top: -12px; background: linear-gradient(to right, #f59e0b, #ec4899); color: white; font-size: 11px; font-weight: 900; padding: 2px 12px; border-radius: 9999px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); text-transform: uppercase; letter-spacing: 0.05em;">
+        ✨ WOW! CLAP! ✨
+      </span>
+      <img src="/clapping_wow.gif" alt="She claps hands and says WOW" style="width: 180px; height: 180px; object-fit: contain; border-radius: 16px;" />
+      <div style="margin-top: 8px; font-weight: 800; font-size: 12px; color: #f8fafc; display: flex; align-items: center; gap: 4px;">
+        <span>👏 She Claps Hands & Says WOW!</span>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
 
