@@ -2722,6 +2722,7 @@ const photoSim = {
     this.electrons = [];
     this.arrivedWin = [];
     this.emitAcc = 0;
+    this.flashes = [];
   },
 
   update(dt) {
@@ -2733,117 +2734,335 @@ const photoSim = {
 
   render() {
     const w = canvas.width / dpr, h = canvas.height / dpr;
-    const gapPx = Math.max(120, Math.min(300, w * 0.36));
-    const cx0 = Math.max(96, w * 0.27);
+    const gapPx = Math.max(140, Math.min(340, w * 0.38));
+    const cx0 = Math.max(104, w * 0.28);
     const cx1 = Math.min(w - 60, cx0 + gapPx);
-    const cy = h * 0.40;
+    const cy = h * 0.38;
     const col = photoLambdaColor(this.lambdaNm);
+    const hnu = photoPhotonEV(), kMax = photoKmaxEV();
+    const v0 = photoStoppingV();
+    const realV = photoRealVmax();
 
-    // light source
+    // 0. Vacuum tube chamber envelope (glass glow)
+    ctx.save();
+    ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+    ctx.lineWidth = 2;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
+    ctx.beginPath();
+    ctx.roundRect(cx0 - 24, cy - 100, (cx1 - cx0) + 48, 200, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    // Subtle glass reflection highlight
+    const glassGrad = ctx.createLinearGradient(cx0 - 20, cy - 95, cx0 - 20, cy + 95);
+    glassGrad.addColorStop(0, "rgba(255,255,255,0.08)");
+    glassGrad.addColorStop(0.5, "rgba(255,255,255,0.01)");
+    glassGrad.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = glassGrad;
+    ctx.beginPath();
+    ctx.roundRect(cx0 - 20, cy - 96, (cx1 - cx0) + 40, 36, 16);
+    ctx.fill();
+    ctx.restore();
+
+    // 1. Light source (monochromatic lamp)
     ctx.fillStyle = "#0f172a";
-    ctx.strokeStyle = "#475569"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.rect(14, cy - 60, 46, 120); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 18;
-    ctx.beginPath(); ctx.arc(60, cy, 14, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#475569"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(14, cy - 65, 52, 130, 8); ctx.fill(); ctx.stroke();
+    // Glowing lamp bulb
+    ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 24;
+    ctx.beginPath(); ctx.arc(66, cy, 15, 0, Math.PI * 2); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = "#e2e8f0"; ctx.font = "11px 'JetBrains Mono', monospace";
-    ctx.fillText("hν " + this.lambdaNm + "nm", 8, cy + 80);
+    // Lamp lens
+    ctx.fillStyle = "rgba(255,255,255,0.7)";
+    ctx.beginPath(); ctx.arc(69, cy, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#e2e8f0"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
+    ctx.fillText("hν " + this.lambdaNm + " nm", 14, cy + 85);
+    ctx.fillStyle = "#94a3b8"; ctx.font = "10px 'JetBrains Mono', monospace";
+    ctx.fillText(hnu.toFixed(2) + " eV", 14, cy + 98);
 
-    // photon stream (wave packets cathode-bound)
+    // 2. Incident photon stream (Number ratio: photon flux strictly scales with intensity)
     if (this.showPhotons && this.intensity > 0) {
-      const n = 4 + Math.round(this.intensity / 8);
-      ctx.strokeStyle = col; ctx.lineWidth = 2.5;
-      for (let i = 0; i < n; i++) {
-        const ph = (((this.t * (0.5 + this.intensity / 60) + i / n) % 1) + 1) % 1;
-        const x = 78 + ph * Math.max(20, cx0 - 100);
-        const y = cy + Math.sin(ph * 12 + i) * 8;
-        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.stroke();
+      const beamCount = Math.max(3, Math.round((this.intensity / 100) * 12));
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2.2;
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 8;
+      for (let i = 0; i < beamCount; i++) {
+        const offsetFraction = i / beamCount;
+        const speedMultiplier = 1.2;
+        const progress = (((this.t * speedMultiplier + offsetFraction) % 1) + 1) % 1;
+        const px = 72 + progress * (cx0 - 8 - 72);
+        const pyBase = cy - 70 + (i / (beamCount - 1 || 1)) * 140;
+
+        // Draw sinusoidal wave-packet
+        ctx.beginPath();
+        const packetLen = 24;
+        for (let s = -packetLen; s <= 0; s += 2) {
+          const waveX = px + s;
+          if (waveX >= 66 && waveX <= cx0 - 8) {
+            const env = Math.sin((-s / packetLen) * Math.PI);
+            const waveY = pyBase + Math.sin((waveX * 0.28) + this.t * 14) * (5.5 * env);
+            if (s === -packetLen) ctx.moveTo(waveX, waveY);
+            else ctx.lineTo(waveX, waveY);
+          }
+        }
+        ctx.stroke();
+
+        // Photon particle lead
+        if (px >= 66 && px <= cx0 - 8) {
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(px, pyBase, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.shadowBlur = 0;
+    }
+
+    // 3. Cathode & Anode plates
+    // Cathode (Emitter plate, left)
+    ctx.fillStyle = "#475569";
+    ctx.fillRect(cx0 - 8, cy - 85, 12, 170);
+    ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 1;
+    ctx.strokeRect(cx0 - 8, cy - 85, 12, 170);
+    ctx.fillStyle = "#cbd5e1"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
+    ctx.fillText("CATHODE (E)", cx0 - 42, cy - 95);
+    ctx.fillStyle = "#94a3b8"; ctx.font = "10px 'JetBrains Mono', monospace";
+    ctx.fillText("Φ₀=" + this.phi0ev.toFixed(2) + " eV", cx0 - 42, cy + 102);
+
+    // Anode (Collector plate, right)
+    ctx.fillStyle = this.voltage >= 0 ? "#15803d" : "#b91c1c";
+    ctx.fillRect(cx1 - 4, cy - 85, 12, 170);
+    ctx.strokeStyle = this.voltage >= 0 ? "#22c55e" : "#ef4444"; ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx1 - 4, cy - 85, 12, 170);
+    ctx.fillStyle = this.voltage >= 0 ? "#86efac" : "#fca5a5"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
+    ctx.fillText("ANODE (C) " + (this.voltage >= 0 ? "(+)" : "(−)"), cx1 - 35, cy - 95);
+    ctx.fillStyle = "#e2e8f0"; ctx.font = "10px 'JetBrains Mono', monospace";
+    ctx.fillText("V=" + (this.voltage >= 0 ? "+" : "") + this.voltage.toFixed(1) + " V", cx1 - 25, cy + 102);
+
+    // Anode arrival flashes
+    if (this.flashes && this.flashes.length > 0) {
+      for (const fl of this.flashes) {
+        ctx.fillStyle = `rgba(56, 189, 248, ${Math.max(0, fl.life * 0.8)})`;
+        ctx.beginPath();
+        ctx.arc(cx1, cy + fl.y, 10 * (1.6 - fl.life * 0.6), 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
-    // cathode & anode plates
-    ctx.fillStyle = "#64748b";
-    ctx.fillRect(cx0 - 8, cy - 90, 12, 180);
-    ctx.fillStyle = "#94a3b8"; ctx.font = "11px 'JetBrains Mono', monospace";
-    ctx.fillText("CATHODE", cx0 - 34, cy - 98);
-    ctx.fillStyle = this.voltage >= 0 ? "#22c55e" : "#ef4444";
-    ctx.fillRect(cx1 - 4, cy - 90, 12, 180);
-    ctx.fillStyle = "#e2e8f0";
-    ctx.fillText("ANODE " + (this.voltage >= 0 ? "(+)" : "(−)") + " V=" + this.voltage.toFixed(1), Math.max(8, cx1 - 70), cy - 98);
-    ctx.fillStyle = "#64748b"; ctx.font = "10px 'JetBrains Mono', monospace";
-    ctx.fillText("vacuum gap 0.10 m (slow-mo view)", cx0 + 40, cy + 106);
-
-    // electrons (velocity-coded)
-    if (this.showElectrons) {
+    // 4. Photoelectrons (Number Ratio & Speed Ratio strictly visualized)
+    if (this.showElectrons && this.electrons.length > 0) {
       for (const el of this.electrons) {
-        const x = cx0 + (el.x / photoGapM) * Math.max(20, cx1 - cx0);
-        const sp = Math.min(1, el.vx / 1.2e6);
-        const ey = Math.max(cy - 85, Math.min(cy + 85, cy + el.y * 0.6));
-        ctx.fillStyle = "rgba(52,211,153," + (0.35 + sp * 0.65).toFixed(2) + ")";
-        ctx.beginPath(); ctx.arc(x, ey, 3.4, 0, Math.PI * 2); ctx.fill();
+        const ex = cx0 + (el.x / photoGapM) * (cx1 - cx0);
+        const ey = cy + el.y;
+        const isReversing = el.vx < 0;
+
+        // Motion trail showing speed ratio (faster electrons have longer trails!)
+        if (el.trail && el.trail.length > 1) {
+          ctx.beginPath();
+          for (let j = 0; j < el.trail.length; j++) {
+            const tx = cx0 + (el.trail[j].x / photoGapM) * (cx1 - cx0);
+            const ty = cy + el.trail[j].y;
+            if (j === 0) ctx.moveTo(tx, ty);
+            else ctx.lineTo(tx, ty);
+          }
+          ctx.lineTo(ex, ey);
+          const spNorm = Math.min(2.5, Math.abs(el.vx) / photoVScale);
+          const trailAlpha = Math.min(0.85, 0.2 + spNorm * 0.3);
+          ctx.strokeStyle = isReversing
+            ? `rgba(248, 113, 113, ${trailAlpha})`
+            : `rgba(56, 189, 248, ${trailAlpha})`;
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
+        }
+
+        // Glowing photoelectron particle
+        const rad = 4.2;
+        const glow = ctx.createRadialGradient(ex, ey, 1, ex, ey, rad + 6);
+        if (isReversing) {
+          glow.addColorStop(0, "rgba(252, 165, 165, 0.95)");
+          glow.addColorStop(0.5, "rgba(239, 68, 68, 0.45)");
+          glow.addColorStop(1, "rgba(239, 68, 68, 0)");
+        } else {
+          glow.addColorStop(0, "rgba(224, 242, 254, 0.95)");
+          glow.addColorStop(0.5, "rgba(56, 189, 248, 0.55)");
+          glow.addColorStop(1, "rgba(14, 165, 233, 0)");
+        }
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(ex, ey, rad + 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Electron core
+        ctx.fillStyle = isReversing ? "#ef4444" : "#0284c7";
+        ctx.beginPath();
+        ctx.arc(ex, ey, rad, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White inner dot
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(ex, ey, rad * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Negative sign (−)
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(ex - 2.2, ey);
+        ctx.lineTo(ex + 2.2, ey);
+        ctx.stroke();
+
+        // Direction / velocity vector if enabled
         if (state.showVectors) {
-          ctx.strokeStyle = "#34d399"; ctx.lineWidth = 1.6;
-          const L = 6 + sp * 22;
-          ctx.beginPath(); ctx.moveTo(x, ey); ctx.lineTo(x + L, ey); ctx.stroke();
+          const vecLen = (el.vx / photoVScale) * 12;
+          ctx.strokeStyle = isReversing ? "#f87171" : "#34d399";
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(ex, ey);
+          ctx.lineTo(ex + vecLen, ey);
+          ctx.stroke();
         }
       }
     }
 
-    // energy diagram panel: hν = Φ₀ + Kmax
-    const bw = 230, bh = 150;
-    const x0 = Math.max(8, w - bw - 8);
+    // 5. Educational Telemetry Header (Number Ratio & Speed Ratio clearly shown)
+    ctx.save();
+    const infoY = cy - 110;
+    ctx.font = "bold 11px 'JetBrains Mono', monospace";
+    // Number ratio badge
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText("● NUMBER RATIO (Flux ∝ Intensity):", cx0 - 20, infoY);
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = "11px 'JetBrains Mono', monospace";
+    ctx.fillText(`${this.intensity}% intensity → ${this.electrons.length} visible e⁻ (${photoEmitRate().toFixed(0)} e⁻/s)`, cx0 + 230, infoY);
+
+    // Speed ratio badge
+    ctx.font = "bold 11px 'JetBrains Mono', monospace";
+    ctx.fillStyle = "#34d399";
+    ctx.fillText("● SPEED RATIO (v ∝ √Kmax):", cx0 - 20, infoY + 16);
+    ctx.fillStyle = "#e2e8f0";
+    ctx.font = "11px 'JetBrains Mono', monospace";
+    if (kMax > 0) {
+      ctx.fillText(`√Kmax = ${Math.sqrt(kMax).toFixed(2)} → vmax ≈ ${(realV / 1e5).toFixed(2)}×10⁵ m/s (Fast e⁻)`, cx0 + 230, infoY + 16);
+    } else {
+      ctx.fillStyle = "#f87171";
+      ctx.fillText("0.00 (No emission: hν < Φ₀)", cx0 + 230, infoY + 16);
+    }
+
+    // Special status banner when cut off or below threshold
+    if (kMax <= 0) {
+      ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
+      ctx.fillRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
+      ctx.strokeStyle = "#fecaca"; ctx.lineWidth = 1.5;
+      ctx.strokeRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 13px 'JetBrains Mono', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("🚫 NO EMISSION: Photon Energy (hν) < Work Function (Φ₀)", (cx0 + cx1) / 2, cy - 2);
+      ctx.font = "11px 'JetBrains Mono', monospace";
+      ctx.fillText(`Wavelength ${this.lambdaNm} nm is below threshold frequency ν₀! Decrease λ to UV/Blue`, (cx0 + cx1) / 2, cy + 16);
+      ctx.textAlign = "left";
+    } else if (this.voltage < 0 && Math.abs(this.voltage) >= v0 - 1e-4) {
+      ctx.fillStyle = "rgba(234, 88, 12, 0.9)";
+      ctx.fillRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
+      ctx.strokeStyle = "#fed7aa"; ctx.lineWidth = 1.5;
+      ctx.strokeRect(cx0 + 20, cy - 24, (cx1 - cx0) - 40, 48);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 13px 'JetBrains Mono', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("🛑 STOPPING POTENTIAL REACHED: V ≤ −V₀", (cx0 + cx1) / 2, cy - 2);
+      ctx.font = "11px 'JetBrains Mono', monospace";
+      ctx.fillText(`Retarding field stops all photoelectrons before anode · Current = 0.00 µA`, (cx0 + cx1) / 2, cy + 16);
+      ctx.textAlign = "left";
+    }
+    ctx.restore();
+
+    // 6. Energy diagram panel: hν = Φ₀ + Kmax
+    const bw = 240, bh = 150;
+    const x0 = Math.max(8, w - bw - 12);
     const y0 = Math.max(26, h - bh - 12);
     if (this.showDiag) {
-      const hnu = photoPhotonEV(), kMax = photoKmaxEV();
-      ctx.fillStyle = "rgba(15,23,42,0.94)"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 1;
-      ctx.fillRect(x0, y0, bw, bh); ctx.strokeRect(x0, y0, bw, bh);
-      ctx.fillStyle = "#e2e8f0"; ctx.font = "11px 'JetBrains Mono', monospace";
-      ctx.fillText("ENERGY: hν = Φ₀ + Kmax", x0 + 8, y0 + 14);
+      ctx.fillStyle = "rgba(15,23,42,0.95)"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect(x0, y0, bw, bh, 12); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#e2e8f0"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
+      ctx.fillText("EINSTEIN EQUATION: hν = Φ₀ + Kmax", x0 + 10, y0 + 16);
       const Emax = Math.max(4, hnu, this.phi0ev + kMax);
-      const Y = (e) => y0 + bh - 12 - (e / Emax) * (bh - 34);
-      ctx.strokeStyle = "#60a5fa"; ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.moveTo(x0 + 30, Y(hnu)); ctx.lineTo(x0 + 90, Y(hnu)); ctx.stroke();
-      ctx.fillStyle = "#60a5fa"; ctx.fillText("hν=" + hnu.toFixed(2), x0 + 30, Y(hnu) - 6);
-      ctx.strokeStyle = "#f87171"; ctx.lineWidth = 5;
-      ctx.beginPath(); ctx.moveTo(x0 + 110, Y(this.phi0ev)); ctx.lineTo(x0 + 170, Y(this.phi0ev)); ctx.stroke();
-      ctx.fillStyle = "#f87171"; ctx.fillText("Φ₀=" + this.phi0ev.toFixed(2), x0 + 110, Y(this.phi0ev) - 6);
+      const Y = (e) => y0 + bh - 16 - (e / Emax) * (bh - 42);
+
+      // hν bar
+      ctx.strokeStyle = "#60a5fa"; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(x0 + 35, Y(hnu)); ctx.lineTo(x0 + 85, Y(hnu)); ctx.stroke();
+      ctx.fillStyle = "#60a5fa"; ctx.font = "10px 'JetBrains Mono', monospace";
+      ctx.fillText("hν=" + hnu.toFixed(2), x0 + 32, Y(hnu) - 6);
+
+      // Φ₀ bar
+      ctx.strokeStyle = "#f87171"; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(x0 + 105, Y(this.phi0ev)); ctx.lineTo(x0 + 155, Y(this.phi0ev)); ctx.stroke();
+      ctx.fillStyle = "#f87171";
+      ctx.fillText("Φ₀=" + this.phi0ev.toFixed(2), x0 + 105, Y(this.phi0ev) - 6);
+
+      // Kmax bar
       if (kMax > 0) {
-        ctx.strokeStyle = "#34d399"; ctx.lineWidth = 5;
+        ctx.strokeStyle = "#34d399"; ctx.lineWidth = 6;
         ctx.beginPath(); ctx.moveTo(x0 + 185, Y(0)); ctx.lineTo(x0 + 185, Y(kMax)); ctx.stroke();
-        ctx.fillStyle = "#34d399"; ctx.fillText("K=" + kMax.toFixed(2), x0 + 190, Y(kMax) + 4);
+        ctx.fillStyle = "#34d399"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
+        ctx.fillText("Kmax=" + kMax.toFixed(2) + "eV", x0 + 155, Y(kMax) - 6);
       } else {
-        ctx.fillStyle = "#f87171"; ctx.font = "bold 12px 'JetBrains Mono', monospace";
-        ctx.fillText("NO EMISSION (hν<Φ₀)", x0 + 30, y0 + bh - 26);
+        ctx.fillStyle = "#f87171"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
+        ctx.fillText("NO EMISSION", x0 + 60, y0 + bh - 24);
       }
     }
 
-    // photocurrent meter (scaled gauge)
+    // 7. Photocurrent meter (scaled gauge)
     const IuA = photoCurrentUA();
-    const gr = Math.max(26, Math.min(50, h * 0.11));
-    const gx = Math.max(gr + 10, Math.min(w * 0.42, x0 - gr - 16));
-    const gy = h - 14;
+    const gr = Math.max(30, Math.min(54, h * 0.12));
+    const gx = Math.max(gr + 14, Math.min(w * 0.40, x0 - gr - 24));
+    const gy = h - 16;
     ctx.fillStyle = "#0f172a"; ctx.strokeStyle = "#475569"; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(gx, gy, gr, Math.PI, 0); ctx.fill(); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(gx - gr, gy); ctx.lineTo(gx + gr, gy); ctx.stroke();
-    const frac = Math.max(0, Math.min(1, IuA / 4));
+
+    // Scale ticks on ammeter
+    for (let t = 0; t <= 5; t++) {
+      const aTick = Math.PI + (t / 5) * Math.PI;
+      const xT1 = gx + Math.cos(aTick) * (gr - 2);
+      const yT1 = gy + Math.sin(aTick) * (gr - 2);
+      const xT2 = gx + Math.cos(aTick) * (gr - 8);
+      const yT2 = gy + Math.sin(aTick) * (gr - 8);
+      ctx.strokeStyle = "#64748b"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(xT1, yT1); ctx.lineTo(xT2, yT2); ctx.stroke();
+    }
+
+    // Needle deflection
+    const maxI = 4.0;
+    const frac = Math.max(0, Math.min(1, IuA / maxI));
     const ang = Math.PI + frac * Math.PI;
-    ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(ang) * (gr - 8), gy + Math.sin(ang) * (gr - 8)); ctx.stroke();
+    ctx.strokeStyle = "#f59e0b"; ctx.lineWidth = 3; ctx.shadowColor = "#f59e0b"; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(ang) * (gr - 10), gy + Math.sin(ang) * (gr - 10)); ctx.stroke();
+    ctx.shadowBlur = 0;
     ctx.fillStyle = "#e2e8f0"; ctx.beginPath(); ctx.arc(gx, gy, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#94a3b8"; ctx.font = "10px 'JetBrains Mono', monospace";
-    ctx.fillText("PHOTOCURRENT", gx - 46, gy - gr - 20);
-    ctx.fillStyle = "#e2e8f0";
-    ctx.fillText("I ≈ " + IuA.toFixed(2) + " µA", gx - 40, gy - gr - 8);
+    ctx.fillStyle = "#94a3b8"; ctx.font = "bold 10px 'JetBrains Mono', monospace";
+    ctx.fillText("AMMETER (µA)", gx - 36, gy - gr - 22);
+    ctx.fillStyle = "#38bdf8"; ctx.font = "bold 12px 'JetBrains Mono', monospace";
+    ctx.fillText("I = " + IuA.toFixed(2) + " µA", gx - 38, gy - gr - 8);
   },
 
   getMetrics() {
+    const hnu = photoPhotonEV();
+    const kMax = photoKmaxEV();
+    const v0 = photoStoppingV();
+    const realV = photoRealVmax();
+    const IuA = photoCurrentUA();
     return [
-      { label: "Wavelength λ", val: this.lambdaNm + " nm · ν=" + (photoNuHz() / 1e14).toFixed(2) + "×10¹⁴ Hz" },
-      { label: "Photon hν", val: photoPhotonEV().toFixed(2) + " eV" },
-      { label: "Work fn Φ₀", val: this.phi0ev.toFixed(2) + " eV" },
-      { label: "Kmax", val: photoKmaxEV().toFixed(2) + " eV" },
-      { label: "V₀ / V", val: photoStoppingV().toFixed(2) + " / " + (this.voltage >= 0 ? "+" : "") + this.voltage.toFixed(1) + " V" },
-      { label: "I photo", val: "≈ " + photoCurrentUA().toFixed(2) + " µA" }
+      { label: "Wavelength λ", val: this.lambdaNm + " nm (ν=" + (photoNuHz() / 1e14).toFixed(2) + "×10¹⁴ Hz)" },
+      { label: "Photon Energy hν", val: hnu.toFixed(2) + " eV" },
+      { label: "Work Function Φ₀", val: this.phi0ev.toFixed(2) + " eV" },
+      { label: "Kmax (hν − Φ₀)", val: kMax > 0 ? kMax.toFixed(2) + " eV" : "0.00 eV (No Emission)" },
+      { label: "Max Speed vmax", val: kMax > 0 ? (realV / 1e5).toFixed(2) + "×10⁵ m/s (Speed ∝ √Kmax)" : "0 m/s" },
+      { label: "Number Ratio", val: this.intensity + "% flux (" + this.electrons.length + " e⁻ active)" },
+      { label: "Collector V / V₀", val: (this.voltage >= 0 ? "+" : "") + this.voltage.toFixed(2) + " V / Stop V₀=" + v0.toFixed(2) + " V" },
+      { label: "Photocurrent I", val: "≈ " + IuA.toFixed(2) + " µA" }
     ];
   },
 
@@ -2920,50 +3139,120 @@ const photoC = 299792458;
 const photoE = 1.602176634e-19;
 const photoME = 9.1093837e-31;
 const photoGapM = 0.10;
-const photoMaxEl = 420;
+const photoMaxEl = 300;
+const photoVScale = 0.085; // Visual speed calibration (m/s per sqrt(eV))
 
-function photoPhotonEV() { return photoH * photoC / (photoSim.lambdaNm * 1e-9) / photoE; }
+function photoPhotonEV() { return (photoH * photoC) / (photoSim.lambdaNm * 1e-9) / photoE; }
 function photoNuHz() { return photoC / (photoSim.lambdaNm * 1e-9); }
 function photoKmaxEV() { return Math.max(0, photoPhotonEV() - photoSim.phi0ev); }
 function photoStoppingV() { return photoKmaxEV(); }
+
+function photoRealVmax() {
+  const kMax = photoKmaxEV();
+  if (kMax <= 0) return 0;
+  return Math.sqrt(2 * kMax * photoE / photoME);
+}
+
+// Number ratio: Emission rate is strictly proportional to Intensity (flux)
 function photoEmitRate() {
   if (photoKmaxEV() <= 0) return 0;
-  return (photoSim.intensity / 100) * 240;
+  return (photoSim.intensity / 100) * 40; // up to 40 e-/s at 100% intensity
 }
+
 function photoSpawnElectron() {
-  const f = 0.15 + Math.random() * 0.85;
-  const keEV = f * photoKmaxEV();
-  const vx = Math.sqrt(2 * keEV * photoE / photoME);
-  photoSim.electrons.push({ x: 0, y: (Math.random() - 0.5) * 130, vx: vx, keJ: keEV * photoE, keEV: keEV });
+  const kMax = photoKmaxEV();
+  if (kMax <= 0) return;
+  // Kinetic energy spread: 0.15*Kmax to 1.0*Kmax (Fermi level ejection reaches Kmax)
+  const f = 0.15 + 0.85 * Math.pow(Math.random(), 0.65);
+  const keEV = f * kMax;
+  // Speed ratio: visual speed strictly proportional to sqrt(keEV)
+  const v0 = photoVScale * Math.sqrt(keEV);
+  // Slight ejection angle divergence (±12°)
+  const angle = (Math.random() - 0.5) * 0.40;
+  const vx = v0 * Math.cos(angle);
+  const vy = v0 * Math.sin(angle);
+  const y = (Math.random() - 0.5) * 140;
+
+  photoSim.electrons.push({
+    x: 0,
+    y: y,
+    vx: vx,
+    vy: vy,
+    keEV: keEV,
+    trail: []
+  });
 }
+
 function photoCurrentUA() {
-  const rate = photoSim.arrivedWin.length / 3;
-  return rate * 0.05 * (photoSim.intensity > 0 && photoKmaxEV() > 0 ? 1 : 0);
+  if (photoSim.intensity <= 0 || photoKmaxEV() <= 0) return 0;
+  const arrivalRate = photoSim.arrivedWin.length / 2.0;
+  return arrivalRate * 0.08;
 }
+
 function photoLambdaColor(nm) {
-  const hue = nm < 450 ? 250 : nm < 495 ? 210 : nm < 570 ? 110 : nm < 590 ? 45 : nm < 620 ? 15 : 0;
-  return "hsl(" + hue + ",90%,60%)";
+  if (nm < 380) return "#a855f7"; // UV / violet
+  if (nm < 440) return "#818cf8"; // Violet-blue
+  if (nm < 490) return "#38bdf8"; // Cyan
+  if (nm < 540) return "#22c55e"; // Green
+  if (nm < 580) return "#eab308"; // Yellow
+  if (nm < 630) return "#f97316"; // Orange
+  return "#ef4444"; // Red
 }
+
 function photoStep(dt) {
   photoSim.t += dt;
-  if (photoSim.intensity > 0 && photoKmaxEV() > 0) {
+  const kMax = photoKmaxEV();
+  if (photoSim.intensity > 0 && kMax > 0) {
     photoSim.emitAcc += photoEmitRate() * dt;
     while (photoSim.emitAcc >= 1) {
       photoSim.emitAcc -= 1;
       if (photoSim.electrons.length < photoMaxEl) photoSpawnElectron();
     }
+  } else {
+    photoSim.emitAcc = 0;
   }
-  const a = (photoSim.voltage * photoE / photoGapM) / photoME;
-  for (const el of photoSim.electrons) { el.vx += a * dt; el.x += el.vx * dt; }
+
+  // Consistent electrodynamic acceleration: a = (vScale^2 / (2 * d)) * V
+  const a = (photoVScale * photoVScale / (2 * photoGapM)) * photoSim.voltage;
   const keep = [];
-  const vAbs = Math.abs(photoSim.voltage);
+
   for (const el of photoSim.electrons) {
+    // Record motion trail (shows speed ratio via trail spacing/length)
+    if (!el.trail) el.trail = [];
+    el.trail.push({ x: el.x, y: el.y });
+    if (el.trail.length > 5) el.trail.shift();
+
+    el.vx += a * dt;
+    el.x += el.vx * dt;
+    el.y += el.vy * dt;
+
+    // Tube boundary reflection
+    if (el.y < -75) { el.y = -75; el.vy = Math.abs(el.vy); }
+    if (el.y > 75) { el.y = 75; el.vy = -Math.abs(el.vy); }
+
     if (el.x >= photoGapM) {
-      if (!(photoSim.voltage < 0 && el.keEV < vAbs)) photoSim.arrivedWin.push(photoSim.t);
-    } else if (el.x > -0.01 && el.vx > -1e5) keep.push(el);
+      // Reached anode collector!
+      photoSim.arrivedWin.push(photoSim.t);
+      if (!photoSim.flashes) photoSim.flashes = [];
+      if (photoSim.flashes.length < 16) {
+        photoSim.flashes.push({ y: el.y, life: 1.0 });
+      }
+    } else if (el.x < -0.005) {
+      // Retarded and pulled back into cathode
+    } else {
+      keep.push(el);
+    }
   }
   photoSim.electrons = keep;
-  while (photoSim.arrivedWin.length && photoSim.t - photoSim.arrivedWin[0] > 3) photoSim.arrivedWin.shift();
+
+  if (photoSim.flashes) {
+    for (const fl of photoSim.flashes) fl.life -= dt * 4;
+    photoSim.flashes = photoSim.flashes.filter(fl => fl.life > 0);
+  }
+
+  while (photoSim.arrivedWin.length && photoSim.t - photoSim.arrivedWin[0] > 2.0) {
+    photoSim.arrivedWin.shift();
+  }
 }
 
 const shmSim = {
