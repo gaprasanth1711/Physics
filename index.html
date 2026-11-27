@@ -2341,70 +2341,414 @@
 
     const ydseSim = {
       name: "Wave Optics: Double-Slit (YDSE)",
-      lambdaNm: 550, dUm: 250, D: 1.2,
+      lambdaNm: 550,
+      dUm: 250,
+      D: 1.2,
+      t: 0,
+      ptY: 0,
+      dragging: false,
+      showWaves: true,
+      showCurve: true,
+
       init() { this.reset(); },
-      reset() {},
-      update(dt) {},
-      beta() { return (this.lambdaNm * 1e-9 * this.D) / Math.max(50, this.dUm * 1e-6) * 1000; }, // mm
+      reset() {
+        this.t = 0;
+        this.ptY = 0;
+        this.dragging = false;
+      },
+      update(dt) {
+        this.t += dt;
+      },
+      beta() {
+        return (this.lambdaNm * 1e-9 * this.D) / Math.max(50, this.dUm * 1e-6) * 1000; // in mm
+      },
+      thetaMrad() {
+        return (this.lambdaNm * 1e-9) / Math.max(50, this.dUm * 1e-6) * 1000; // in mrad
+      },
+      onMouseDown(x, y) {
+        const h = canvas.height / dpr;
+        const cy = h * 0.48;
+        this.dragging = true;
+        this.ptY = Math.max(-h * 0.40, Math.min(h * 0.40, y - cy));
+      },
+      onMouseMove(x, y) {
+        if (!this.dragging) return;
+        const h = canvas.height / dpr;
+        const cy = h * 0.48;
+        this.ptY = Math.max(-h * 0.40, Math.min(h * 0.40, y - cy));
+      },
+      onMouseUp() {
+        this.dragging = false;
+      },
+
       render() {
         const w = canvas.width / dpr, h = canvas.height / dpr;
-        const slitX = w * 0.22, screenX = w * 0.82;
-        // slits
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(slitX - 4, h * 0.15, 8, h * 0.7);
-        const gapPx = 46;
-        ctx.fillStyle = '#22d3ee'; ctx.shadowColor = '#22d3ee'; ctx.shadowBlur = 10;
-        ctx.fillRect(slitX - 4, h / 2 - gapPx / 2 - 3, 8, 6);
-        ctx.fillRect(slitX - 4, h / 2 + gapPx / 2 - 3, 8, 6);
+        const cy = h * 0.48;
+        const col = photoLambdaColor ? photoLambdaColor(this.lambdaNm) : '#22d3ee';
+
+        // 1. Reactive geometry: Slits move with d, Screen moves with D!
+        const slitX = Math.max(90, w * 0.20);
+        
+        // Slit separation d (pixels) - Slits visibly move closer or further apart!
+        const minGapPx = 22;
+        const maxGapPx = Math.min(130, h * 0.32);
+        const slitFrac = (this.dUm - 100) / (500 - 100);
+        const gapPx = minGapPx + Math.max(0, Math.min(1, slitFrac)) * (maxGapPx - minGapPx);
+        const y1 = cy - gapPx / 2;
+        const y2 = cy + gapPx / 2;
+
+        // Screen distance D (pixels) - Screen visibly glides horizontally!
+        const minDDist = Math.max(140, (w - slitX) * 0.34);
+        const maxDDist = Math.max(minDDist + 80, w - slitX - 110);
+        const dFrac = (this.D - 0.5) / (2.5 - 0.5);
+        const screenDist = minDDist + Math.max(0, Math.min(1, dFrac)) * (maxDDist - minDDist);
+        const screenX = slitX + screenDist;
+
+        // Visual wavelength (pixels)
+        const lambdaVis = 14 + ((this.lambdaNm - 380) / (750 - 380)) * 18;
+        const waveSpeed = 42; // pixels/s
+        const phase = (this.t * waveSpeed) % lambdaVis;
+
+        // Fringe width on screen (pixels)
+        const betaVis = (lambdaVis * screenDist) / gapPx;
+
+        // 2. Central Reference Axis
+        ctx.save();
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(10, cy);
+        ctx.lineTo(screenX + 40, cy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // 3. Primary Light Source & Incident Waves (Before Double Slit)
+        const srcX = 22;
+        ctx.fillStyle = "#0f172a";
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(4, cy - 36, 36, 72, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing source bulb
+        ctx.fillStyle = col;
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 16;
+        ctx.beginPath();
+        ctx.arc(srcX, cy, 8, 0, Math.PI * 2);
+        ctx.fill();
         ctx.shadowBlur = 0;
-        // source ray
-        ctx.strokeStyle = 'rgba(34,211,238,0.6)'; ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(20, h / 2); ctx.lineTo(slitX, h / 2 - gapPx / 2); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(20, h / 2); ctx.lineTo(slitX, h / 2 + gapPx / 2); ctx.stroke();
-        // interference pattern on screen (I = 4I0 cos²(π d y / λD))
-        const betaPx = 26 + (this.lambdaNm - 380) * 0.06 - (this.dUm - 100) * 0.04;
-        for (let y = h * 0.15; y < h * 0.85; y += 2) {
-          const dy = (y - h / 2) / Math.max(8, betaPx);
-          const inten = Math.pow(Math.cos(Math.PI * dy / 2), 2);
-          const hue = 190 + (this.lambdaNm - 550) * 0.25;
-          ctx.fillStyle = `hsla(${hue},95%,${25 + inten * 45}%,${0.25 + inten * 0.75})`;
-          ctx.fillRect(screenX, y, 34, 2);
+
+        // Primary expanding circular wavefronts from source to slit barrier
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(srcX, cy - h * 0.45, slitX - srcX, h * 0.9);
+        ctx.clip();
+        const srcMaxR = slitX - srcX + 20;
+        for (let r = phase; r <= srcMaxR; r += lambdaVis) {
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 1.8;
+          ctx.globalAlpha = Math.max(0.15, 0.7 - (r / srcMaxR) * 0.45);
+          ctx.beginPath();
+          ctx.arc(srcX, cy, r, -Math.PI / 3, Math.PI / 3);
+          ctx.stroke();
         }
-        ctx.fillStyle = '#e2e8f0'; ctx.fillRect(screenX + 34, h * 0.15, 3, h * 0.7);
-        ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
-        ctx.fillText(`λ=${this.lambdaNm}nm d=${this.dUm}µm D=${this.D.toFixed(1)}m`, 14, 22);
-        ctx.fillText(`β = λD/d ≈ ${this.beta().toFixed(2)} mm`, 14, h - 14);
-        ctx.fillText('SCREEN', screenX - 6, h * 0.12);
+        ctx.restore();
+
+        // 4. Secondary Wavefronts & Expanding Waves (After Double Slit)
+        if (this.showWaves) {
+          ctx.save();
+          // Clip wavefronts strictly between double-slit barrier and screen
+          ctx.beginPath();
+          ctx.rect(slitX + 2, cy - h * 0.46, screenDist - 2, h * 0.92);
+          ctx.clip();
+
+          const maxWaveR = Math.hypot(screenDist, h * 0.5) + 30;
+          const numWaves = Math.ceil(maxWaveR / lambdaVis);
+
+          // Render secondary wave crests and troughs from S1 and S2
+          for (let i = 0; i < numWaves; i++) {
+            const r = ((this.t * 2.5 + i) % numWaves) * lambdaVis;
+            if (r < 2 || r > maxWaveR) continue;
+
+            const alpha = Math.max(0.08, 0.65 * (1 - r / maxWaveR));
+
+            // Wave Crest (solid bright wave of color col)
+            ctx.strokeStyle = col;
+            ctx.lineWidth = 1.8;
+            ctx.globalAlpha = alpha;
+            // Slit 1 wavefront crest
+            ctx.beginPath();
+            ctx.arc(slitX, y1, r, -Math.PI / 2.2, Math.PI / 2.2);
+            ctx.stroke();
+            // Slit 2 wavefront crest
+            ctx.beginPath();
+            ctx.arc(slitX, y2, r, -Math.PI / 2.2, Math.PI / 2.2);
+            ctx.stroke();
+
+            // Wave Trough (subtle line halfway between crests)
+            const rTrough = r + lambdaVis / 2;
+            if (rTrough <= maxWaveR) {
+              ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+              ctx.lineWidth = 1;
+              ctx.globalAlpha = alpha * 0.5;
+              ctx.beginPath();
+              ctx.arc(slitX, y1, rTrough, -Math.PI / 2.2, Math.PI / 2.2);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.arc(slitX, y2, rTrough, -Math.PI / 2.2, Math.PI / 2.2);
+              ctx.stroke();
+            }
+          }
+
+          // Antinodal constructive lines radiating to bright fringe maxima (0, ±1, ±2)
+          for (let m = -2; m <= 2; m++) {
+            const targetY = cy + m * betaVis;
+            ctx.strokeStyle = m === 0 ? "rgba(255, 255, 255, 0.4)" : "rgba(34, 211, 238, 0.25)";
+            ctx.lineWidth = m === 0 ? 1.5 : 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(slitX, cy);
+            ctx.lineTo(screenX, targetY);
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+          ctx.restore();
+        }
+
+        // 5. Double-Slit Barrier Plate (Physically reactive with slit gap d)
+        ctx.fillStyle = "#1e293b";
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 1.5;
+        // Upper opaque section
+        const topY = cy - h * 0.42;
+        ctx.fillRect(slitX - 5, topY, 10, y1 - 4 - topY);
+        ctx.strokeRect(slitX - 5, topY, 10, y1 - 4 - topY);
+        // Middle opaque barrier between S1 and S2
+        ctx.fillRect(slitX - 5, y1 + 4, 10, y2 - 4 - (y1 + 4));
+        ctx.strokeRect(slitX - 5, y1 + 4, 10, y2 - 4 - (y1 + 4));
+        // Lower opaque section
+        const botY = cy + h * 0.42;
+        ctx.fillRect(slitX - 5, y2 + 4, 10, botY - (y2 + 4));
+        ctx.strokeRect(slitX - 5, y2 + 4, 10, botY - (y2 + 4));
+
+        // Slit 1 (S1) Aperture opening & glow
+        ctx.fillStyle = col;
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 10;
+        ctx.fillRect(slitX - 3, y1 - 4, 6, 8);
+        // Slit 2 (S2) Aperture opening & glow
+        ctx.fillRect(slitX - 3, y2 - 4, 6, 8);
+        ctx.shadowBlur = 0;
+
+        // Slit labels S1, S2
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "bold 10px 'JetBrains Mono', monospace";
+        ctx.fillText("S₁", slitX - 22, y1 + 3);
+        ctx.fillText("S₂", slitX - 22, y2 + 3);
+
+        // Slit separation dimension arrow (d)
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(slitX + 16, y1);
+        ctx.lineTo(slitX + 16, y2);
+        // Arrow heads
+        ctx.moveTo(slitX + 12, y1 + 4); ctx.lineTo(slitX + 16, y1); ctx.lineTo(slitX + 20, y1 + 4);
+        ctx.moveTo(slitX + 12, y2 - 4); ctx.lineTo(slitX + 16, y2); ctx.lineTo(slitX + 20, y2 - 4);
+        ctx.stroke();
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "bold 10px 'JetBrains Mono', monospace";
+        ctx.fillText(`d=${this.dUm}µm`, slitX + 24, cy + 3);
+
+        // 6. Observation Screen (Physically moves with D!)
+        // Screen plate background
+        ctx.fillStyle = "#0f172a";
+        ctx.strokeStyle = "#64748b";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(screenX, cy - h * 0.44, 28, h * 0.88, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        // Render continuous interference fringes on the screen
+        const screenTop = cy - h * 0.43;
+        const screenBot = cy + h * 0.43;
+        for (let y = screenTop; y <= screenBot; y += 1.5) {
+          const dy = y - cy;
+          // I = I0 * cos^2(π * dy / betaVis)
+          const inten = Math.pow(Math.cos((Math.PI * dy) / Math.max(4, betaVis)), 2);
+          ctx.fillStyle = col;
+          ctx.globalAlpha = 0.08 + inten * 0.88;
+          ctx.fillRect(screenX + 2, y, 24, 1.5);
+        }
+        ctx.globalAlpha = 1.0;
+
+        // Screen Top Badge
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "bold 11px 'JetBrains Mono', monospace";
+        ctx.fillText("SCREEN", screenX - 6, screenTop - 8);
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "10px 'JetBrains Mono', monospace";
+        ctx.fillText(`D=${this.D.toFixed(1)}m`, screenX - 4, screenBot + 16);
+
+        // Central Maximum Marker (y = 0)
+        ctx.strokeStyle = "#facc15";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(screenX - 4, cy);
+        ctx.lineTo(screenX + 32, cy);
+        ctx.stroke();
+        ctx.fillStyle = "#facc15";
+        ctx.font = "bold 9px 'JetBrains Mono', monospace";
+        ctx.fillText("Central (n=0)", screenX + 36, cy + 3);
+
+        // 7. Distance D Dimension Line (Horizontal from Slits to Screen)
+        const dimY = cy + h * 0.44 + 6;
+        ctx.strokeStyle = "#34d399";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(slitX, dimY);
+        ctx.lineTo(screenX, dimY);
+        // Vertical ends
+        ctx.moveTo(slitX, dimY - 4); ctx.lineTo(slitX, dimY + 4);
+        ctx.moveTo(screenX, dimY - 4); ctx.lineTo(screenX, dimY + 4);
+        ctx.stroke();
+        ctx.fillStyle = "#34d399";
+        ctx.font = "bold 11px 'JetBrains Mono', monospace";
+        ctx.fillText(`Screen Distance D = ${this.D.toFixed(1)} m`, (slitX + screenX) / 2 - 70, dimY + 16);
+
+        // 8. Intensity Distribution Curve I(y) alongside Screen (Optional toggle)
+        if (this.showCurve && screenX + 36 < w - 20) {
+          const curveX = screenX + 34;
+          const curveW = Math.min(50, w - curveX - 8);
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          for (let y = screenTop; y <= screenBot; y += 2) {
+            const dy = y - cy;
+            const inten = Math.pow(Math.cos((Math.PI * dy) / Math.max(4, betaVis)), 2);
+            const px = curveX + inten * (curveW - 8);
+            if (y === screenTop) ctx.moveTo(px, y);
+            else ctx.lineTo(px, y);
+          }
+          ctx.stroke();
+        }
+
+        // 9. Interactive Point P Ray Tracker
+        const pY = cy + this.ptY;
+        if (pY >= screenTop && pY <= screenBot) {
+          // Draw point P on screen
+          ctx.fillStyle = "#f59e0b";
+          ctx.beginPath();
+          ctx.arc(screenX, pY, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Rays from S1 to P and S2 to P
+          ctx.strokeStyle = "rgba(245, 158, 11, 0.75)";
+          ctx.lineWidth = 1.6;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(slitX, y1); ctx.lineTo(screenX, pY);
+          ctx.moveTo(slitX, y2); ctx.lineTo(screenX, pY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Path difference Δx = S2P - S1P
+          const r1 = Math.hypot(screenDist, pY - y1);
+          const r2 = Math.hypot(screenDist, pY - y2);
+          const deltaL = Math.abs(r2 - r1);
+          const nFrac = deltaL / lambdaVis;
+
+          // Callout badge next to P
+          ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 1;
+          const badgeX = Math.min(screenX + 36, w - 160);
+          ctx.beginPath();
+          ctx.roundRect(badgeX, pY - 14, 150, 28, 6);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#facc15";
+          ctx.font = "bold 10px 'JetBrains Mono', monospace";
+          ctx.fillText(`P: y = ${(this.ptY * (this.beta() / betaVis)).toFixed(2)} mm`, badgeX + 6, pY - 1);
+          ctx.fillStyle = "#e2e8f0";
+          ctx.font = "9px 'JetBrains Mono', monospace";
+          ctx.fillText(`Δx ≈ ${nFrac.toFixed(2)} λ (${Math.abs(nFrac - Math.round(nFrac)) < 0.1 ? 'Bright' : Math.abs(nFrac - Math.floor(nFrac) - 0.5) < 0.1 ? 'Dark' : 'Phase'})`, badgeX + 6, pY + 10);
+        }
       },
+
       getMetrics() {
+        const beta = this.beta();
+        const theta = this.thetaMrad();
         return [
           { label: "Wavelength λ", val: `${this.lambdaNm} nm` },
-          { label: "Slit d", val: `${this.dUm} µm` },
-          { label: "Screen D", val: `${this.D.toFixed(1)} m` },
-          { label: "Fringe β=λD/d", val: `${this.beta().toFixed(2)} mm` },
-          { label: "CBSE", val: "Ch-10 YDSE" }
+          { label: "Slit Separation d", val: `${this.dUm} µm (Moves Slits)` },
+          { label: "Screen Distance D", val: `${this.D.toFixed(1)} m (Moves Screen)` },
+          { label: "Fringe Width β", val: `${beta.toFixed(2)} mm (β = λD/d)` },
+          { label: "Angular Width θ", val: `${theta.toFixed(2)} mrad (θ = λ/d)` },
+          { label: "Interference Rule", val: "Crest+Crest=Bright, Crest+Trough=Dark" }
         ];
       },
+
       presets: {
-        "Green 550nm": { lambdaNm: 550, dUm: 250, D: 1.2 },
-        "Red Wide": { lambdaNm: 650, dUm: 200, D: 1.5 },
-        "Blue Fine": { lambdaNm: 450, dUm: 350, D: 1.0 }
+        "Sodium Yellow (Standard)": { lambdaNm: 589, dUm: 250, D: 1.2 },
+        "Red Laser (Wide Fringes)": { lambdaNm: 650, dUm: 150, D: 1.8 },
+        "Blue Light (Fine Fringes)": { lambdaNm: 450, dUm: 380, D: 0.8 },
+        "Close Slits (Large β)": { lambdaNm: 532, dUm: 120, D: 1.5 }
       },
+
       buildControls() {
         return `
-          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Wavelength (nm)</span><span id="valWL" class="font-mono text-cyan-400">${this.lambdaNm}</span></div>
-            <input type="range" id="ctrlWL" min="380" max="700" value="${this.lambdaNm}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Slit d (µm)</span><span id="valSD" class="font-mono text-cyan-400">${this.dUm}</span></div>
-            <input type="range" id="ctrlSD" min="100" max="500" value="${this.dUm}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Screen D (m)</span><span id="valSC" class="font-mono text-cyan-400">${this.D}</span></div>
-            <input type="range" id="ctrlSC" min="0.5" max="2" step="0.1" value="${this.D}" class="w-full"></div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300"><span>Wavelength λ</span><span id="valWL" class="font-mono text-cyan-400">${this.lambdaNm} nm</span></div>
+              <input type="range" id="ctrlWL" min="380" max="750" step="5" value="${this.lambdaNm}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300"><span>Slit separation d</span><span id="valSD" class="font-mono text-cyan-400">${this.dUm} µm</span></div>
+              <input type="range" id="ctrlSD" min="100" max="500" step="5" value="${this.dUm}" class="w-full">
+            </div>
+            <div>
+              <div class="flex justify-between mb-1 text-slate-300"><span>Screen distance D</span><span id="valSC" class="font-mono text-cyan-400">${this.D.toFixed(1)} m</span></div>
+              <input type="range" id="ctrlSC" min="0.5" max="2.5" step="0.1" value="${this.D}" class="w-full">
+            </div>
+            <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-300 font-medium">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" id="ctrlShowWaves" ${this.showWaves ? 'checked' : ''} class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+                <span>Wavefronts</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" id="ctrlShowCurve" ${this.showCurve ? 'checked' : ''} class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0">
+                <span>Intensity Curve</span>
+              </label>
+            </div>
           </div>`;
       },
+
       bindControls() {
-        document.getElementById('ctrlWL')?.addEventListener('input', (e) => { this.lambdaNm = parseFloat(e.target.value); document.getElementById('valWL').textContent = this.lambdaNm; });
-        document.getElementById('ctrlSD')?.addEventListener('input', (e) => { this.dUm = parseFloat(e.target.value); document.getElementById('valSD').textContent = this.dUm; });
-        document.getElementById('ctrlSC')?.addEventListener('input', (e) => { this.D = parseFloat(e.target.value); document.getElementById('valSC').textContent = this.D; });
+        document.getElementById('ctrlWL')?.addEventListener('input', (e) => { 
+          this.lambdaNm = parseFloat(e.target.value); 
+          document.getElementById('valWL').textContent = this.lambdaNm + " nm"; 
+        });
+        document.getElementById('ctrlSD')?.addEventListener('input', (e) => { 
+          this.dUm = parseFloat(e.target.value); 
+          document.getElementById('valSD').textContent = this.dUm + " µm"; 
+        });
+        document.getElementById('ctrlSC')?.addEventListener('input', (e) => { 
+          this.D = parseFloat(e.target.value); 
+          document.getElementById('valSC').textContent = this.D.toFixed(1) + " m"; 
+        });
+        document.getElementById('ctrlShowWaves')?.addEventListener('change', (e) => {
+          this.showWaves = e.target.checked;
+        });
+        document.getElementById('ctrlShowCurve')?.addEventListener('change', (e) => {
+          this.showCurve = e.target.checked;
+        });
       }
     };
 
