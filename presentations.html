@@ -278,7 +278,7 @@
       <a href="/" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700/60 transition shadow-sm" title="Open Interactive Simulations Lab">
         <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-cyan-400"></i>
         <span class="hidden sm:inline">Simulations Lab</span>
-        <span class="text-[10px] px-1.5 py-0.2 bg-cyan-500/20 text-cyan-300 rounded font-mono">17</span>
+        <span id="simCountBadge" class="sim-count-badge text-[10px] px-1.5 py-0.2 bg-cyan-500/20 text-cyan-300 rounded font-mono">22</span>
       </a>
 
       <!-- Quick Help modal toggle -->
@@ -606,8 +606,8 @@
                 <p class="text-slate-400 text-[11px]">Interact with projectiles, double pendulums, electromagnetic induction, optics, and wave motion.</p>
               </div>
             </div>
-            <a href="/" class="shrink-0 px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-center transition">
-              Launch 17 Physics Labs &rarr;
+            <a href="/" id="btnLaunchSimsCallout" class="shrink-0 px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-center transition">
+              Launch <span class="sim-count-number">22</span> Physics Labs &rarr;
             </a>
           </div>
 
@@ -1444,6 +1444,64 @@
         presentationContainer.addEventListener('dragstart', (e) => e.preventDefault());
       }
 
+      // 11. Dynamic Simulation Counter Auto-Synchroniser
+      // Automatically synchronises simulation counts whenever simulations are added
+      function updateSimCountUI(count) {
+        if (!count || count < 1) return;
+        document.querySelectorAll('.sim-count-badge, #simCountBadge').forEach(el => {
+          el.textContent = count;
+        });
+        document.querySelectorAll('.sim-count-number').forEach(el => {
+          el.textContent = count;
+        });
+        const calloutBtn = document.getElementById('btnLaunchSimsCallout');
+        if (calloutBtn) {
+          calloutBtn.innerHTML = `Launch <span class="sim-count-number">${count}</span> Physics Labs &rarr;`;
+        }
+      }
+
+      async function autoDetectSimulationsCount() {
+        // Fast local storage restore
+        try {
+          const cached = localStorage.getItem('physics_simulations_count');
+          if (cached && !isNaN(parseInt(cached, 10))) {
+            updateSimCountUI(parseInt(cached, 10));
+          }
+        } catch (_) {}
+
+        // Dynamic background auto-detection from main simulation registry
+        try {
+          const res = await fetch('/', { cache: 'no-cache' });
+          if (res.ok) {
+            const html = await res.text();
+
+            // Strategy A: Unique data-sim navigation buttons
+            const dataSimMatches = html.match(/data-sim=["']([^"']+)["']/g) || [];
+            const uniqueDataSims = new Set(dataSimMatches.map(s => s.replace(/data-sim=["']/, '').replace(/["']/, '')));
+
+            // Strategy B: Simulations registry object keys
+            let keysCount = 0;
+            const objMatch = html.match(/const\s+simulations\s*=\s*\{([\s\S]*?)\};/);
+            if (objMatch) {
+              const lines = objMatch[1].split('\n')
+                .map(s => s.trim())
+                .filter(s => s && !s.startsWith('//') && s.includes(':'));
+              keysCount = lines.length;
+            }
+
+            const liveCount = Math.max(uniqueDataSims.size, keysCount);
+            if (liveCount >= 10) {
+              try {
+                localStorage.setItem('physics_simulations_count', liveCount);
+              } catch (_) {}
+              updateSimCountUI(liveCount);
+            }
+          }
+        } catch (_) {
+          // Gracefully maintain 22 baseline
+        }
+      }
+
       window.addEventListener('resize', () => {
         resizeCanvasResolution();
       });
@@ -1453,6 +1511,9 @@
         resizeCanvasResolution();
         renderTree();
         
+        // Auto-detect and sync latest live simulation count
+        autoDetectSimulationsCount();
+
         // Select initial module (Class 12, Chapter 01, Part 1)
         selectTopic('class-12', '12-01', '12-01-t01');
         lucide.createIcons();
