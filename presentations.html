@@ -344,6 +344,46 @@
       pointer-events: none;
       z-index: 2;
     }
+
+    /* Educator Photo Avatar & Profile Modal Framing */
+    @keyframes educatorHaloPulse {
+      0%, 100% { opacity: 0.55; transform: scale(0.98); }
+      50% { opacity: 0.95; transform: scale(1.06); }
+    }
+    .educator-avatar-ring {
+      position: relative;
+      isolation: isolate;
+      border-radius: 9999px;
+      padding: 2px;
+      background: linear-gradient(135deg, #818cf8, #38bdf8, #3b82f6);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.32);
+    }
+    .educator-avatar-ring::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(56, 189, 248, 0.5));
+      filter: blur(5px);
+      z-index: -1;
+      animation: educatorHaloPulse 3.6s ease-in-out infinite;
+    }
+    .educator-photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .group:hover .educator-photo-img {
+      transform: scale(1.08);
+    }
+    .educator-portrait-modal {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+    }
   </style>
 </head>
 <body class="bg-space-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased overflow-x-hidden mode-browse">
@@ -395,6 +435,19 @@
         <span class="hidden sm:inline">Simulations Lab</span>
         <span id="simCountBadge" class="sim-count-badge text-[10px] px-1.5 py-0.2 bg-cyan-500/20 text-cyan-300 rounded font-mono">22</span>
       </a>
+
+      <!-- Educator Profile Avatar Pill -->
+      <button id="btnEducatorProfile" type="button" class="group flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-slate-800/85 hover:bg-slate-700/85 border border-slate-700/70 hover:border-indigo-400/60 transition shadow-sm" title="Meet Your Physics Educator — Prasanth">
+        <span class="educator-avatar-ring w-7 h-7 block shrink-0">
+          <span class="block w-full h-full rounded-full overflow-hidden bg-slate-900">
+            <img src="/assets/prasanth-educator.jpg" alt="Prasanth" class="educator-photo-img" onerror="this.src='prasanth-educator.jpg'" />
+          </span>
+        </span>
+        <span class="hidden xl:flex flex-col items-start leading-none text-left">
+          <span class="text-[11px] font-semibold text-slate-100 group-hover:text-indigo-300 transition-colors">Prasanth</span>
+          <span class="text-[9px] font-mono text-indigo-400 uppercase tracking-wider mt-0.5">Educator</span>
+        </span>
+      </button>
 
       <!-- Quick Help modal toggle -->
       <button id="btnOpenHelp" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Shortcuts & Instructions">
@@ -684,8 +737,18 @@
               <p id="cardChapterTitle" class="text-xs text-slate-400">Chapter 01: Electric Charges and Fields</p>
             </div>
 
-            <!-- Quick Topic Jumper Navigation -->
-            <div class="flex items-center gap-2">
+            <!-- Curated By + Quick Topic Jumper Navigation -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btnCompanionEducatorProfile" type="button" class="group flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/70 hover:border-indigo-400/50 transition" title="View Educator Profile">
+                <span class="educator-avatar-ring w-6 h-6 block shrink-0">
+                  <span class="block w-full h-full rounded-full overflow-hidden bg-slate-900">
+                    <img src="/assets/prasanth-educator.jpg" alt="Prasanth" class="educator-photo-img" onerror="this.src='prasanth-educator.jpg'" />
+                  </span>
+                </span>
+                <span class="text-[11px] text-slate-300 group-hover:text-white transition-colors">
+                  Presented by <strong class="text-indigo-300">Prasanth</strong>
+                </span>
+              </button>
               <button id="cardBtnPrev" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 flex items-center gap-1 transition">
                 <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Previous
               </button>
@@ -790,6 +853,52 @@
 
       <div class="p-3 bg-indigo-950/40 border border-indigo-800/40 rounded-xl text-[11px] text-indigo-300">
         💡 <strong>Teacher Tip:</strong> In Browse Mode, clicking on the slide advances animated formulas and builds one by one. Switch to Annotate Mode to write directly on the slide.
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       ABOUT EDUCATOR PROFILE MODAL
+       ======================================================== -->
+  <div id="educatorModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="educatorModalTitle">
+    <div class="bg-space-900 border border-slate-700/80 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+      <div class="relative h-20 bg-gradient-to-r from-indigo-600/35 via-blue-600/30 to-cyan-600/35 border-b border-slate-800/80">
+        <button id="btnCloseEducator" type="button" class="absolute top-3 right-3 text-slate-300 hover:text-white bg-slate-900/75 hover:bg-slate-800 p-1.5 rounded-lg transition" aria-label="Close profile">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div class="px-6 pb-6 -mt-14 text-center space-y-4">
+        <div class="relative inline-block">
+          <div class="educator-avatar-ring w-28 h-28 mx-auto p-[3px] shadow-xl">
+            <div class="w-full h-full rounded-full overflow-hidden bg-slate-900">
+              <img src="/assets/prasanth-educator.jpg" alt="Prasanth" class="educator-portrait-modal" onerror="this.src='prasanth-educator.jpg'" />
+            </div>
+          </div>
+          <div class="absolute -bottom-1 -right-1 w-9 h-9 rounded-xl bg-white p-0.5 shadow-lg border border-slate-700/40 flex items-center justify-center overflow-hidden" title="Prasanth Physics">
+            <img src="/assets/prasanth-physics-logo.webp" alt="Prasanth Physics Logo" class="w-full h-full object-contain" onerror="this.src='prasanth-physics-logo.webp'" />
+          </div>
+        </div>
+        <div>
+          <h3 id="educatorModalTitle" class="text-lg font-extrabold text-white tracking-tight">Prasanth</h3>
+          <p class="text-xs font-mono text-indigo-400 uppercase tracking-wider mt-0.5">Physics Educator &bull; Mastery In Physics</p>
+          <p class="text-xs text-slate-300 leading-relaxed mt-3">
+            Creator of <strong class="text-white">Prasanth Physics</strong> &mdash; helping Class XI &amp; XII students master core derivations, visual intuition, and interactive physics experiments.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5 pt-1 text-left">
+          <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+            <div class="text-[10px] font-mono text-indigo-400 uppercase">Curriculum Decks</div>
+            <div class="text-sm font-bold text-white mt-0.5">Classes XI &amp; XII</div>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+            <div class="text-[10px] font-mono text-cyan-400 uppercase">Interactive Labs</div>
+            <div class="text-sm font-bold text-white mt-0.5"><span class="sim-count-number">22</span> Simulations</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 pt-1">
+          <button id="btnEducatorContinuePpt" type="button" class="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition">Continue Presentations</button>
+          <a href="/" class="flex-1 py-2 px-3 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl text-center transition">Launch Simulations</a>
+        </div>
       </div>
     </div>
   </div>
@@ -1525,6 +1634,25 @@
         if (e.target === helpModal) helpModal.classList.add('hidden');
       });
 
+      // Educator Profile Modal Events
+      const educatorModal = document.getElementById('educatorModal');
+      const btnEducatorProfile = document.getElementById('btnEducatorProfile');
+      const btnCompanionEducatorProfile = document.getElementById('btnCompanionEducatorProfile');
+      const btnCloseEducator = document.getElementById('btnCloseEducator');
+      const btnEducatorContinuePpt = document.getElementById('btnEducatorContinuePpt');
+      const openEducatorModal = () => educatorModal && educatorModal.classList.remove('hidden');
+      const closeEducatorModal = () => educatorModal && educatorModal.classList.add('hidden');
+
+      if (btnEducatorProfile) btnEducatorProfile.addEventListener('click', openEducatorModal);
+      if (btnCompanionEducatorProfile) btnCompanionEducatorProfile.addEventListener('click', openEducatorModal);
+      if (btnCloseEducator) btnCloseEducator.addEventListener('click', closeEducatorModal);
+      if (btnEducatorContinuePpt) btnEducatorContinuePpt.addEventListener('click', closeEducatorModal);
+      if (educatorModal) {
+        educatorModal.addEventListener('click', (e) => {
+          if (e.target === educatorModal) closeEducatorModal();
+        });
+      }
+
       // Global Keyboard Shortcuts
       window.addEventListener('keydown', (e) => {
         // Ignore if user is typing in search input
@@ -1554,6 +1682,7 @@
           navigateTopic(1);
         } else if (e.key === 'Escape') {
           helpModal.classList.add('hidden');
+          closeEducatorModal();
           if (window.innerWidth < 1024) closeMobileSidebar();
         }
       });
