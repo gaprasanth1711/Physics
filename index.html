@@ -198,23 +198,143 @@
     @media (max-width: 1023px) {
       body[data-mtab="lab"] #guideBar { display: block; }
     }
+
+    /* ========================================================
+       PRASANTH PHYSICS ANIMATED LOGO EFFECTS
+       ======================================================== */
+    @keyframes logoSpinRing {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes logoAuraPulse {
+      0%, 100% {
+        transform: scale(0.95);
+        opacity: 0.65;
+        filter: blur(8px);
+      }
+      50% {
+        transform: scale(1.15);
+        opacity: 0.95;
+        filter: blur(14px);
+      }
+    }
+    @keyframes logoGleamSweep {
+      0% { transform: translateX(-160%) skewX(-25deg); }
+      22%, 100% { transform: translateX(260%) skewX(-25deg); }
+    }
+    @keyframes logoFloating {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2.5px); }
+    }
+
+    .prasanth-logo-badge {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      isolation: isolate;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .prasanth-logo-badge:hover .logo-aura-pulse {
+      opacity: 1 !important;
+      filter: blur(16px) !important;
+      transform: scale(1.2) !important;
+    }
+    .logo-aura-pulse {
+      position: absolute;
+      inset: -4px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6, #6366f1, #0ea5e9);
+      animation: logoAuraPulse 3.5s ease-in-out infinite;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .logo-spin-border {
+      position: relative;
+      padding: 2px;
+      border-radius: 14px;
+      overflow: hidden;
+      z-index: 1;
+      background: rgba(15, 23, 42, 0.8);
+      box-shadow: 0 4px 14px -2px rgba(6, 182, 212, 0.35);
+      animation: logoFloating 4s ease-in-out infinite;
+    }
+    .logo-spin-border::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, #38bdf8, #2563eb, #818cf8, #06b6d4, #38bdf8);
+      animation: logoSpinRing 4s linear infinite;
+      z-index: -1;
+    }
+    .logo-img-box {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .prasanth-logo-badge:hover .logo-img-box {
+      transform: scale(1.08);
+    }
+    .logo-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+      transition: transform 0.3s ease;
+    }
+    .prasanth-logo-badge:hover .logo-img-box img {
+      transform: scale(1.1);
+    }
+    .logo-gleam-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
+      transform: translateX(-160%) skewX(-25deg);
+      animation: logoGleamSweep 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
   </style>
 </head>
 <body class="bg-space-950 text-slate-100 h-screen flex flex-col font-sans overflow-hidden selection:bg-cyan-500 selection:text-black">
   <a href="#stageSection" class="skip-link">Skip to simulation</a>
 
-  <header class="border-b border-slate-800/80 bg-space-900/90 backdrop-blur-md shrink-0 z-40 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
-    <div class="flex items-center gap-3">
-      <div class="h-9 w-9 rounded-xl bg-cyan-700 flex items-center justify-center shadow-sm">
-        <i data-lucide="atom" class="w-5 h-5 text-white"></i>
+  <header class="border-b border-slate-800/80 bg-space-900/90 backdrop-blur-md shrink-0 z-40 px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+    <a href="/" class="flex items-center gap-3 group text-left" title="Prasanth Physics - Return to Home">
+      <div class="prasanth-logo-badge">
+        <div class="logo-aura-pulse"></div>
+        <div class="logo-spin-border">
+          <div class="logo-img-box">
+            <img src="/assets/prasanth-physics-logo.webp" alt="Prasanth Physics Logo" onerror="this.src='prasanth-physics-logo.webp'" />
+            <div class="logo-gleam-overlay"></div>
+          </div>
+        </div>
       </div>
       <div>
-        <h1 class="font-bold text-base md:text-lg tracking-tight text-slate-100">
-          PRASANTH PHYSICS SIMULATIONS
-        </h1>
-        <p class="text-[10px] text-slate-400 font-mono tracking-wide uppercase">Interactive Physics & Simulation Lab</p>
+        <div class="flex items-center gap-2">
+          <h1 class="font-extrabold text-base md:text-lg tracking-tight text-white group-hover:text-cyan-300 transition-colors">
+            PRASANTH PHYSICS
+          </h1>
+          <span class="px-2 py-0.5 text-[9.5px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full font-mono uppercase tracking-wider hidden sm:inline-block">Simulations Lab</span>
+        </div>
+        <p class="text-[10px] text-slate-400 font-mono tracking-wide uppercase group-hover:text-slate-300 transition-colors">Mastery In Physics • Classes XI &amp; XII</p>
       </div>
-    </div>
+    </a>
 
 
     <!-- Top Action buttons -->
@@ -240,6 +360,18 @@
     <!-- Left Sidebar: Simulations Switcher -->
     <aside id="simSidebar" class="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-slate-800/80 bg-space-900/60 p-3 flex lg:flex-col justify-between shrink-0 overflow-x-auto lg:overflow-y-auto">
       <div>
+        <!-- Branded Logo Card in Sidebar -->
+        <div class="hidden lg:flex items-center gap-2.5 p-2 mb-2.5 rounded-xl bg-slate-900/90 border border-slate-800/90 shadow-sm group hover:border-cyan-500/40 transition">
+          <div class="relative w-8 h-8 rounded-lg bg-white p-0.5 shrink-0 overflow-hidden shadow-inner flex items-center justify-center">
+            <img src="/assets/prasanth-physics-logo.webp" alt="Logo" class="w-full h-full object-contain group-hover:scale-105 transition-transform" onerror="this.src='prasanth-physics-logo.webp'" />
+            <div class="logo-gleam-overlay"></div>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[11px] font-bold text-white truncate group-hover:text-cyan-300 transition-colors">Prasanth Physics</div>
+            <div class="text-[9px] font-mono text-cyan-400 font-semibold tracking-wider uppercase">Mastery in Physics</div>
+          </div>
+        </div>
+
         <div id="simHubLabel" class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-2 hidden lg:block">Simulations Hub</div>
         <div class="px-1 mb-2">
           <label for="simSearch" class="visually-hidden">Search simulations by name, topic, class or concept</label>
