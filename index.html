@@ -165,6 +165,11 @@
       body[data-mtab="lab"] #guideBar { display: block; }
     }
   </style>
+  <!-- Vercel Web Analytics -->
+  <script type="module">
+    import { inject } from 'https://unpkg.com/@vercel/analytics@latest/dist/index.mjs';
+    inject();
+  </script>
 </head>
 <body class="bg-space-950 text-slate-100 h-screen flex flex-col font-sans overflow-hidden selection:bg-cyan-500 selection:text-black">
   <a href="#stageSection" class="skip-link">Skip to simulation</a>
