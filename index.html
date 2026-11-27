@@ -107,20 +107,54 @@
       #hudSimTitle { font-size: 12px; }
       #dynamicControlsPanel { font-size: 13px; }
     }
-    /* Stacked Lab tab: readings below canvas (scrollable), overlay hidden */
+    /* Big Simulation Screen Estate & Layout */
+    #stageSection {
+      flex: 1 1 0% !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow-y: auto;
+    }
+    #canvasContainer {
+      flex: 1 1 0% !important;
+      min-height: 60vh !important;
+      height: auto !important;
+      width: 100% !important;
+      position: relative;
+    }
+    #canvasContainer canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    /* Collapsible sidebar: full screen simulation width when collapsed */
+    body.sidebar-collapsed #simSidebar {
+      display: none !important;
+    }
+    #dynamicControlsPanel {
+      flex-shrink: 0;
+      max-height: 160px;
+      overflow-y: auto;
+      background: rgba(15, 23, 42, 0.90);
+      border-top: 1px solid rgba(51, 65, 85, 0.7);
+    }
+    #bottomDataBox {
+      flex-shrink: 0;
+      background: rgba(10, 15, 29, 0.96);
+      border-top: 1px solid rgba(51, 65, 85, 0.7);
+    }
     @media (max-width: 1023px) {
       body[data-mtab="lab"] #hudBox { display: none; }
-      body[data-mtab="lab"] #telePanel { display: block !important; }
       body[data-mtab="lab"] #stageSection { overflow-y: auto; }
-      body[data-mtab="lab"] #canvasContainer { flex: none; height: 44vh; min-height: 300px; }
+      body[data-mtab="lab"] #canvasContainer { min-height: 52vh; }
     }
     body.view-mobile[data-mtab="lab"] #hudBox { display: none; }
-    body.view-mobile[data-mtab="lab"] #telePanel { display: block !important; }
     body.view-mobile[data-mtab="lab"] #stageSection { overflow-y: auto; }
-    body.view-mobile[data-mtab="lab"] #canvasContainer { flex: none; height: 44vh; min-height: 300px; }
+    body.view-mobile[data-mtab="lab"] #canvasContainer { min-height: 52vh; }
     body.view-desktop main { flex-direction: row !important; }
     body.view-desktop #simNavList { flex-direction: column !important; }
     body.view-desktop main > aside:first-child { width: 16rem !important; min-width: 16rem; }
+    body.view-desktop.sidebar-collapsed main > aside:first-child { display: none !important; }
     @media (pointer: coarse) {
       #btnPlayPause, #btnStep, #btnReset, #btnClearTrails { min-height: 44px; min-width: 44px; }
       input[type="range"] { height: 34px; }
@@ -410,6 +444,10 @@
       <!-- Top Simulation Control Bar -->
       <div id="simControlBar" class="p-3 bg-space-900/40 border-b border-slate-800/70 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-2">
+          <button id="btnToggleSidebar" class="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 hover:text-white rounded-lg border border-slate-700 text-xs font-medium transition shadow-sm" title="Toggle Sidebar (Expand Simulation to Full Screen Width)">
+            <i data-lucide="layout-sidebar" class="w-3.5 h-3.5 text-cyan-400"></i>
+            <span class="hidden sm:inline" id="textToggleSidebar">Sims List</span>
+          </button>
           <button id="btnPlayPause" class="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition shadow">
             <i data-lucide="play" id="iconPlayPause" class="w-3.5 h-3.5"></i>
             <span id="textPlayPause">Launch / Play</span>
@@ -487,39 +525,31 @@
         </div>
       </div>
 
-      <!-- Dedicated Bottom Data Box (Separated cleanly below the simulation) -->
-      <div id="bottomDataBox" class="border-t border-slate-800/80 bg-space-900/95 px-4 py-2.5 shrink-0 select-none">
-        <div class="flex items-center justify-between gap-3 mb-2 pb-1 border-b border-slate-800/80">
+      <!-- Sliders for Variation (Directly below simulation) -->
+      <div class="p-3 bg-space-900/90 border-t border-slate-800/80 max-h-40 lg:max-h-48 overflow-y-auto shrink-0" id="dynamicControlsPanel">
+        <!-- Controls rendered dynamically according to active simulation -->
+      </div>
+
+      <!-- Dedicated Bottom Data Box (Details in Bottom) -->
+      <div id="bottomDataBox" class="border-t border-slate-800/80 bg-space-950/95 px-4 py-2 shrink-0 select-none">
+        <div class="flex items-center justify-between gap-3 mb-1.5 pb-1 border-b border-slate-800/80">
           <div class="flex items-center gap-2">
             <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>
             <span id="bottomDataTitle" class="text-xs font-bold text-cyan-300 font-mono tracking-tight uppercase">SIMULATION DATA &amp; LIVE READINGS</span>
           </div>
-          <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Independent Data Panel</span>
+          <div class="flex items-center gap-3 text-[10px] font-mono text-slate-500">
+            <span id="crumbTrail" class="hidden md:inline">Physics › All › Projectile Dynamics</span>
+            <span class="uppercase tracking-wider text-cyan-400/80">Live Telemetry</span>
+          </div>
         </div>
         <div id="bottomDataMetrics" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs font-mono">
           <!-- Populated dynamically with live metrics -->
         </div>
       </div>
 
-      <!-- Readings below canvas (stacked layouts; scroll to see) -->
-      <div id="telePanel" class="hidden border-t border-slate-800/80 bg-space-900/60 px-3.5 py-2.5 shrink-0">
-        <div class="text-[11px] font-mono uppercase tracking-wider text-cyan-400 mb-1.5">Live readings — scroll down for more</div>
-        <div id="teleList" class="grid grid-cols-1 gap-x-4 gap-y-1 text-[12px] font-mono"></div>
-      </div>
-
-      <!-- Lab guide: derived from existing sim name, hint and first preset (no new claims) -->
-      <div id="guideBar" class="border-t border-slate-800/80 bg-space-900/40 px-3.5 py-2 text-xs leading-relaxed shrink-0">
-        <div id="crumbTrail" class="font-mono text-[11px] text-slate-400 mb-1">Physics › All › Projectile Dynamics</div>
-        <div class="flex flex-wrap gap-x-5 gap-y-1">
-          <span class="text-slate-300"><span class="text-slate-500">Observe: </span><span id="guideWhat">Adjust and observe the live readings.</span></span>
-          <span class="text-slate-300"><span class="text-slate-500">Try: </span><span id="guideTry" class="text-cyan-300">Earth Standard</span></span>
-        </div>
-      </div>
-
-      <!-- Bottom Parameter Sliders & Physical Controls -->
-      <div class="p-3.5 bg-space-900/80 border-t border-slate-800/80 max-h-36 lg:max-h-56 overflow-y-auto shrink-0" id="dynamicControlsPanel">
-        <!-- Controls rendered dynamically according to active simulation -->
-      </div>
+      <!-- Hidden legacy elements preserved for scripting -->
+      <div id="telePanel" class="hidden"><div id="teleList"></div></div>
+      <div id="guideBar" class="hidden"><span id="guideWhat"></span><span id="guideTry"></span></div>
     </section>
 
   </main>
@@ -3087,10 +3117,11 @@ const photoSim = {
 
   render() {
     const w = canvas.width / dpr, h = canvas.height / dpr;
-    const gapPx = Math.max(140, Math.min(340, w * 0.38));
-    const cx0 = Math.max(104, w * 0.28);
-    const cx1 = Math.min(w - 60, cx0 + gapPx);
-    const cy = h * 0.38;
+    const gapPx = Math.max(180, Math.min(540, w * 0.45));
+    const cx0 = Math.max(100, Math.min(w * 0.30, w - gapPx - 90));
+    const cx1 = cx0 + gapPx;
+    const cy = h * 0.44;
+    const chamberH = Math.max(220, Math.min(380, h * 0.60));
     const col = photoLambdaColor(this.lambdaNm);
     const hnu = photoPhotonEV(), kMax = photoKmaxEV();
     const v0 = photoStoppingV();
@@ -3102,18 +3133,18 @@ const photoSim = {
     ctx.lineWidth = 2;
     ctx.fillStyle = "rgba(15, 23, 42, 0.45)";
     ctx.beginPath();
-    ctx.roundRect(cx0 - 24, cy - 100, (cx1 - cx0) + 48, 200, 24);
+    ctx.roundRect(cx0 - 24, cy - chamberH / 2, (cx1 - cx0) + 48, chamberH, 24);
     ctx.fill();
     ctx.stroke();
 
     // Subtle glass reflection highlight
-    const glassGrad = ctx.createLinearGradient(cx0 - 20, cy - 95, cx0 - 20, cy + 95);
+    const glassGrad = ctx.createLinearGradient(cx0 - 20, cy - chamberH / 2 + 5, cx0 - 20, cy + chamberH / 2 - 5);
     glassGrad.addColorStop(0, "rgba(255,255,255,0.08)");
     glassGrad.addColorStop(0.5, "rgba(255,255,255,0.01)");
     glassGrad.addColorStop(1, "rgba(255,255,255,0)");
     ctx.fillStyle = glassGrad;
     ctx.beginPath();
-    ctx.roundRect(cx0 - 20, cy - 96, (cx1 - cx0) + 40, 36, 16);
+    ctx.roundRect(cx0 - 20, cy - chamberH / 2 + 4, (cx1 - cx0) + 40, 36, 16);
     ctx.fill();
     ctx.restore();
 
@@ -3173,25 +3204,26 @@ const photoSim = {
     }
 
     // 3. Cathode & Anode plates
+    const plateH = chamberH * 0.72;
     // Cathode (Emitter plate, left)
     ctx.fillStyle = "#475569";
-    ctx.fillRect(cx0 - 8, cy - 85, 12, 170);
+    ctx.fillRect(cx0 - 8, cy - plateH / 2, 12, plateH);
     ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 1;
-    ctx.strokeRect(cx0 - 8, cy - 85, 12, 170);
+    ctx.strokeRect(cx0 - 8, cy - plateH / 2, 12, plateH);
     ctx.fillStyle = "#cbd5e1"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
-    ctx.fillText("CATHODE (E)", cx0 - 42, cy - 95);
+    ctx.fillText("CATHODE (E)", cx0 - 42, cy - plateH / 2 - 10);
     ctx.fillStyle = "#94a3b8"; ctx.font = "10px 'JetBrains Mono', monospace";
-    ctx.fillText("Φ₀=" + this.phi0ev.toFixed(2) + " eV", cx0 - 42, cy + 102);
+    ctx.fillText("Φ₀=" + this.phi0ev.toFixed(2) + " eV", cx0 - 42, cy + plateH / 2 + 16);
 
     // Anode (Collector plate, right)
     ctx.fillStyle = this.voltage >= 0 ? "#15803d" : "#b91c1c";
-    ctx.fillRect(cx1 - 4, cy - 85, 12, 170);
+    ctx.fillRect(cx1 - 4, cy - plateH / 2, 12, plateH);
     ctx.strokeStyle = this.voltage >= 0 ? "#22c55e" : "#ef4444"; ctx.lineWidth = 1.5;
-    ctx.strokeRect(cx1 - 4, cy - 85, 12, 170);
+    ctx.strokeRect(cx1 - 4, cy - plateH / 2, 12, plateH);
     ctx.fillStyle = this.voltage >= 0 ? "#86efac" : "#fca5a5"; ctx.font = "bold 11px 'JetBrains Mono', monospace";
-    ctx.fillText("ANODE (C) " + (this.voltage >= 0 ? "(+)" : "(−)"), cx1 - 35, cy - 95);
+    ctx.fillText("ANODE (C) " + (this.voltage >= 0 ? "(+)" : "(−)"), cx1 - 35, cy - plateH / 2 - 10);
     ctx.fillStyle = "#e2e8f0"; ctx.font = "10px 'JetBrains Mono', monospace";
-    ctx.fillText("V=" + (this.voltage >= 0 ? "+" : "") + this.voltage.toFixed(1) + " V", cx1 - 25, cy + 102);
+    ctx.fillText("V=" + (this.voltage >= 0 ? "+" : "") + this.voltage.toFixed(1) + " V", cx1 - 25, cy + plateH / 2 + 16);
 
     // Anode arrival flashes
     if (this.flashes && this.flashes.length > 0) {
@@ -3281,19 +3313,19 @@ const photoSim = {
 
     // 5. External Circuit & Photocurrent Ammeter (Centered cleanly below the vacuum tube)
     const gx = (cx0 + cx1) / 2;
-    const gy = Math.min(h - 22, cy + 130);
-    const gr = Math.max(28, Math.min(46, h * 0.10));
+    const gy = Math.min(h - 22, cy + chamberH / 2 + 38);
+    const gr = Math.max(28, Math.min(46, h * 0.09));
 
     // Circuit wires connecting plates to ammeter
     ctx.strokeStyle = "#475569";
     ctx.lineWidth = 1.8;
     ctx.beginPath();
     // Cathode wire down to ammeter
-    ctx.moveTo(cx0 - 2, cy + 85);
+    ctx.moveTo(cx0 - 2, cy + plateH / 2);
     ctx.lineTo(cx0 - 2, gy);
     ctx.lineTo(gx - gr - 8, gy);
     // Anode wire down to ammeter
-    ctx.moveTo(cx1 + 2, cy + 85);
+    ctx.moveTo(cx1 + 2, cy + plateH / 2);
     ctx.lineTo(cx1 + 2, gy);
     ctx.lineTo(gx + gr + 8, gy);
     ctx.stroke();
@@ -3458,7 +3490,8 @@ function photoSpawnElectron() {
   const angle = (Math.random() - 0.5) * 0.40;
   const vx = v0 * Math.cos(angle);
   const vy = v0 * Math.sin(angle);
-  const y = (Math.random() - 0.5) * 140;
+  const spanH = Math.max(140, Math.min(260, (canvas.height / dpr) * 0.40));
+  const y = (Math.random() - 0.5) * spanH;
 
   photoSim.electrons.push({
     x: 0,
@@ -9635,6 +9668,31 @@ const rutherfordSim = {
       const empty = document.getElementById('simEmpty');
       if (empty) empty.classList.toggle('hidden', visible > 0);
     });
+
+    // Sidebar toggle (Allows full-screen wide simulation view)
+    const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+    if (btnToggleSidebar) {
+      btnToggleSidebar.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-collapsed');
+        const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+        try { localStorage.setItem('physics_sidebar_collapsed', isCollapsed ? '1' : '0'); } catch (_) {}
+        const textEl = document.getElementById('textToggleSidebar');
+        if (textEl) textEl.textContent = isCollapsed ? 'Show Sims' : 'Hide Sims';
+        resizeCanvas();
+        if (simulations[state.activeSim]?.onResize) {
+          simulations[state.activeSim].onResize();
+        }
+      });
+    }
+
+    // Restore saved sidebar preference
+    try {
+      if (localStorage.getItem('physics_sidebar_collapsed') === '1') {
+        document.body.classList.add('sidebar-collapsed');
+        const textEl = document.getElementById('textToggleSidebar');
+        if (textEl) textEl.textContent = 'Show Sims';
+      }
+    } catch (_) {}
 
     // Global speed selector
     document.getElementById('speedSelect').addEventListener('change', (e) => {
