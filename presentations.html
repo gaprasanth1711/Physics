@@ -129,6 +129,19 @@
       cursor: crosshair;
     }
 
+    /* Protected Presentation Header Shield (Masks popout & download buttons) */
+    #driveHeaderShield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      z-index: 25;
+      pointer-events: auto !important;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
     /* Persistent Watermark */
     .portal-watermark {
       position: absolute;
@@ -430,11 +443,6 @@
             <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
           </button>
 
-          <a id="btnOpenExternal" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 px-2.5 py-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-xs transition" title="Open Presentation in Google Drive / Slides tab">
-            <i data-lucide="external-link" class="w-3.5 h-3.5 text-indigo-400"></i>
-            <span class="hidden md:inline">Open in Drive</span>
-          </a>
-
           <button id="btnFullscreen" class="flex items-center gap-1.5 px-3 py-1.5 text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-semibold shadow transition" title="Enter Fullscreen Presentation (Press 'F')">
             <i data-lucide="maximize" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">Fullscreen</span>
@@ -461,12 +469,6 @@
         
         <div id="presentationContainer" class="w-full max-w-6xl">
           
-          <!-- Persistent Physics Prasanth Brand Watermark -->
-          <div class="portal-watermark">
-            <i data-lucide="atom" class="w-3.5 h-3.5 text-indigo-400 animate-spin" style="animation-duration: 8s;"></i>
-            <span class="text-xs font-bold tracking-wide text-white">Physics Prasanth</span>
-          </div>
-
           <!-- Aspect Ratio Container -->
           <div class="stage-ratio-box">
             <div class="stage-ratio-content">
@@ -491,6 +493,23 @@
                       webkitallowfullscreen="true"
                       loading="lazy">
               </iframe>
+
+              <!-- Protected Header Shield: Masks and blocks Google Drive's native popout & download buttons -->
+              <div id="driveHeaderShield" class="absolute top-0 left-0 right-0 h-12 z-25 flex items-center justify-between px-3 md:px-4 bg-slate-950/95 border-b border-slate-800/80 backdrop-blur-md select-none shadow-md">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold shrink-0">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    <span>Protected Presentation</span>
+                  </div>
+                  <span id="shieldTopicTitle" class="text-xs font-semibold text-slate-200 truncate max-w-[200px] sm:max-w-md"></span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-700/50 text-[11px] font-medium text-indigo-300">
+                    <i data-lucide="atom" class="w-3.5 h-3.5 text-indigo-400 animate-spin" style="animation-duration: 8s;"></i>
+                    <span class="font-bold text-white tracking-wide">Physics Prasanth</span>
+                  </div>
+                </div>
+              </div>
 
               <!-- Teacher Annotation Canvas Layer -->
               <canvas id="annotationCanvas" width="1920" height="1080"></canvas>
@@ -710,8 +729,8 @@
       const btnPrevTopic = document.getElementById('btnPrevTopic');
       const btnNextTopic = document.getElementById('btnNextTopic');
       const btnReloadSlide = document.getElementById('btnReloadSlide');
-      const btnOpenExternal = document.getElementById('btnOpenExternal');
       const btnFullscreen = document.getElementById('btnFullscreen');
+      const shieldTopicTitle = document.getElementById('shieldTopicTitle');
 
       // Tracker & Cards
       const trackerClassBadge = document.getElementById('trackerClassBadge');
@@ -981,6 +1000,7 @@
         cardClassBadge.textContent = current.className;
         cardWeightageBadge.textContent = `Weightage: ${current.weightage}`;
         cardTopicTitle.textContent = current.topic.title;
+        if (shieldTopicTitle) shieldTopicTitle.textContent = current.topic.title;
         cardChapterTitle.textContent = `${current.chapterTitle}`;
         loaderTopicTitle.textContent = `Streaming ${current.topic.title}...`;
 
@@ -1029,7 +1049,7 @@
         slideLoader.classList.remove('opacity-0', 'pointer-events-none');
 
         if (engineType === 'slides') {
-          presentationIframe.src = `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=3000&rtpof=true&sd=true`;
+          presentationIframe.src = `https://docs.google.com/presentation/d/${id}/embed?start=false&loop=false&delayms=3000&rtpof=true&sd=true&rm=minimal`;
           if (btnEngineSlides) btnEngineSlides.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 bg-indigo-600 text-white font-semibold shadow-sm';
           if (btnEngineStream) btnEngineStream.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200';
           modeHintText.textContent = "Animated Slides engine active: Step through animations, builds & transitions (requires Google Slides converted format).";
@@ -1038,10 +1058,6 @@
           if (btnEngineStream) btnEngineStream.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 bg-indigo-600 text-white font-semibold shadow-sm';
           if (btnEngineSlides) btnEngineSlides.className = 'px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 text-slate-400 hover:text-slate-200';
           modeHintText.textContent = "Presentation Stream engine active: Universal slide viewer; loads all PPTX presentations without requiring Google login.";
-        }
-
-        if (btnOpenExternal) {
-          btnOpenExternal.href = `https://docs.google.com/presentation/d/${id}/edit?usp=sharing`;
         }
 
         presentationIframe.onload = function() {
@@ -1387,6 +1403,12 @@
         // Ignore if user is typing in search input
         if (document.activeElement === catalogueSearch) return;
 
+        // Prevent download / save / print shortcuts (Ctrl+S, Ctrl+P, Ctrl+U)
+        if ((e.ctrlKey || e.metaKey) && ['s', 'S', 'p', 'P', 'u', 'U'].includes(e.key)) {
+          e.preventDefault();
+          return false;
+        }
+
         if (e.key === 'b' || e.key === 'B') {
           setMode('browse');
         } else if (e.key === 'a' || e.key === 'A') {
@@ -1408,6 +1430,19 @@
           if (window.innerWidth < 1024) closeMobileSidebar();
         }
       });
+
+      // Prevent right-click context menu on presentation to block "Save As / Download"
+      document.addEventListener('contextmenu', (e) => {
+        if (e.target.closest('#presentationContainer') || e.target.closest('main')) {
+          e.preventDefault();
+          return false;
+        }
+      });
+
+      // Prevent drag saving of assets
+      if (presentationContainer) {
+        presentationContainer.addEventListener('dragstart', (e) => e.preventDefault());
+      }
 
       window.addEventListener('resize', () => {
         resizeCanvasResolution();
