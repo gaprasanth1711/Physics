@@ -511,11 +511,11 @@
             </div>
           </button>
 
-          <button data-sim="orbit" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
-            <i data-lucide="orbit" class="w-4 h-4 shrink-0 text-amber-400"></i>
+          <button data-sim="magforce" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
+            <i data-lucide="magnet" class="w-4 h-4 shrink-0 text-amber-400"></i>
             <div>
-              <div class="font-semibold leading-snug">Orbital Mechanics</div>
-              <div class="text-[10px] text-slate-400 hidden lg:block">N-body gravity sandbox</div>
+              <div class="font-semibold leading-snug">Current Force &amp; Torque</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Rod F=BIL &amp; Loop τ=NIAB · XII</div>
             </div>
           </button>
 
@@ -1532,245 +1532,954 @@
     };
 
     /* ==========================================================
-       4. SIMULATION 3: ORBITAL MECHANICS & N-BODY SANDBOX
+       4. SIMULATION 3: MAGNETIC FORCE ON CURRENT ROD & TORQUE ON LOOP
        ========================================================== */
-    const orbitSim = {
-      name: "Orbital Mechanics & N-Body Gravity",
-      G: 1200, // Gravitational constant scaled for sandbox
-      bodies: [],
-      dragStart: null,
+    const magforceSim = {
+      name: "Current in Magnetic Field: Rod Force & Loop Torque · XII",
+      mode: 'rod',        // 'rod' (F = BIL sinθ) | 'loop' (τ = NIAB sinφ, F_net = 0)
+      I: 6.0,             // Current in Amperes (-10 to +10 A)
+      B: 0.80,            // Magnetic Field in Tesla (-1.5 to +1.5 T)
+      L: 0.40,            // Rod length / Loop vertical arm length (0.10 to 0.60 m)
+      thetaDeg: 90,       // Angle between conductor I·L and B in Rod mode (0 to 180 deg)
+      rodMass: 0.12,      // kg
+      rodX: 0.0,          // Normalized rail displacement (-0.88 to +0.88 -> -0.35 to +0.35 m)
+      rodV: 0.0,          // Rod velocity along rail (m/s)
+      rodTrail: [],
+      N: 20,              // Number of coil turns in Loop mode
+      areaCm2: 40,        // Loop area in cm^2 (10 to 80 cm^2)
+      phiDeg: 65,         // Initial/hold angle φ between dipole moment m and B (0 to 180 deg)
+      phi: 65 * Math.PI / 180,
+      omega: 0.0,         // Angular speed (rad/s)
+      holdAngle: false,   // Freeze coil at phiDeg for static vector analysis
+      Jloop: 0.010,       // Rotational inertia (kg*m^2)
+      tauTrail: [],
+      chargePhase: 0.0,
+      dragging: false,
+      dragLastX: 0,
 
       init() {
         this.reset();
       },
 
       reset() {
-        const cx = (canvas.width / dpr) / 2;
-        const cy = (canvas.height / dpr) / 2;
+        this.rodX = 0.0;
+        this.rodV = 0.0;
+        this.rodTrail = [];
+        this.phi = (this.phiDeg * Math.PI) / 180;
+        this.omega = 0.0;
+        this.tauTrail = [];
+      },
 
-        this.bodies = [
-          // Central Star
-          { x: cx, y: cy, vx: 0, vy: 0, mass: 600, radius: 18, color: '#fbbf24', fixed: true, trail: [] },
-          // Inner Planet
-          { x: cx, y: cy - 110, vx: 2.3, vy: 0, mass: 8, radius: 5, color: '#38bdf8', fixed: false, trail: [] },
-          // Outer Gas Giant
-          { x: cx, y: cy + 190, vx: -1.8, vy: 0, mass: 25, radius: 8, color: '#c084fc', fixed: false, trail: [] },
-          // Eccentric Satellite / Comet
-          { x: cx - 250, y: cy, vx: 0, vy: 1.4, mass: 3, radius: 4, color: '#34d399', fixed: false, trail: [] }
-        ];
+      proj(cx, cy, X, Y, Z) {
+        return {
+          x: cx + X - 0.36 * Z,
+          y: cy - Y + 0.24 * Z
+        };
+      },
+
+      drawPill(x, y, text, textColor = '#f8fafc', bgColor = 'rgba(15, 23, 42, 0.88)', borderColor = 'rgba(148, 163, 184, 0.35)') {
+        ctx.save();
+        ctx.font = 'bold 10px "JetBrains Mono", monospace';
+        const m = ctx.measureText(text);
+        const padX = 6;
+        const w = m.width + padX * 2;
+        const h = 16;
+        ctx.fillStyle = bgColor;
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 1;
+        ctx.fillRect(x - w / 2, y - h / 2, w, h);
+        ctx.strokeRect(x - w / 2, y - h / 2, w, h);
+        ctx.fillStyle = textColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y + 0.5);
+        ctx.restore();
+      },
+
+      drawVec(x1, y1, x2, y2, color, width = 2.6, label = '', labelOffset = { x: 0, y: -12 }) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 3) return;
+        const head = Math.min(10, Math.max(6, len * 0.22));
+        const ang = Math.atan2(dy, dx);
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+        ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+        if (label) {
+          this.drawPill(x2 + (labelOffset.x || 0), y2 + (labelOffset.y || 0), label, color, 'rgba(9, 13, 22, 0.90)', color);
+        }
+        ctx.restore();
+      },
+
+      getRodPhysics() {
+        const thetaRad = (this.thetaDeg * Math.PI) / 180;
+        const sinT = Math.sin(thetaRad);
+        // Conductor axis along +z: L_vec = L * z_hat; B = B*(cosT z_hat + sinT y_hat)
+        // F = I (L_vec x B) = I*L*B*sinT*(z_hat x y_hat) = -I*L*B*sinT * x_hat
+        const Fx = -this.I * this.L * this.B * sinT;
+        const Fmag = Math.abs(Fx);
+        const ax = Fx / this.rodMass;
+        return { thetaRad, sinT, Fx, Fmag, ax };
+      },
+
+      getLoopPhysics() {
+        const A = this.areaCm2 * 1e-4; // m^2
+        const sinPhi = Math.sin(this.phi);
+        const cosPhi = Math.cos(this.phi);
+        // Side arms length L_arm derived cleanly from A = L_arm * b_arm (with aspect ratio 1.25)
+        const Larm = Math.sqrt(A * 1.25);
+        const bArm = A / Larm;
+        const mMag = this.N * Math.abs(this.I) * A;
+        const armForce = this.N * Math.abs(this.I) * Larm * Math.abs(this.B);
+        // Torque tau = m x B magnitude (restoring sign: when I*B > 0 pulls phi -> 0; when I*B < 0 pulls phi -> pi)
+        const torqueSigned = this.N * this.I * A * this.B * sinPhi;
+        const torqueMag = Math.abs(torqueSigned);
+        let normDeg = ((this.phi * 180 / Math.PI) % 360 + 360) % 360;
+        if (normDeg > 180) normDeg = 360 - normDeg;
+        const planeAlpha = 90 - normDeg;
+        return { A, Larm, bArm, sinPhi, cosPhi, mMag, armForce, torqueSigned, torqueMag, normDeg, planeAlpha };
       },
 
       update(dt) {
-        const num = this.bodies.length;
-
-        // Gravitational pair-wise interaction F = G*m1*m2 / r^2
-        for (let i = 0; i < num; i++) {
-          const b1 = this.bodies[i];
-          if (b1.fixed) continue;
-
-          let fx = 0;
-          let fy = 0;
-
-          for (let j = 0; j < num; j++) {
-            if (i === j) continue;
-            const b2 = this.bodies[j];
-            const dx = b2.x - b1.x;
-            const dy = b2.y - b1.y;
-            const distSq = dx * dx + dy * dy + 100; // Softening parameter to prevent infinity
-            const dist = Math.sqrt(distSq);
-            const force = (this.G * b1.mass * b2.mass) / distSq;
-
-            fx += force * (dx / dist);
-            fy += force * (dy / dist);
+        this.chargePhase += dt * this.I * 0.45;
+        if (this.mode === 'rod') {
+          const { Fx } = this.getRodPhysics();
+          if (Math.abs(Fx) > 1e-5) {
+            // Smooth visual acceleration along 0.70 m track (rodX in [-0.88, +0.88])
+            const visualAcc = (Fx / this.rodMass) * 0.14;
+            const damping = 0.85;
+            this.rodV += (visualAcc - damping * this.rodV) * dt;
+            this.rodX += this.rodV * dt;
+            if (this.rodX > 0.88) {
+              this.rodX = 0.88;
+              if (this.rodV > 0) this.rodV = 0;
+            } else if (this.rodX < -0.88) {
+              this.rodX = -0.88;
+              if (this.rodV < 0) this.rodV = 0;
+            }
+          } else {
+            this.rodV *= Math.max(0, 1 - 6 * dt);
           }
-
-          // a = F / m
-          b1.vx += (fx / b1.mass) * dt;
-          b1.vy += (fy / b1.mass) * dt;
-
-          b1.x += b1.vx * dt * 45;
-          b1.y += b1.vy * dt * 45;
-
-          // Trail logging
           if (state.showTrails) {
-            b1.trail.push({ x: b1.x, y: b1.y });
-            if (b1.trail.length > 280) b1.trail.shift();
+            this.rodTrail.push(this.rodX);
+            if (this.rodTrail.length > 90) this.rodTrail.shift();
+          }
+        } else {
+          if (this.holdAngle) {
+            this.phi = (this.phiDeg * Math.PI) / 180;
+            this.omega = 0;
+          } else {
+            const A = this.areaCm2 * 1e-4;
+            const steps = 8;
+            const subDt = dt / steps;
+            for (let s = 0; s < steps; s++) {
+              // Aligning torque pulls m toward B: d2phi/dt2 = -(N*I*A*B*sin(phi) + c*omega)/J
+              const tauAlign = -this.N * this.I * A * this.B * Math.sin(this.phi);
+              const tauDamp = -0.016 * this.omega;
+              const alpha = (tauAlign + tauDamp) / this.Jloop;
+              this.omega += alpha * subDt;
+              this.phi += this.omega * subDt;
+            }
+          }
+          if (state.showTrails) {
+            this.tauTrail.push(this.phi);
+            if (this.tauTrail.length > 100) this.tauTrail.shift();
           }
         }
       },
 
-      render() {
-        // Draw trails
-        if (state.showTrails) {
-          for (let b of this.bodies) {
-            if (b.trail.length > 2) {
-              ctx.strokeStyle = b.color;
-              ctx.lineWidth = 1.2;
-              ctx.globalAlpha = 0.45;
-              ctx.beginPath();
-              ctx.moveTo(b.trail[0].x, b.trail[0].y);
-              for (let p of b.trail) {
-                ctx.lineTo(p.x, p.y);
-              }
-              ctx.stroke();
-              ctx.globalAlpha = 1.0;
+      renderRodStage(cx, cy, scaleW, scaleH) {
+        const { thetaRad, Fx, Fmag, ax } = this.getRodPhysics();
+        const railHalf = Math.min(scaleW * 0.34, 185);
+        const zHalf = Math.min(scaleH * 0.24, 34 + (this.L / 0.60) * 42);
+        const railY = -12;
+
+        // Magnetic Pole Plates (Below N/S & Top S/N depending on sign of B)
+        const bPos = this.B >= 0;
+        const bZero = Math.abs(this.B) < 0.01;
+        if (!bZero) {
+          const sinT = Math.sin(thetaRad);
+          const cosT = Math.cos(thetaRad);
+          const bSign = bPos ? 1 : -1;
+          // Draw soft translucent field zone box
+          const b1 = this.proj(cx, cy, -railHalf * 0.82, -74, -zHalf - 16);
+          const b2 = this.proj(cx, cy, railHalf * 0.82, -74, -zHalf - 16);
+          const b3 = this.proj(cx, cy, railHalf * 0.82, -74, zHalf + 16);
+          const b4 = this.proj(cx, cy, -railHalf * 0.82, -74, zHalf + 16);
+          ctx.save();
+          ctx.fillStyle = bPos ? 'rgba(239, 68, 68, 0.14)' : 'rgba(59, 130, 246, 0.14)';
+          ctx.strokeStyle = bPos ? 'rgba(248, 113, 113, 0.45)' : 'rgba(96, 165, 250, 0.45)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(b1.x, b1.y); ctx.lineTo(b2.x, b2.y); ctx.lineTo(b3.x, b3.y); ctx.lineTo(b4.x, b4.y); ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.font = 'bold 10px "Inter", sans-serif';
+          ctx.fillStyle = bPos ? '#fca5a5' : '#93c5fd';
+          ctx.textAlign = 'center';
+          const botMid = this.proj(cx, cy, 0, -78, zHalf + 24);
+          ctx.fillText(bPos ? 'Bottom Magnetic Pole (N)' : 'Bottom Magnetic Pole (S)', botMid.x, botMid.y + 8);
+          ctx.restore();
+
+          // Uniform tilted Magnetic Field arrows (B) across apparatus
+          const bxUnit = 0;
+          const byUnit = sinT * bSign;
+          const bzUnit = cosT * bSign;
+          for (let ix = -1; ix <= 1; ix++) {
+            for (let iz = -1; iz <= 1; iz++) {
+              const px = ix * railHalf * 0.46;
+              const pz = iz * zHalf * 0.45;
+              const lenHalf = 42;
+              const pA = this.proj(cx, cy, px - bxUnit * lenHalf, railY + 6 - byUnit * lenHalf, pz - bzUnit * lenHalf);
+              const pB = this.proj(cx, cy, px + bxUnit * lenHalf, railY + 6 + byUnit * lenHalf, pz + bzUnit * lenHalf);
+              ctx.save();
+              ctx.globalAlpha = ix === 0 && iz === 0 ? 0.92 : 0.42;
+              this.drawVec(pA.x, pA.y, pB.x, pB.y, '#38bdf8', ix === 0 && iz === 0 ? 2.4 : 1.5, ix === 1 && iz === 0 ? `B=${this.B.toFixed(2)}T` : '', { x: 26, y: -6 });
+              ctx.restore();
             }
           }
         }
 
-        // Draw bodies
-        for (let b of this.bodies) {
-          ctx.fillStyle = b.color;
-          if (b.fixed) {
-            // Sun glow
-            ctx.shadowColor = b.color;
-            ctx.shadowBlur = 24;
-          }
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
+        // Parallel Horizontal Copper Rails (Back Rail -zHalf, Front Rail +zHalf)
+        const rBL = this.proj(cx, cy, -railHalf, railY, -zHalf);
+        const rBR = this.proj(cx, cy, railHalf, railY, -zHalf);
+        const rFL = this.proj(cx, cy, -railHalf, railY, zHalf);
+        const rFR = this.proj(cx, cy, railHalf, railY, zHalf);
 
-          // Vector visualizer
-          if (state.showVectors && !b.fixed) {
-            ctx.strokeStyle = '#ef4444';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(b.x, b.y);
-            ctx.lineTo(b.x + b.vx * 15, b.y + b.vy * 15);
-            ctx.stroke();
-          }
+        // Rail supports & circuit wires to DC supply on left
+        ctx.save();
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(rBL.x, rBL.y); ctx.lineTo(rBR.x, rBR.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(rFL.x, rFL.y); ctx.lineTo(rFR.x, rFR.y); ctx.stroke();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(rBL.x, rBL.y - 1); ctx.lineTo(rBR.x, rBR.y - 1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(rFL.x, rFL.y - 1); ctx.lineTo(rFR.x, rFR.y - 1); ctx.stroke();
+
+        // Circuit loop on left connecting rails through Battery (with polarity)
+        const midLeftX = Math.min(rBL.x, rFL.x) - 24;
+        const midLeftY = (rBL.y + rFL.y) / 2;
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(rBL.x, rBL.y);
+        ctx.lineTo(midLeftX, rBL.y);
+        ctx.lineTo(midLeftX, rFL.y);
+        ctx.lineTo(rFL.x, rFL.y);
+        ctx.stroke();
+
+        // Battery symbol on left wire
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(midLeftX - 10, midLeftY - 12, 20, 24);
+        const topIsPos = this.I >= 0;
+        ctx.strokeStyle = topIsPos ? '#34d399' : '#f87171';
+        ctx.lineWidth = topIsPos ? 2.5 : 3.5;
+        ctx.beginPath(); ctx.moveTo(midLeftX - (topIsPos ? 10 : 5), midLeftY - 5); ctx.lineTo(midLeftX + (topIsPos ? 10 : 5), midLeftY - 5); ctx.stroke();
+        ctx.strokeStyle = topIsPos ? '#f87171' : '#34d399';
+        ctx.lineWidth = topIsPos ? 3.5 : 2.5;
+        ctx.beginPath(); ctx.moveTo(midLeftX - (topIsPos ? 5 : 10), midLeftY + 5); ctx.lineTo(midLeftX + (topIsPos ? 5 : 10), midLeftY + 5); ctx.stroke();
+        ctx.font = 'bold 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#34d399';
+        ctx.textAlign = 'right';
+        ctx.fillText(topIsPos ? '+' : '−', midLeftX - 12, midLeftY - 4);
+        ctx.fillStyle = '#f87171';
+        ctx.fillText(topIsPos ? '−' : '+', midLeftX - 12, midLeftY + 7);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText(`I = ${this.I.toFixed(1)}A`, midLeftX - 8, midLeftY + 22);
+
+        // End bumpers on rails
+        for (const endX of [-railHalf, railHalf]) {
+          const bP = this.proj(cx, cy, endX, railY + 4, -zHalf);
+          const fP = this.proj(cx, cy, endX, railY + 4, zHalf);
+          ctx.fillStyle = '#475569';
+          ctx.fillRect(bP.x - 3, bP.y - 6, 6, 10);
+          ctx.fillRect(fP.x - 3, fP.y - 6, 6, 10);
         }
+        ctx.restore();
 
-        // Mouse sling vector indicator if dragging
-        if (this.dragStart) {
-          ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 2;
+        // Current-Carrying Sliding Copper Rod
+        const rodWorldX = this.rodX * (railHalf - 24);
+        const rodBack = this.proj(cx, cy, rodWorldX, railY + 2, -zHalf - 8);
+        const rodFront = this.proj(cx, cy, rodWorldX, railY + 2, zHalf + 8);
+        const rodMid = this.proj(cx, cy, rodWorldX, railY + 2, 0);
+
+        // Motion trail along rails
+        if (state.showTrails && this.rodTrail.length > 2) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+          ctx.lineWidth = 3;
           ctx.setLineDash([4, 4]);
+          const t0 = this.proj(cx, cy, this.rodTrail[0] * (railHalf - 24), railY + 2, 0);
           ctx.beginPath();
-          ctx.moveTo(this.dragStart.x, this.dragStart.y);
-          ctx.lineTo(this.dragStart.currX, this.dragStart.currY);
+          ctx.moveTo(t0.x, t0.y);
+          for (const rx of this.rodTrail) {
+            const tp = this.proj(cx, cy, rx * (railHalf - 24), railY + 2, 0);
+            ctx.lineTo(tp.x, tp.y);
+          }
           ctx.stroke();
           ctx.setLineDash([]);
-
-          ctx.fillStyle = '#38bdf8';
-          ctx.beginPath();
-          ctx.arc(this.dragStart.x, this.dragStart.y, 6, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.restore();
         }
+
+        // Metallic Copper Rod body
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(rodBack.x + 2, rodBack.y + 4); ctx.lineTo(rodFront.x + 2, rodFront.y + 4); ctx.stroke();
+
+        const rodGrad = ctx.createLinearGradient(rodBack.x, rodBack.y, rodFront.x, rodFront.y);
+        rodGrad.addColorStop(0, '#b45309');
+        rodGrad.addColorStop(0.5, '#fbbf24');
+        rodGrad.addColorStop(1, '#d97706');
+        ctx.strokeStyle = rodGrad;
+        ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.moveTo(rodBack.x, rodBack.y); ctx.lineTo(rodFront.x, rodFront.y); ctx.stroke();
+
+        // Moving charge dots representing Current I along rod
+        if (Math.abs(this.I) > 0.1) {
+          for (let k = 0; k < 5; k++) {
+            const frac = ((k / 5 + (this.chargePhase % 1)) % 1 + 1) % 1;
+            const qx = rodBack.x + (rodFront.x - rodBack.x) * frac;
+            const qy = rodBack.y + (rodFront.y - rodBack.y) * frac;
+            ctx.fillStyle = '#34d399';
+            ctx.beginPath(); ctx.arc(qx, qy, 2.7, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        // Vectors anchored at Rod Center
+        if (state.showVectors) {
+          // 1. Current vector I·L along rod
+          if (Math.abs(this.I) > 0.1) {
+            const iSign = this.I > 0 ? 1 : -1;
+            const iTip = this.proj(cx, cy, rodWorldX, railY + 2, iSign * (zHalf + 18));
+            this.drawVec(rodMid.x, rodMid.y, iTip.x, iTip.y, '#34d399', 2.6, `I (${this.I > 0 ? 'Front' : 'Back'})`, { x: 0, y: iSign > 0 ? 14 : -14 });
+          }
+
+          // 2. Angle theta arc between Rod (+Z) and B at rodMid
+          if (!bZero) {
+            const pDirRod = this.proj(cx, cy, rodWorldX, railY + 2, 34);
+            const pDirB = this.proj(cx, cy, rodWorldX, railY + 2 + 34 * Math.sin(thetaRad) * (bPos ? 1 : -1), 34 * Math.cos(thetaRad) * (bPos ? 1 : -1));
+            const a1 = Math.atan2(pDirRod.y - rodMid.y, pDirRod.x - rodMid.x);
+            const a2 = Math.atan2(pDirB.y - rodMid.y, pDirB.x - rodMid.x);
+            ctx.save();
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(rodMid.x, rodMid.y, 22, Math.min(a1, a2), Math.max(a1, a2));
+            ctx.stroke();
+            ctx.font = 'bold 10px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText(`θ=${this.thetaDeg}°`, rodMid.x + 14, rodMid.y - 16);
+            ctx.restore();
+          }
+
+          // 3. Magnetic Force Vector F along X axis
+          if (Fmag > 0.01) {
+            const fPx = Math.sign(Fx) * Math.min(110, 32 + Fmag * 24);
+            const fEnd = this.proj(cx, cy, rodWorldX + fPx, railY + 2, 0);
+            const dirTxt = Fx > 0 ? '→ Right' : '← Left';
+            this.drawVec(rodMid.x, rodMid.y, fEnd.x, fEnd.y, '#f43f5e', 3.4, `F = ${Fmag.toFixed(2)} N (${dirTxt})`, { x: Fx > 0 ? 10 : -10, y: -16 });
+          } else {
+            this.drawPill(rodMid.x, rodMid.y - 26, 'F = 0 N (sinθ = 0 or I/B = 0 → No Force!)', '#fbbf24', 'rgba(15, 23, 42, 0.92)', '#f59e0b');
+          }
+        }
+
+        // Bottom caption inside Rod canvas stage
+        ctx.save();
+        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('Rod translates along rails because single straight conductor has NET FORCE F = B·I·L·sinθ ≠ 0', cx, Math.min(scaleH - 34, cy + 128));
+        ctx.restore();
+      },
+
+      renderLoopStage(cx, cy, scaleW, scaleH) {
+        const { A, sinPhi, cosPhi, mMag, armForce, torqueSigned, torqueMag, normDeg, planeAlpha } = this.getLoopPhysics();
+        const bPos = this.B >= 0;
+        const bZero = Math.abs(this.B) < 0.01;
+        const poleX = Math.min(scaleW * 0.36, 175);
+        const poleW = 34;
+        const poleH = Math.min(scaleH * 0.44, 150);
+
+        // North & South Pole Pieces (Left & Right)
+        ctx.save();
+        const leftIsN = bPos;
+        const gradL = ctx.createLinearGradient(cx - poleX - poleW, cy, cx - poleX, cy);
+        gradL.addColorStop(0, leftIsN ? '#7f1d1d' : '#1e3a8a');
+        gradL.addColorStop(1, leftIsN ? '#ef4444' : '#3b82f6');
+        ctx.fillStyle = gradL;
+        ctx.fillRect(cx - poleX - poleW, cy - poleH / 2, poleW, poleH);
+        ctx.strokeStyle = leftIsN ? '#fca5a5' : '#93c5fd';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(cx - poleX - poleW, cy - poleH / 2, poleW, poleH);
+
+        const gradR = ctx.createLinearGradient(cx + poleX, cy, cx + poleX + poleW, cy);
+        gradR.addColorStop(0, leftIsN ? '#3b82f6' : '#ef4444');
+        gradR.addColorStop(1, leftIsN ? '#1e3a8a' : '#7f1d1d');
+        ctx.fillStyle = gradR;
+        ctx.fillRect(cx + poleX, cy - poleH / 2, poleW, poleH);
+        ctx.strokeStyle = leftIsN ? '#93c5fd' : '#fca5a5';
+        ctx.strokeRect(cx + poleX, cy - poleH / 2, poleW, poleH);
+
+        ctx.font = 'bold 16px "Inter", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(leftIsN ? 'N' : 'S', cx - poleX - poleW / 2, cy);
+        ctx.fillText(leftIsN ? 'S' : 'N', cx + poleX + poleW / 2, cy);
+        ctx.restore();
+
+        // Uniform Horizontal Magnetic Field Lines B along X
+        if (!bZero) {
+          const dirX = bPos ? 1 : -1;
+          for (let row = -2; row <= 2; row++) {
+            const fy = cy + row * (poleH * 0.18);
+            const xL = cx - poleX + 10;
+            const xR = cx + poleX - 10;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.36)';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1.3;
+            ctx.beginPath(); ctx.moveTo(xL, fy); ctx.lineTo(xR, fy); ctx.stroke();
+            ctx.setLineDash([]);
+            // small direction arrow mid-left
+            const ax1 = dirX > 0 ? xL + 16 : xR - 16;
+            const ax2 = ax1 + dirX * 22;
+            this.drawVec(ax1, fy, ax2, fy, 'rgba(56, 189, 248, 0.72)', 1.5);
+            ctx.restore();
+          }
+          this.drawPill(cx - poleX + 46, cy - poleH / 2 - 14, `B = ${this.B.toFixed(2)} T`, '#38bdf8', 'rgba(9,13,22,0.9)', '#0284c7');
+        }
+
+        // Pivot Rotation Vertical Axle
+        const coilH = Math.min(scaleH * 0.38, 128);
+        const coilW = Math.min(scaleW * 0.25, 96) * Math.sqrt(this.areaCm2 / 40);
+        const axleTop = this.proj(cx, cy, 0, coilH / 2 + 28, 0);
+        const axleBot = this.proj(cx, cy, 0, -coilH / 2 - 28, 0);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(axleTop.x, axleTop.y); ctx.lineTo(axleBot.x, axleBot.y); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // Loop Corners in 3D:
+        // u = (-sin(phi), 0, cos(phi)) is coil breadth axis; n = (cos(phi), 0, sin(phi)) is normal (dipole m dir)
+        const ux = -sinPhi, uz = cosPhi;
+        const halfB = coilW / 2;
+        const halfH = coilH / 2;
+        // Arm 1 (PQ) at +halfB * u; Arm 2 (RS) at -halfB * u
+        const P = this.proj(cx, cy, halfB * ux, -halfH, halfB * uz);
+        const Q = this.proj(cx, cy, halfB * ux, halfH, halfB * uz);
+        const R = this.proj(cx, cy, -halfB * ux, halfH, -halfB * uz);
+        const S = this.proj(cx, cy, -halfB * ux, -halfH, -halfB * uz);
+
+        // Subtle fill showing plane of rectangular loop
+        ctx.save();
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.10)';
+        ctx.beginPath();
+        ctx.moveTo(P.x, P.y); ctx.lineTo(Q.x, Q.y); ctx.lineTo(R.x, R.y); ctx.lineTo(S.x, S.y); ctx.closePath();
+        ctx.fill();
+
+        // Copper wire frame (thickness hints N turns)
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = Math.min(6, 2.5 + this.N / 15);
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(P.x, P.y); ctx.lineTo(Q.x, Q.y); ctx.lineTo(R.x, R.y); ctx.lineTo(S.x, S.y); ctx.closePath();
+        ctx.stroke();
+
+        // Animated current dots flowing around Q -> P -> S -> R -> Q (for I > 0)
+        if (Math.abs(this.I) > 0.1) {
+          const verts = [Q, P, S, R];
+          ctx.fillStyle = '#34d399';
+          for (let seg = 0; seg < 4; seg++) {
+            const A1 = verts[seg];
+            const A2 = verts[(seg + 1) % 4];
+            for (let k = 0; k < 2; k++) {
+              const t = (((this.chargePhase * 0.8 + k * 0.5) % 1) + 1) % 1;
+              const qx = A1.x + (A2.x - A1.x) * t;
+              const qy = A1.y + (A2.y - A1.y) * t;
+              ctx.beginPath(); ctx.arc(qx, qy, 2.6, 0, Math.PI * 2); ctx.fill();
+            }
+          }
+          // Current arrow midpoints on Arm 1 & Arm 2
+          const m1x = (Q.x + P.x) / 2, m1y = (Q.y + P.y) / 2;
+          const m2x = (S.x + R.x) / 2, m2y = (S.y + R.y) / 2;
+          const dir1 = this.I > 0 ? 1 : -1;
+          this.drawVec(m1x, m1y - dir1 * 8, m1x, m1y + dir1 * 12, '#34d399', 2);
+          this.drawVec(m2x, m2y + dir1 * 8, m2x, m2y - dir1 * 12, '#34d399', 2);
+        }
+        ctx.restore();
+
+        // Labels P, Q, R, S on loop vertices
+        ctx.save();
+        ctx.font = 'bold 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#fde68a';
+        ctx.fillText('P', P.x - 10, P.y + 8);
+        ctx.fillText('Q', Q.x - 10, Q.y - 6);
+        ctx.fillText('R', R.x + 8, R.y - 6);
+        ctx.fillText('S', S.x + 8, S.y + 8);
+        ctx.restore();
+
+        // Couple Force Vectors F1, F2 & Dipole Moment m
+        if (state.showVectors) {
+          const mid1 = this.proj(cx, cy, halfB * ux, 0, halfB * uz);
+          const mid2 = this.proj(cx, cy, -halfB * ux, 0, -halfB * uz);
+          // F1 on Arm PQ: +Z * sign(I*B); F2 on Arm RS: -Z * sign(I*B)
+          const fSign = (this.I * this.B >= 0 ? 1 : -1);
+          if (armForce > 0.01) {
+            const fLen = Math.min(92, 26 + armForce * 14);
+            const F1Tip = this.proj(cx, cy, halfB * ux, 0, halfB * uz + fSign * fLen);
+            const F2Tip = this.proj(cx, cy, -halfB * ux, 0, -halfB * uz - fSign * fLen);
+            this.drawVec(mid1.x, mid1.y, F1Tip.x, F1Tip.y, '#f43f5e', 3.0, `F₁=${armForce.toFixed(2)}N`, { x: -12, y: 14 * fSign });
+            this.drawVec(mid2.x, mid2.y, F2Tip.x, F2Tip.y, '#fb7185', 3.0, `F₂=-F₁`, { x: 14, y: -14 * fSign });
+
+            // Couple Lever Arm indicator between lines of action when sinPhi is noticeable
+            if (Math.abs(sinPhi) > 0.08) {
+              ctx.save();
+              ctx.strokeStyle = '#f59e0b';
+              ctx.lineWidth = 1.4;
+              ctx.setLineDash([3, 3]);
+              const levA = this.proj(cx, cy, -halfB * sinPhi, -halfH - 12, 0);
+              const levB = this.proj(cx, cy, halfB * sinPhi, -halfH - 12, 0);
+              ctx.beginPath(); ctx.moveTo(levA.x, levA.y); ctx.lineTo(levB.x, levB.y); ctx.stroke();
+              ctx.setLineDash([]);
+              ctx.font = '9px "JetBrains Mono", monospace';
+              ctx.fillStyle = '#fbbf24';
+              ctx.textAlign = 'center';
+              ctx.fillText(`Lever arm d⊥ = b·sinφ`, (levA.x + levB.x) / 2, levA.y + 13);
+              ctx.restore();
+            }
+          }
+
+          // Magnetic Dipole Moment m = NIA * n_hat (sign flips with I)
+          const mDirSign = this.I >= 0 ? 1 : -1;
+          const mTip = this.proj(cx, cy, mDirSign * 78 * cosPhi, 0, mDirSign * 78 * sinPhi);
+          const centerScreen = this.proj(cx, cy, 0, 0, 0);
+          if (Math.abs(this.I) > 0.1) {
+            this.drawVec(centerScreen.x, centerScreen.y, mTip.x, mTip.y, '#c084fc', 2.6, `m = ${mMag.toFixed(3)} A·m²`, { x: 10, y: -12 });
+          }
+
+          // Rotational Torque Arrow at top of axle
+          if (torqueMag > 0.0002) {
+            const cw = torqueSigned > 0;
+            ctx.save();
+            ctx.strokeStyle = '#22d3ee';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.ellipse(axleTop.x, axleTop.y - 6, 22, 8, 0, cw ? 0.2 : Math.PI - 0.2, cw ? Math.PI - 0.2 : 0.2, !cw);
+            ctx.stroke();
+            this.drawPill(axleTop.x, axleTop.y - 22, `τ = ${torqueMag.toFixed(4)} N·m (Couple)`, '#22d3ee', 'rgba(9,13,22,0.9)', '#0891b2');
+            ctx.restore();
+          } else {
+            this.drawPill(axleTop.x, axleTop.y - 22, `τ = 0 N·m (Stable Equil. m ∥ B)`, '#34d399', 'rgba(9,13,22,0.9)', '#10b981');
+          }
+        }
+
+        // Bottom caption inside Loop canvas stage
+        ctx.save();
+        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Loop has F_net = F₁ + F₂ = 0 (no translation) → Couple creates TORQUE τ = NIAB·sin(${normDeg.toFixed(0)}°) = NIAB·cos(${planeAlpha.toFixed(0)}°)`, cx, Math.min(scaleH - 34, cy + poleH / 2 + 26));
+        ctx.restore();
+      },
+
+      renderCurvePanel(plotX, plotY, plotW, plotH) {
+        // Draw semi-transparent analytics container on right (or bottom on narrow)
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.80)';
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(plotX, plotY, plotW, plotH);
+        ctx.strokeRect(plotX, plotY, plotW, plotH);
+
+        const padL = 40, padR = 16, padT = 38, padB = plotH > 230 ? 96 : 64;
+        const gW = Math.max(80, plotW - padL - padR);
+        const gH = Math.max(60, plotH - padT - padB);
+        const gx0 = plotX + padL;
+        const gy0 = plotY + padT + gH;
+
+        ctx.font = 'bold 11px "Inter", sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.textAlign = 'left';
+        const isRod = this.mode === 'rod';
+        ctx.fillText(isRod ? 'Force vs Angle Curve: F(θ) = B I L sinθ' : 'Torque vs Dipole Angle: τ(φ) = N I A B sinφ', plotX + 14, plotY + 20);
+
+        // Axes
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(gx0, plotY + padT);
+        ctx.lineTo(gx0, gy0);
+        ctx.lineTo(gx0 + gW, gy0);
+        ctx.stroke();
+
+        // 90 deg vertical guide
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(gx0 + gW / 2, plotY + padT);
+        ctx.lineTo(gx0 + gW / 2, gy0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Axis labels
+        ctx.font = '9px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('0°', gx0, gy0 + 12);
+        ctx.fillText('90° (Max)', gx0 + gW / 2, gy0 + 12);
+        ctx.fillText('180°', gx0 + gW - 4, gy0 + 12);
+
+        if (isRod) {
+          const { Fmag } = this.getRodPhysics();
+          const Fmax = Math.max(0.001, Math.abs(this.I) * this.L * Math.abs(this.B));
+          ctx.textAlign = 'right';
+          ctx.fillText(`${Fmax.toFixed(2)}N`, gx0 - 4, plotY + padT + 4);
+          ctx.fillText('0', gx0 - 4, gy0);
+
+          // Sine curve
+          ctx.strokeStyle = '#f43f5e';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          for (let deg = 0; deg <= 180; deg += 3) {
+            const x = gx0 + (deg / 180) * gW;
+            const y = gy0 - Math.sin((deg * Math.PI) / 180) * (gH * 0.90);
+            if (deg === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+
+          // Live Marker
+          const dotX = gx0 + (this.thetaDeg / 180) * gW;
+          const dotY = gy0 - Math.sin((this.thetaDeg * Math.PI) / 180) * (gH * 0.90);
+          ctx.fillStyle = '#fbbf24';
+          ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 10;
+          ctx.beginPath(); ctx.arc(dotX, dotY, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Concept card bottom
+          const cardY = gy0 + 24;
+          const cardH = Math.max(44, plotY + plotH - cardY - 10);
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.72)';
+          ctx.fillRect(plotX + 12, cardY, plotW - 24, cardH);
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+          ctx.strokeRect(plotX + 12, cardY, plotW - 24, cardH);
+          ctx.textAlign = 'left';
+          ctx.font = 'bold 10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#fda4af';
+          ctx.fillText(`Rod Force: F = B·I·L·sin(${this.thetaDeg}°) = ${Fmag.toFixed(3)} N`, plotX + 20, cardY + 15);
+          ctx.font = '10px "Inter", sans-serif';
+          ctx.fillStyle = '#cbd5e1';
+          if (cardH > 50) {
+            ctx.fillText('Straight conductor experiences NET FORCE → translates across rails.', plotX + 20, cardY + 32);
+            ctx.fillStyle = '#34d399';
+            ctx.fillText('Direction by Fleming Left-Hand Rule / Right-Hand (L × B).', plotX + 20, cardY + 47);
+          }
+        } else {
+          const { A, torqueMag, normDeg, planeAlpha } = this.getLoopPhysics();
+          const tauMax = Math.max(0.0001, this.N * Math.abs(this.I) * A * Math.abs(this.B));
+          ctx.textAlign = 'right';
+          ctx.fillText(`${tauMax.toFixed(3)}`, gx0 - 4, plotY + padT + 4);
+          ctx.fillText('0', gx0 - 4, gy0);
+
+          // Sine curve
+          ctx.strokeStyle = '#22d3ee';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          for (let deg = 0; deg <= 180; deg += 3) {
+            const x = gx0 + (deg / 180) * gW;
+            const y = gy0 - Math.sin((deg * Math.PI) / 180) * (gH * 0.90);
+            if (deg === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+
+          // Live Marker
+          const dotX = gx0 + (normDeg / 180) * gW;
+          const dotY = gy0 - Math.sin((normDeg * Math.PI) / 180) * (gH * 0.90);
+          ctx.fillStyle = '#c084fc';
+          ctx.shadowColor = '#c084fc'; ctx.shadowBlur = 10;
+          ctx.beginPath(); ctx.arc(dotX, dotY, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Concept contrast card bottom
+          const cardY = gy0 + 24;
+          const cardH = Math.max(44, plotY + plotH - cardY - 10);
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.72)';
+          ctx.fillRect(plotX + 12, cardY, plotW - 24, cardH);
+          ctx.strokeStyle = 'rgba(34, 211, 238, 0.35)';
+          ctx.strokeRect(plotX + 12, cardY, plotW - 24, cardH);
+          ctx.textAlign = 'left';
+          ctx.font = 'bold 10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#67e8f9';
+          ctx.fillText(`F_net = 0 N  |  Torque τ = ${torqueMag.toFixed(4)} N·m`, plotX + 20, cardY + 15);
+          ctx.font = '10px "Inter", sans-serif';
+          ctx.fillStyle = '#cbd5e1';
+          if (cardH > 50) {
+            ctx.fillText(`φ = ${normDeg.toFixed(0)}° (∠m,B) | α = ${planeAlpha.toFixed(0)}° (plane,B)`, plotX + 20, cardY + 32);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillText('Closed loop forms a couple → rotates without shifting CoM!', plotX + 20, cardY + 47);
+          }
+        }
+        ctx.restore();
+      },
+
+      render() {
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+        const isNarrow = w < 720;
+        const appW = isNarrow ? w : w * 0.58;
+        const appH = isNarrow ? h * 0.56 : h;
+        const appCx = appW * 0.52;
+        const appCy = appH * 0.50;
+
+        if (this.mode === 'rod') {
+          this.renderRodStage(appCx, appCy, appW, appH);
+        } else {
+          this.renderLoopStage(appCx, appCy, appW, appH);
+        }
+
+        const plotX = isNarrow ? 12 : w * 0.59;
+        const plotY = isNarrow ? h * 0.57 : 14;
+        const plotW = isNarrow ? w - 24 : w * 0.39;
+        const plotH = isNarrow ? h * 0.40 : h - 42;
+        this.renderCurvePanel(plotX, plotY, plotW, plotH);
       },
 
       getMetrics() {
-        return [
-          { label: "Active Bodies", val: `${this.bodies.length}` },
-          { label: "Central Mass", val: `${this.bodies[0]?.mass || 0} M☉` },
-          { label: "G Constant", val: `${this.G}` },
-          { label: "Spawn Mode", val: "Drag to fling satellite" }
-        ];
-      },
-
-      presets: {
-        "Sun & Inner Planets": { G: 1200 },
-        "Binary Stars System": {
-          setup: (sim) => {
-            const cx = (canvas.width / dpr) / 2;
-            const cy = (canvas.height / dpr) / 2;
-            sim.bodies = [
-              { x: cx - 60, y: cy, vx: 0, vy: -1.2, mass: 350, radius: 14, color: '#f59e0b', fixed: false, trail: [] },
-              { x: cx + 60, y: cy, vx: 0, vy: 1.2, mass: 350, radius: 14, color: '#06b6d4', fixed: false, trail: [] },
-              { x: cx, y: cy + 170, vx: -2.0, vy: 0, mass: 5, radius: 4, color: '#ec4899', fixed: false, trail: [] }
-            ];
-          }
-        },
-        "Hyperbolic Comet Flyby": {
-          setup: (sim) => {
-            const cx = (canvas.width / dpr) / 2;
-            const cy = (canvas.height / dpr) / 2;
-            sim.bodies = [
-              { x: cx, y: cy, vx: 0, vy: 0, mass: 800, radius: 20, color: '#fbbf24', fixed: true, trail: [] },
-              { x: cx - 350, y: cy - 120, vx: 2.8, vy: 0.4, mass: 2, radius: 4, color: '#38bdf8', fixed: false, trail: [] }
-            ];
-          }
+        if (this.mode === 'rod') {
+          const { Fx, Fmag, ax, sinT } = this.getRodPhysics();
+          const dir = Fmag < 0.005 ? 'Zero Force' : (Fx > 0 ? 'Right (+x)' : 'Left (−x)');
+          return [
+            { label: "Apparatus", val: "Straight Rod" },
+            { label: "Force F = BILsinθ", val: `${Fmag.toFixed(3)} N (${dir})` },
+            { label: "Acceleration a", val: `${Math.abs(ax).toFixed(2)} m/s²` },
+            { label: "Angle θ (∠L, B)", val: `${this.thetaDeg}° (sinθ=${sinT.toFixed(2)})` },
+            { label: "Current / Field", val: `I=${this.I.toFixed(1)}A, B=${this.B.toFixed(2)}T` }
+          ];
+        } else {
+          const { armForce, torqueMag, normDeg, planeAlpha } = this.getLoopPhysics();
+          return [
+            { label: "Apparatus", val: "Closed Loop" },
+            { label: "Net Force F_net", val: "0.000 N (Couple)" },
+            { label: "Torque τ = NIABsinφ", val: `${torqueMag.toFixed(4)} N·m` },
+            { label: "Arm Forces F₁, F₂", val: `±${armForce.toFixed(3)} N` },
+            { label: "Angles φ / Plane α", val: `φ=${normDeg.toFixed(0)}° / α=${planeAlpha.toFixed(0)}°` }
+          ];
         }
       },
 
+      presets: {
+        "Current Rod in B (Force F = BIL)": { mode: 'rod', I: 6.0, B: 0.80, L: 0.40, thetaDeg: 90, rodMass: 0.12 },
+        "Rod Parallel to B (F = 0 N)": { mode: 'rod', I: 6.0, B: 0.80, L: 0.40, thetaDeg: 0, rodMass: 0.12 },
+        "Current Loop Torque (Plane ∥ B, φ=90°)": { mode: 'loop', I: 5.0, B: 0.80, N: 20, areaCm2: 40, phiDeg: 85, holdAngle: false },
+        "Loop Stable Equilibrium (m ∥ B, τ = 0)": { mode: 'loop', I: 5.0, B: 0.80, N: 20, areaCm2: 40, phiDeg: 0, holdAngle: true }
+      },
+
       buildControls() {
+        const isRod = this.mode === 'rod';
         return `
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div>
-              <div class="flex justify-between mb-1 text-slate-300">
-                <span>Gravity Constant G</span>
-                <span id="valG" class="font-mono text-cyan-400">${this.G}</span>
+          <div class="space-y-2.5 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800/80">
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-400 font-mono text-[10px] uppercase mr-1">Conducting Shape:</span>
+                <button id="btnModeRod" class="px-3 py-1.5 rounded-lg font-semibold transition border ${isRod ? 'bg-rose-600/90 text-white border-rose-400/60 shadow-sm' : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'}">
+                  1. Straight Rod (Force F)
+                </button>
+                <button id="btnModeLoop" class="px-3 py-1.5 rounded-lg font-semibold transition border ${!isRod ? 'bg-cyan-600/90 text-white border-cyan-400/60 shadow-sm' : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'}">
+                  2. Closed Loop (Torque τ)
+                </button>
               </div>
-              <input type="range" id="ctrlG" min="300" max="3000" step="50" value="${this.G}" class="w-full">
+              <div class="flex items-center gap-1.5">
+                <button id="btnRevI" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 transition font-medium">Reverse I</button>
+                <button id="btnRevB" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 transition font-medium">Reverse B</button>
+                ${isRod
+                  ? `<button id="btnRecenterRod" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition font-medium">Re-center Rod</button>`
+                  : `<button id="btnToggleHoldPhi" class="px-2.5 py-1 rounded-lg border transition font-medium ${this.holdAngle ? 'bg-amber-600/85 text-white border-amber-400/60' : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-slate-700'}">${this.holdAngle ? 'Lock Angle: ON' : 'Free Swing (τ)'}</button>`
+                }
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <button id="btnSpawnSatellite" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-medium rounded-lg border border-slate-700 transition">
-                + Spawn Random Satellite
-              </button>
-            </div>
-            <div class="flex items-center gap-2 col-span-2 text-slate-400 text-[11px]">
-              <i data-lucide="info" class="w-4 h-4 text-cyan-400 shrink-0"></i>
-              <span>Click and drag anywhere on the canvas to slingshot your own custom planet into orbit!</span>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <div class="flex justify-between mb-1 text-slate-300">
+                  <span>Current I (A)</span>
+                  <span id="valMagI" class="font-mono text-emerald-400">${this.I.toFixed(1)} A</span>
+                </div>
+                <input type="range" id="ctrlMagI" min="-10" max="10" step="0.5" value="${this.I}" class="w-full">
+              </div>
+              <div>
+                <div class="flex justify-between mb-1 text-slate-300">
+                  <span>Magnetic Field B (T)</span>
+                  <span id="valMagB" class="font-mono text-cyan-400">${this.B.toFixed(2)} T</span>
+                </div>
+                <input type="range" id="ctrlMagB" min="-1.5" max="1.5" step="0.05" value="${this.B}" class="w-full">
+              </div>
+              ${isRod ? `
+                <div>
+                  <div class="flex justify-between mb-1 text-slate-300">
+                    <span>Rod Length L (m)</span>
+                    <span id="valMagL" class="font-mono text-amber-400">${this.L.toFixed(2)} m</span>
+                  </div>
+                  <input type="range" id="ctrlMagL" min="0.10" max="0.60" step="0.05" value="${this.L}" class="w-full">
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1 text-slate-300">
+                    <span>Angle θ (∠L, B)</span>
+                    <span id="valMagTheta" class="font-mono text-rose-400">${this.thetaDeg}°</span>
+                  </div>
+                  <input type="range" id="ctrlMagTheta" min="0" max="180" step="5" value="${this.thetaDeg}" class="w-full">
+                </div>
+              ` : `
+                <div>
+                  <div class="flex justify-between mb-1 text-slate-300">
+                    <span>Turns N &amp; Area</span>
+                    <span id="valMagN" class="font-mono text-amber-400">${this.N} · ${this.areaCm2}cm²</span>
+                  </div>
+                  <input type="range" id="ctrlMagN" min="5" max="50" step="1" value="${this.N}" class="w-full">
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1 text-slate-300">
+                    <span>Dipole Angle φ (∠m, B)</span>
+                    <span id="valMagPhi" class="font-mono text-purple-400">${this.phiDeg}°</span>
+                  </div>
+                  <input type="range" id="ctrlMagPhi" min="0" max="180" step="5" value="${this.phiDeg}" class="w-full">
+                </div>
+              `}
             </div>
           </div>
         `;
       },
 
       bindControls() {
-        document.getElementById('ctrlG')?.addEventListener('input', (e) => {
-          this.G = parseFloat(e.target.value);
-          document.getElementById('valG').textContent = this.G;
+        const refreshUI = () => {
+          controlsPanel.innerHTML = this.buildControls();
+          this.bindControls();
+        };
+
+        document.getElementById('btnModeRod')?.addEventListener('click', () => {
+          this.mode = 'rod';
+          this.reset();
+          refreshUI();
+          showToast('Switched to Straight Rod: Net Force F = B·I·L·sinθ', 'info');
         });
-        document.getElementById('btnSpawnSatellite')?.addEventListener('click', () => {
-          const cx = (canvas.width / dpr) / 2;
-          const cy = (canvas.height / dpr) / 2;
-          const angle = Math.random() * Math.PI * 2;
-          const dist = 90 + Math.random() * 180;
-          const v = Math.sqrt((this.G * this.bodies[0].mass) / dist) * (0.8 + Math.random() * 0.4) * 0.05;
-          
-          this.bodies.push({
-            x: cx + Math.cos(angle) * dist,
-            y: cy + Math.sin(angle) * dist,
-            vx: -Math.sin(angle) * v * 20,
-            vy: Math.cos(angle) * v * 20,
-            mass: 3 + Math.random() * 8,
-            radius: 3 + Math.random() * 4,
-            color: `hsl(${Math.random() * 360}, 80%, 65%)`,
-            fixed: false,
-            trail: []
-          });
-          showToast("New planet seeded in gravitational field!", "info");
+        document.getElementById('btnModeLoop')?.addEventListener('click', () => {
+          this.mode = 'loop';
+          this.phiDeg = 75;
+          this.holdAngle = false;
+          this.reset();
+          refreshUI();
+          showToast('Switched to Current Loop: F_net = 0, Couple Torque τ = N·I·A·B·sinφ', 'info');
+        });
+        document.getElementById('btnRevI')?.addEventListener('click', () => {
+          this.I = -this.I;
+          if (Math.abs(this.I) < 0.1) this.I = 5.0;
+          if (this.mode === 'loop' && !this.holdAngle && Math.abs(Math.sin(this.phi)) < 0.05) {
+            this.phi += 0.08;
+          }
+          refreshUI();
+        });
+        document.getElementById('btnRevB')?.addEventListener('click', () => {
+          this.B = -this.B;
+          if (Math.abs(this.B) < 0.05) this.B = 0.80;
+          if (this.mode === 'loop' && !this.holdAngle && Math.abs(Math.sin(this.phi)) < 0.05) {
+            this.phi += 0.08;
+          }
+          refreshUI();
+        });
+        document.getElementById('btnRecenterRod')?.addEventListener('click', () => {
+          this.rodX = 0;
+          this.rodV = 0;
+          this.rodTrail = [];
+          showToast('Rod centered on copper rails', 'info');
+        });
+        document.getElementById('btnToggleHoldPhi')?.addEventListener('click', () => {
+          this.holdAngle = !this.holdAngle;
+          if (!this.holdAngle) {
+            this.omega = 0;
+          } else {
+            this.phi = (this.phiDeg * Math.PI) / 180;
+          }
+          refreshUI();
+        });
+
+        document.getElementById('ctrlMagI')?.addEventListener('input', (e) => {
+          this.I = parseFloat(e.target.value);
+          document.getElementById('valMagI').textContent = `${this.I.toFixed(1)} A`;
+        });
+        document.getElementById('ctrlMagB')?.addEventListener('input', (e) => {
+          this.B = parseFloat(e.target.value);
+          document.getElementById('valMagB').textContent = `${this.B.toFixed(2)} T`;
+        });
+        document.getElementById('ctrlMagL')?.addEventListener('input', (e) => {
+          this.L = parseFloat(e.target.value);
+          document.getElementById('valMagL').textContent = `${this.L.toFixed(2)} m`;
+        });
+        document.getElementById('ctrlMagTheta')?.addEventListener('input', (e) => {
+          this.thetaDeg = parseFloat(e.target.value);
+          document.getElementById('valMagTheta').textContent = `${this.thetaDeg}°`;
+          this.rodV = 0;
+        });
+        document.getElementById('ctrlMagN')?.addEventListener('input', (e) => {
+          this.N = parseInt(e.target.value, 10);
+          document.getElementById('valMagN').textContent = `${this.N} · ${this.areaCm2}cm²`;
+        });
+        document.getElementById('ctrlMagPhi')?.addEventListener('input', (e) => {
+          this.phiDeg = parseFloat(e.target.value);
+          this.phi = (this.phiDeg * Math.PI) / 180;
+          this.omega = 0;
+          document.getElementById('valMagPhi').textContent = `${this.phiDeg}°`;
         });
       },
 
       onMouseDown(x, y) {
-        this.dragStart = { x, y, currX: x, currY: y };
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+        const inStage = w < 720 ? (y <= h * 0.57) : (x <= w * 0.58);
+        if (inStage) {
+          this.dragging = true;
+          this.dragLastX = x;
+        }
       },
       onMouseMove(x, y) {
-        if (this.dragStart) {
-          this.dragStart.currX = x;
-          this.dragStart.currY = y;
+        if (!this.dragging) return;
+        const dx = x - this.dragLastX;
+        this.dragLastX = x;
+        if (this.mode === 'rod') {
+          this.rodX = Math.max(-0.88, Math.min(0.88, this.rodX + dx * 0.0055));
+          this.rodV = 0;
+        } else {
+          this.phi += dx * 0.012;
+          this.omega = 0;
+          let deg = Math.round(((this.phi * 180 / Math.PI) % 360 + 360) % 360);
+          if (deg > 180) deg = 360 - deg;
+          this.phiDeg = deg;
+          const phiLbl = document.getElementById('valMagPhi');
+          if (phiLbl) phiLbl.textContent = `${this.phiDeg}°`;
         }
       },
-      onMouseUp(x, y) {
-        if (this.dragStart) {
-          const vx = (this.dragStart.x - x) * 0.05;
-          const vy = (this.dragStart.y - y) * 0.05;
-          this.bodies.push({
-            x: this.dragStart.x,
-            y: this.dragStart.y,
-            vx: vx,
-            vy: vy,
-            mass: 6,
-            radius: 5,
-            color: '#f43f5e',
-            fixed: false,
-            trail: []
-          });
-          this.dragStart = null;
-          showToast("Orbital satellite launched!", "success");
-        }
+      onMouseUp() {
+        this.dragging = false;
       }
     };
 
@@ -9845,7 +10554,7 @@ const rutherfordSim = {
     const simulations = {
       projectile: projectileSim,
       pendulum: pendulumSim,
-      orbit: orbitSim,
+      magforce: magforceSim,
       optics: opticsSim,
       electro: electroSim,
       circuit: circuitSim,
@@ -9913,8 +10622,8 @@ const rutherfordSim = {
       if (sim.bindControls) sim.bindControls();
 
       // Update contextual hint
-      if (simKey === 'orbit') {
-        hudHintText.textContent = "Click & drag on canvas to fling a satellite with initial velocity vector!";
+      if (simKey === 'magforce') {
+        hudHintText.textContent = "CBSE XII Magnetism: Switch Rod (Force F = BIL sinθ) vs Loop (F_net = 0, Couple Torque τ = NIAB sinφ); drag on stage to slide rod or twist coil!";
       } else if (simKey === 'projectile') {
         hudHintText.textContent = "Adjust launch angle & velocity, then hit Launch to hit the target!";
       } else if (simKey === 'electro') {
@@ -10134,7 +10843,8 @@ const rutherfordSim = {
       if (sim.trail) sim.trail = [];
       if (sim.hist) sim.hist = [];
       if (sim.testTrail) sim.testTrail = [];
-      if (sim.bodies) sim.bodies.forEach(b => b.trail = []);
+      if (sim.rodTrail) sim.rodTrail = [];
+      if (sim.tauTrail) sim.tauTrail = [];
       showToast("Canvas trails cleared", "info");
     });
 
@@ -10344,7 +11054,8 @@ const rutherfordSim = {
       const simCountEl = document.getElementById('educatorSimCount');
       if (simCountEl) simCountEl.textContent = Object.keys(simulations).length;
       const urlParams = new URLSearchParams(window.location.search);
-      const initialSim = urlParams.get('sim') || 'circular';
+      const rawSim = urlParams.get('sim') || 'circular';
+      const initialSim = rawSim === 'orbit' ? 'magforce' : rawSim;
       switchSimulation(simulations[initialSim] ? initialSim : 'circular');
       state._booted = true;
       lucide.createIcons();

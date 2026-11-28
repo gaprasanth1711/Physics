@@ -35,7 +35,7 @@ const SIMS = [
       ['At what launch angle is horizontal range maximum?', 'At 45 degrees (when air drag is ignored and launch/landing heights are equal), because sin(2 * 45) = 1.'],
       ['Does horizontal velocity change during ideal projectile motion?', 'No. Since gravity acts vertically downward, horizontal acceleration ax = 0 and vx = u cos(theta) remains constant.']
     ],
-    related: ['circular', 'fric', 'orbit']
+    related: ['circular', 'fric', 'col']
   },
   {
     id: 'pendulum',
@@ -56,29 +56,29 @@ const SIMS = [
       ['Why is a double pendulum chaotic?', 'Its equations of motion are strongly coupled and non-linear, so tiny differences in initial angle grow exponentially over time.'],
       ['Is total energy conserved without damping?', 'Yes. Without air resistance or pivot friction, kinetic energy and gravitational potential energy sum to a fixed constant.']
     ],
-    related: ['shm', 'wave', 'orbit']
+    related: ['shm', 'wave', 'col']
   },
   {
-    id: 'orbit',
-    title: 'Orbital Mechanics & N-Body Gravity Simulation',
-    shortName: 'Orbital Mechanics',
-    level: 'Class XI Physics',
-    chapter: 'Gravitation',
-    chapterRef: '11-08',
-    summary: 'Interactive N-body gravitational sandbox. Click and drag to launch satellites with custom velocity vectors, compare circular vs elliptical orbits, verify Kepler laws, and test escape velocity.',
+    id: 'magforce',
+    title: 'Force on Current-Carrying Rod & Torque on Loop in Magnetic Field Simulation',
+    shortName: 'Current Force & Torque',
+    level: 'Class XII Physics',
+    chapter: 'Moving Charges and Magnetism',
+    chapterRef: '12-04',
+    summary: 'Compare a straight current-carrying rod and a closed rectangular current loop in a uniform magnetic field B. A straight conductor experiences net translational force F = B I L sin(theta), whereas a closed loop experiences F_net = 0 and rotates under couple torque tau = N I A B sin(phi).',
     formulas: [
-      'F = \\frac{GMm}{r^2}',
-      'v_o = \\sqrt{\\frac{GM}{r}}',
-      'v_e = \\sqrt{\\frac{2GM}{r}} = \\sqrt{2}\\,v_o',
-      'T^2 = \\frac{4\\pi^2}{GM} r^3'
+      '\\vec{F} = I(\\vec{L} \\times \\vec{B}),\\quad F = B I L \\sin\\theta',
+      '\\vec{F}_{\\text{net, loop}} = \\oint I\\,(d\\vec{l} \\times \\vec{B}) = 0',
+      '\\vec{\\tau} = \\vec{m} \\times \\vec{B},\\quad \\tau = N I A B \\sin\\phi = N I A B \\cos\\alpha',
+      '|\\vec{m}| = N I A'
     ],
-    variables: ['Central body mass M', 'Launch speed & direction', 'Orbital radius r', 'Angular momentum'],
-    examFocus: 'Core CBSE Class 11 Gravitation (3-5 marks): derive orbital velocity, escape velocity relation ve = sqrt(2) * vo, and Kepler third law of periods.',
+    variables: ['Shape mode (Straight Rod vs Closed Loop)', 'Current magnitude & polarity I', 'Magnetic field strength B', 'Angle theta (rod) & dipole angle phi (loop)'],
+    examFocus: 'Core CBSE Class 12 Chapter 4 (5-mark concept): derive torque on a rectangular current loop in a uniform magnetic field, contrast net force on an open rod vs closed loop, and distinguish dipole angle phi from loop plane angle alpha.',
     faqs: [
-      ['How is escape velocity related to low-orbit speed?', 'Escape velocity is sqrt(2) times the circular orbital speed at the same radius: ve = sqrt(2) * vo.'],
-      ['Why do planets sweep equal areas in equal times?', 'Because central gravitational force produces zero torque, conserving angular momentum L = mvr.']
+      ['Why does a current-carrying straight rod translate in a uniform B-field while a closed loop only rotates?', 'A straight conductor has unbalanced force F = BIL sin(theta), whereas around a closed loop in a uniform B-field the forces on opposite sides cancel (F_net = 0) and form a rotational couple tau = NIAB sin(phi).'],
+      ['When is the torque on a current-carrying coil maximum vs zero in a uniform magnetic field?', 'Torque is maximum (tau = NIAB) when the plane of the loop is parallel to B (phi = 90 degrees), and zero when the plane is perpendicular to B (phi = 0 degrees, dipole m aligned with B).']
     ],
-    related: ['circular', 'projectile', 'rutherford']
+    related: ['magnet', 'galv', 'acgen']
   },
   {
     id: 'optics',
@@ -373,7 +373,7 @@ const SIMS = [
       ['Why does a cyclist lean inward while taking a curved turn?', 'Leaning tilts the normal reaction force so its horizontal component N sin(theta) supplies the needed centripetal force mv^2/r.'],
       ['Why are highway curves banked?', 'Banking supplies centripetal force via normal reaction so vehicles can turn safely without relying solely on tire friction.']
     ],
-    related: ['fric', 'orbit', 'projectile']
+    related: ['fric', 'shm', 'projectile']
   },
   {
     id: 'galv',
@@ -394,7 +394,7 @@ const SIMS = [
       ['Why do galvanometers use concave magnetic poles and a soft-iron core?', 'They create a radial magnetic field so the coil plane stays parallel to B at every angle, keeping sin(theta) = 1 and deflection proportional to current.'],
       ['How is a galvanometer converted into an ammeter?', 'By connecting a low-resistance shunt S in parallel with the galvanometer coil.']
     ],
-    related: ['magnet', 'emi', 'acgen']
+    related: ['magforce', 'magnet', 'acgen']
   },
   {
     id: 'acgen',
@@ -415,7 +415,7 @@ const SIMS = [
       ['When is induced EMF maximum in an AC generator?', 'When the plane of the coil is parallel to the magnetic field (magnetic flux Phi is zero, but its rate of change dPhi/dt is maximum).'],
       ['What is the phase difference between magnetic flux and induced EMF?', 'Exactly 90 degrees (pi/2 radians): flux varies as cos(omega*t) while EMF varies as sin(omega*t).']
     ],
-    related: ['emi', 'lcr', 'galv']
+    related: ['magforce', 'emi', 'lcr']
   },
   {
     id: 'lcr',
@@ -476,14 +476,14 @@ const SIMS = [
       ['What happens when impact parameter b approaches zero?', 'The alpha particle undergoes a head-on collision and rebounds back at scattering angle theta = 180 degrees at the distance of closest approach r0.'],
       ['Why did Rutherford conclude the atom is mostly empty space?', 'Because over 99.8% of alpha particles passed straight through the thin gold foil with minimal deflection.']
     ],
-    related: ['electro', 'photo', 'orbit']
+    related: ['electro', 'photo', 'magnet']
   }
 ];
 
 const CHAPTER_TO_SIM = {
   '12-01': 'electro',
   '12-03': 'circuit',
-  '12-04': 'galv',
+  '12-04': 'magforce',
   '12-06': 'acgen',
   '12-07': 'lcr',
   '12-09': 'lens',
@@ -493,7 +493,6 @@ const CHAPTER_TO_SIM = {
   '11-04': 'projectile',
   '11-05': 'circular',
   '11-06': 'col',
-  '11-08': 'orbit',
   '11-10': 'hydraulics',
   '11-14': 'shm',
   '11-15': 'wave'
@@ -504,7 +503,7 @@ const TOP_10_DERIVATIONS = [
   { num: 2, title: 'Capacitance of a Parallel Plate Capacitor (With & Without Dielectric Slab)', chapter: 'Electrostatic Potential & Capacitance (Ch 2)', marks: '3 Marks', sim: null, formula: 'C = \\frac{\\varepsilon_0 A}{d - t(1 - 1/K)}', points: ['Start from field E0 = sigma / epsilon0 in air gap and E = E0 / K inside dielectric.', 'Write potential V = E0(d - t) + (E0/K)t and substitute sigma = Q/A.'] },
   { num: 3, title: 'Relation Between Drift Velocity and Electric Current', chapter: 'Current Electricity (Ch 3)', marks: '2–3 Marks', sim: 'ohms', formula: 'I = n e A v_d,\\quad v_d = \\frac{e E \\tau}{m}', points: ['Derive electron acceleration a = -eE/m and average over relaxation time tau.', 'Compute total charge crossing cross-section A in interval dt.'] },
   { num: 4, title: 'Magnetic Field on the Axis of a Circular Current Loop (Biot-Savart Law)', chapter: 'Moving Charges and Magnetism (Ch 4)', marks: '3–5 Marks', sim: 'galv', formula: 'B = \\frac{\\mu_0 I R^2}{2(R^2 + x^2)^{3/2}}', points: ['Resolve elemental dB into axial and perpendicular components.', 'State explicitly why radial components cancel in diametrically opposite pairs.'] },
-  { num: 5, title: 'Force Between Two Parallel Current-Carrying Conductors & Definition of 1 Ampere', chapter: 'Moving Charges and Magnetism (Ch 4)', marks: '3 Marks', sim: 'magnet', formula: '\\frac{F}{L} = \\frac{\\mu_0 I_1 I_2}{2\\pi d}', points: ['Like currents attract, unlike currents repel.', 'Always state the official SI definition of 1 Ampere at the conclusion.'] },
+  { num: 5, title: 'Force Between Two Parallel Current-Carrying Conductors & Definition of 1 Ampere', chapter: 'Moving Charges and Magnetism (Ch 4)', marks: '3 Marks', sim: 'magforce', formula: '\\frac{F}{L} = \\frac{\\mu_0 I_1 I_2}{2\\pi d}', points: ['Like currents attract, unlike currents repel.', 'Always state the official SI definition of 1 Ampere at the conclusion.'] },
   { num: 6, title: 'Impedance and Resonance in a Series LCR Circuit (Phasor Method)', chapter: 'Alternating Current (Ch 7)', marks: '3–5 Marks', sim: 'lcr', formula: 'Z = \\sqrt{R^2 + (X_L - X_C)^2},\\quad \\omega_r = \\frac{1}{\\sqrt{LC}}', points: ['Sketch the phasor diagram with VR along I, VL leading by 90°, VC lagging by 90°.', 'Equate XL = XC for resonance and sketch the resonance current curve.'] },
   { num: 7, title: "Refraction at a Spherical Surface & Lens Maker's Formula", chapter: 'Ray Optics & Optical Instruments (Ch 9)', marks: '5 Marks', sim: 'lens', formula: '\\frac{1}{f} = (\\mu - 1)\\left(\\frac{1}{R_1} - \\frac{1}{R_2}\\right)', points: ['Apply New Cartesian sign convention explicitly before step 1.', 'Add refraction equations for first and second spherical surfaces using thin lens assumption.'] },
   { num: 8, title: 'Refraction Through a Prism & Angle of Minimum Deviation', chapter: 'Ray Optics & Optical Instruments (Ch 9)', marks: '3 Marks', sim: 'optics', formula: '\\mu = \\frac{\\sin\\left(\\frac{A + D_m}{2}\\right)}{\\sin\\left(\\frac{A}{2}\\right)}', points: ['Prove i + e = A + delta and r1 + r2 = A from geometry.', 'Set i = e and r1 = r2 = A/2 at minimum deviation delta = Dm.'] },
