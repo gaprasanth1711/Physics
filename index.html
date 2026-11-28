@@ -3,10 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PRASANTH PHYSICS SIMULATIONS - Interactive Physics Simulations Hub</title>
+  <title>Prasanth Physics — 22 Free Interactive Physics Simulations Lab (Class 11 &amp; 12, CBSE, NEET, JEE)</title>
+  <meta name="description" content="Explore 22 free interactive Class 11 and Class 12 physics simulations by Prasanth Ganesan: Projectile Motion, YDSE Double Slit, Photoelectric Effect, LCR Resonance, AC Generator, Rutherford Scattering, Ray Optics, EMI &amp; more for CBSE, JEE &amp; NEET.">
+  <meta name="keywords" content="Prasanth Physics, interactive physics simulations, CBSE Class 12 physics lab, Class 11 physics simulation, YDSE simulation, photoelectric effect simulation, LCR resonance simulation, projectile motion, JEE physics lab, NEET physics">
+  <meta name="author" content="Prasanth Ganesan">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <link rel="canonical" href="https://physicsprasanth.vercel.app/">
+  <link rel="icon" type="image/webp" href="/assets/prasanth-physics-logo.webp">
+  <link rel="apple-touch-icon" href="/assets/prasanth-physics-logo.webp">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#090d16">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Prasanth Physics">
+  <meta property="og:title" content="Prasanth Physics — 22 Free Interactive Physics Simulations Lab (CBSE XI &amp; XII, NEET, JEE)">
+  <meta property="og:description" content="Master Class 11 &amp; 12 Physics visually with 22 real-time interactive simulations, live sliders, telemetry readings, formula guides, and 332 animated presentations.">
+  <meta property="og:url" content="https://physicsprasanth.vercel.app/">
+  <meta property="og:image" content="https://physicsprasanth.vercel.app/assets/og-simulations.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Prasanth Physics — 22 Interactive Physics Simulations Lab">
+  <meta name="twitter:description" content="Free virtual physics experiments for CBSE Classes 11 &amp; 12, NEET &amp; JEE with live parameter sliders.">
+  <meta name="twitter:image" content="https://physicsprasanth.vercel.app/assets/og-simulations.jpg">
   <meta name="google-adsense-account" content="ca-pub-6928817668817115">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6928817668817115"
        crossorigin="anonymous"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://physicsprasanth.vercel.app/#website",
+        "url": "https://physicsprasanth.vercel.app/",
+        "name": "Prasanth Physics",
+        "description": "Interactive Physics Simulations Lab, Formula Sheets & Class 11-12 CBSE Presentations by Prasanth Ganesan",
+        "inLanguage": "en-IN"
+      },
+      {
+        "@type": "EducationalOrganization",
+        "@id": "https://physicsprasanth.vercel.app/#org",
+        "name": "Prasanth Physics",
+        "url": "https://physicsprasanth.vercel.app/",
+        "logo": "https://physicsprasanth.vercel.app/assets/prasanth-physics-logo.webp",
+        "founder": {
+          "@type": "Person",
+          "name": "Prasanth Ganesan",
+          "jobTitle": "Physics Educator"
+        }
+      },
+      {
+        "@type": "WebApplication",
+        "name": "Prasanth Physics Interactive Simulations Lab",
+        "url": "https://physicsprasanth.vercel.app/",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "All",
+        "isAccessibleForFree": true,
+        "educationalLevel": ["CBSE Class 11", "CBSE Class 12", "JEE", "NEET"],
+        "description": "22 interactive physics simulations including Projectile Motion, Double Pendulum, Circular Motion, SHM, Electrostatics, Ohm's Law, Moving Coil Galvanometer, AC Generator, LCR Resonance, YDSE, Huygens Principle, Photoelectric Effect and Rutherford Scattering.",
+        "provider": { "@id": "https://physicsprasanth.vercel.app/#org" }
+      }
+    ]
+  }
+  </script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -391,6 +450,10 @@
         <i data-lucide="code-2" class="w-3.5 h-3.5 text-cyan-400"></i>
         <span class="hidden sm:inline">Embed / Export</span>
       </button>
+      <a href="/formulas" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:text-white bg-emerald-900/50 hover:bg-emerald-800/70 rounded-lg border border-emerald-700/50 transition" title="CBSE Class XI & XII Formula Sheets & Top Derivations">
+        <i data-lucide="book-open" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span class="hidden md:inline">Formulas</span>
+      </a>
       <a href="/presentations" id="btnGoPresentations" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm transition">
         <i data-lucide="presentation" class="w-3.5 h-3.5 text-indigo-200"></i>
         <span>Physics Presentations (XI &amp; XII)</span>
@@ -627,14 +690,28 @@
         </button>
       </div>
 
-      <!-- Presentation Portal Link in sidebar -->
-      <div class="hidden lg:block mt-4 pt-4 border-t border-slate-800/80">
-        <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2 px-1">Presentations Portal</div>
+      <!-- Presentation & Study Portals in sidebar -->
+      <div class="hidden lg:block mt-4 pt-4 border-t border-slate-800/80 space-y-2">
+        <div class="text-[11px] font-mono uppercase tracking-wider text-slate-400 px-1">Resources &amp; Study Hub</div>
         <a href="/presentations" class="w-full text-left px-3 py-2.5 rounded-xl bg-indigo-950/40 hover:bg-indigo-900/50 text-xs text-indigo-200 border border-indigo-700/40 flex items-center gap-2.5 group transition">
           <i data-lucide="presentation" class="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform"></i>
           <div>
             <div class="font-semibold text-white">Physics Presentations</div>
             <div class="text-[10px] text-indigo-300/80">Classes XI &amp; XII (332 PPTs)</div>
+          </div>
+        </a>
+        <a href="/formulas" class="w-full text-left px-3 py-2 rounded-xl bg-emerald-950/35 hover:bg-emerald-900/45 text-xs text-emerald-200 border border-emerald-700/40 flex items-center gap-2.5 group transition">
+          <i data-lucide="book-open" class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform"></i>
+          <div>
+            <div class="font-semibold text-white">Formulas &amp; Derivations</div>
+            <div class="text-[10px] text-emerald-300/80">30 Chapters &amp; Top 10 Proofs</div>
+          </div>
+        </a>
+        <a href="/labs" class="w-full text-left px-3 py-2 rounded-xl bg-slate-900/70 hover:bg-slate-800/80 text-xs text-slate-200 border border-slate-700/50 flex items-center gap-2.5 group transition">
+          <i data-lucide="library" class="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform"></i>
+          <div>
+            <div class="font-semibold text-white">22 Simulation Guides</div>
+            <div class="text-[10px] text-slate-400">Theory, equations &amp; viva prep</div>
           </div>
         </a>
       </div>
@@ -747,6 +824,15 @@
         <div id="bottomDataMetrics" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs font-mono">
           <!-- Populated dynamically with live metrics -->
         </div>
+        <nav aria-label="Quick Physics Resources" class="mt-2 pt-1.5 border-t border-slate-800/70 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
+          <div class="flex flex-wrap items-center gap-3">
+            <a id="activeSimGuideLink" href="/labs/circular" class="text-cyan-300 hover:text-cyan-200 underline decoration-cyan-500/40 underline-offset-2 transition">Theory &amp; Formulas for This Simulation &rarr;</a>
+            <a href="/labs" class="hover:text-white transition">All 22 Lab Guides</a>
+            <a href="/formulas" class="text-emerald-300 hover:text-emerald-200 transition">Class XI–XII Formulas &amp; Top 10 Derivations</a>
+            <a href="/presentations" class="text-indigo-300 hover:text-indigo-200 transition">332 Presentations</a>
+          </div>
+          <span class="hidden sm:inline text-[10px] text-slate-500 font-mono">Prasanth Physics &bull; CBSE / NEET / JEE</span>
+        </nav>
       </div>
 
       <!-- Hidden legacy elements preserved for scripting -->
@@ -9865,6 +9951,14 @@ const rutherfordSim = {
         if (gw) gw.textContent = document.getElementById('hudHintText')?.textContent || 'Adjust and observe the live readings.';
         const gt = document.getElementById('guideTry');
         if (gt) gt.textContent = Object.keys(sim.presets || {})[0] || 'Default setup';
+        const guideLink = document.getElementById('activeSimGuideLink');
+        if (guideLink) {
+          guideLink.href = `/labs/${simKey}`;
+          guideLink.textContent = `${title} Guide & Formulas →`;
+        }
+        if (state._booted || new URLSearchParams(window.location.search).has('sim')) {
+          document.title = `${title} Interactive Simulation — Prasanth Physics`;
+        }
       } catch (e) {}
 
       showToast(`Switched to ${sim.name}`, 'info');
@@ -10235,6 +10329,7 @@ const rutherfordSim = {
       const urlParams = new URLSearchParams(window.location.search);
       const initialSim = urlParams.get('sim') || 'circular';
       switchSimulation(simulations[initialSim] ? initialSim : 'circular');
+      state._booted = true;
       lucide.createIcons();
       if ((window.matchMedia && window.matchMedia('(max-width:1023px)').matches) || document.body.classList.contains('view-mobile')) {
         showToast('22 simulations here — tap Sims below or the SIM box above to switch', 'info');

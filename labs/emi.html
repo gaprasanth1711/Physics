@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Electromagnetic Induction: Faraday &amp; Lenz's Law Lab — Class XII Physics | Prasanth Physics</title>
+  <meta name="description" content="Drag a bar magnet through a solenoid coil and observe real-time magnetic flux changes, induced EMF spikes, induced current direction opposing motion (Lenz Law), and galvanometer deflection. Key formulas, interactive variables, and CBSE exam questions for Electromagnetic Induction.">
+  <meta name="keywords" content="EMI Faraday &amp; Lenz simulation, Electromagnetic Induction, Class XII Physics, interactive physics lab, Prasanth Physics, NEET JEE">
+  <meta name="author" content="Prasanth Ganesan">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <link rel="canonical" href="https://physicsprasanth.vercel.app/labs/emi">
+  <link rel="icon" type="image/webp" href="/assets/prasanth-physics-logo.webp">
+  <link rel="apple-touch-icon" href="/assets/prasanth-physics-logo.webp">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#090d16">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Prasanth Physics">
+  <meta property="og:title" content="Electromagnetic Induction: Faraday &amp; Lenz's Law Lab — Class XII Physics | Prasanth Physics">
+  <meta property="og:description" content="Drag a bar magnet through a solenoid coil and observe real-time magnetic flux changes, induced EMF spikes, induced current direction opposing motion (Lenz Law), and galvanometer deflection. Key formulas, interactive variables, and CBSE exam questions for Electromagnetic Induction.">
+  <meta property="og:url" content="https://physicsprasanth.vercel.app/labs/emi">
+  <meta property="og:image" content="https://physicsprasanth.vercel.app/assets/og-simulations.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Electromagnetic Induction: Faraday &amp; Lenz's Law Lab — Class XII Physics | Prasanth Physics">
+  <meta name="twitter:description" content="Drag a bar magnet through a solenoid coil and observe real-time magnetic flux changes, induced EMF spikes, induced current direction opposing motion (Lenz Law), and galvanometer deflection. Key formulas, interactive variables, and CBSE exam questions for Electromagnetic Induction.">
+  <meta name="twitter:image" content="https://physicsprasanth.vercel.app/assets/og-simulations.jpg">
+  <meta name="google-adsense-account" content="ca-pub-6928817668817115">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6928817668817115" crossorigin="anonymous"></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"LearningResource","name":"Electromagnetic Induction: Faraday & Lenz's Law Lab","url":"https://physicsprasanth.vercel.app/labs/emi","description":"Drag a bar magnet through a solenoid coil and observe real-time magnetic flux changes, induced EMF spikes, induced current direction opposing motion (Lenz Law), and galvanometer deflection.","educationalLevel":["Class XII Physics","JEE","NEET"],"learningResourceType":"Interactive Simulation Guide","isAccessibleForFree":true,"author":{"@type":"Person","name":"Prasanth Ganesan"},"isPartOf":{"@type":"WebSite","name":"Prasanth Physics","url":"https://physicsprasanth.vercel.app"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Simulations Lab","item":"https://physicsprasanth.vercel.app/"},{"@type":"ListItem","position":2,"name":"Lab Guides","item":"https://physicsprasanth.vercel.app/labs"},{"@type":"ListItem","position":3,"name":"EMI Faraday & Lenz","item":"https://physicsprasanth.vercel.app/labs/emi"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How does Lenz Law obey Conservation of Energy?","acceptedAnswer":{"@type":"Answer","text":"The induced current opposes the magnet motion, requiring mechanical work to push the magnet—this mechanical work converts into electrical energy."}},{"@type":"Question","name":"When is induced EMF zero even in a strong magnetic field?","acceptedAnswer":{"@type":"Answer","text":"When the magnetic flux linked with the coil is constant (dPhi/dt = 0)."}}]}]}</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}]});"></script>
+  <style>
+    body { background: #05070d; color: #f1f5f9; font-family: Inter, system-ui, sans-serif; }
+    .glass-card { background: rgba(15, 23, 42, 0.78); border: 1px solid rgba(148, 163, 184, 0.16); backdrop-filter: blur(10px); }
+    .katex-display { margin: 0.4rem 0 !important; overflow-x: auto; overflow-y: hidden; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+<header class="sticky top-0 z-40 border-b border-slate-800/90 bg-[#090d16]/95 backdrop-blur-md px-4 py-2.5">
+  <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+    <a href="/" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-xl bg-white p-0.5 flex items-center justify-center overflow-hidden shadow-md border border-cyan-500/40">
+        <img src="/assets/prasanth-physics-logo.webp" alt="Prasanth Physics Logo" class="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+      </div>
+      <div>
+        <div class="font-extrabold text-sm md:text-base tracking-tight text-white group-hover:text-cyan-300 transition-colors">PRASANTH PHYSICS</div>
+        <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Mastery In Physics &bull; Classes XI &amp; XII</div>
+      </div>
+    </a>
+    <nav class="flex flex-wrap items-center gap-2">
+      <a href="/" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition">22 Simulations</a>
+      <a href="/labs" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white">Lab Guides</a>
+      <a href="/formulas" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition">Formulas &amp; Derivations</a>
+      <a href="/presentations" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition">332 Presentations</a>
+    </nav>
+  </div>
+</header>
+<main class="flex-1 max-w-5xl w-full mx-auto px-4 py-8 space-y-8">
+  <nav class="text-xs text-slate-400 flex items-center gap-2 font-mono">
+    <a href="/" class="hover:text-cyan-300">Home</a>
+    <span>/</span>
+    <a href="/labs" class="hover:text-cyan-300">Lab Guides</a>
+    <span>/</span>
+    <span class="text-cyan-300">EMI Faraday &amp; Lenz</span>
+  </nav>
+
+  <section class="glass-card rounded-2xl p-6 md:p-8 border-cyan-500/25 space-y-5">
+    <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+      <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">Class XII Physics</span>
+      <span class="px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">Electromagnetic Induction</span>
+    </div>
+    <h1 class="text-2xl md:text-4xl font-extrabold text-white tracking-tight">Electromagnetic Induction: Faraday &amp; Lenz's Law Lab</h1>
+    <p class="text-slate-300 text-sm md:text-base leading-relaxed">Drag a bar magnet through a solenoid coil and observe real-time magnetic flux changes, induced EMF spikes, induced current direction opposing motion (Lenz Law), and galvanometer deflection.</p>
+    <div class="flex flex-wrap items-center gap-3 pt-2">
+      <a href="/?sim=emi" class="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm shadow-lg shadow-cyan-900/30 transition">
+        Launch Live Interactive Simulation &rarr;
+      </a>
+      <a href="/formulas#ch-12-06" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm border border-slate-700 transition">
+        Chapter Formulas &amp; Tips
+      </a>
+      <a href="/presentations" class="px-4 py-3 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-200 font-semibold text-sm border border-indigo-700/40 transition">
+        Watch Animated Slides
+      </a>
+    </div>
+  </section>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <section class="glass-card rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-bold text-cyan-300">Key Formulas &amp; Equations</h2>
+      <div class="space-y-3">
+        <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100">$$\Phi_B = \vec{B} \cdot \vec{A} = BA\cos\theta$$</div>
+<div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100">$$\varepsilon = -N\frac{d\Phi_B}{dt}$$</div>
+<div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100">$$\varepsilon_{\text{motional}} = B l v$$</div>
+      </div>
+    </section>
+
+    <section class="glass-card rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-bold text-emerald-300">Interactive Controls in This Lab</h2>
+      <ul class="space-y-2 text-sm text-slate-300 list-disc list-inside">
+        <li>Magnet speed &amp; position</li>
+<li>Coil turns N</li>
+<li>Field strength B</li>
+<li>Flux vs EMF waveform</li>
+      </ul>
+      <div class="p-4 rounded-xl bg-amber-950/30 border border-amber-700/40 text-xs text-amber-200 leading-relaxed">
+        <strong>CBSE / Exam Focus:</strong> Core CBSE Class 12 EMI concept (4-5 marks): Lenz law as a consequence of conservation of energy and polarity prediction questions.
+      </div>
+    </section>
+  </div>
+
+  <section class="glass-card rounded-2xl p-6 space-y-4">
+    <h2 class="text-lg font-bold text-white">Frequently Asked Conceptual &amp; Viva Questions</h2>
+    <div class="space-y-4">
+      <div class="border-b border-slate-800/80 pb-3 last:border-b-0 last:pb-0">
+        <h3 class="font-semibold text-sm text-cyan-300">How does Lenz Law obey Conservation of Energy?</h3>
+        <p class="text-sm text-slate-300 mt-1">The induced current opposes the magnet motion, requiring mechanical work to push the magnet—this mechanical work converts into electrical energy.</p>
+      </div>
+<div class="border-b border-slate-800/80 pb-3 last:border-b-0 last:pb-0">
+        <h3 class="font-semibold text-sm text-cyan-300">When is induced EMF zero even in a strong magnetic field?</h3>
+        <p class="text-sm text-slate-300 mt-1">When the magnetic flux linked with the coil is constant (dPhi/dt = 0).</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-base font-bold text-slate-200">Related Physics Simulations</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <a href="/labs/acgen" class="glass-card p-4 rounded-xl hover:border-cyan-500/50 transition block">
+      <div class="text-[11px] font-mono text-cyan-400">Class XII Physics</div>
+      <div class="font-bold text-sm text-white mt-0.5">AC Generator</div>
+      <div class="text-xs text-slate-400 mt-1 line-clamp-2">Electromagnetic Induction &amp; Alternating Current</div>
+    </a>
+<a href="/labs/lcr" class="glass-card p-4 rounded-xl hover:border-cyan-500/50 transition block">
+      <div class="text-[11px] font-mono text-cyan-400">Class XII Physics</div>
+      <div class="font-bold text-sm text-white mt-0.5">LCR Series Resonance</div>
+      <div class="text-xs text-slate-400 mt-1 line-clamp-2">Alternating Current</div>
+    </a>
+<a href="/labs/magnet" class="glass-card p-4 rounded-xl hover:border-cyan-500/50 transition block">
+      <div class="text-[11px] font-mono text-cyan-400">Class XII Physics</div>
+      <div class="font-bold text-sm text-white mt-0.5">Magnetic Lorentz Force</div>
+      <div class="text-xs text-slate-400 mt-1 line-clamp-2">Moving Charges and Magnetism</div>
+    </a>
+    </div>
+  </section>
+</main>
+<footer class="border-t border-slate-800/80 bg-[#090d16] py-8 px-4 mt-12">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+    <div class="flex items-center gap-3">
+      <img src="/assets/prasanth-educator.jpg" alt="Prasanth Ganesan" class="w-9 h-9 rounded-full object-cover border border-cyan-500/40" />
+      <div>
+        <div class="font-semibold text-white">Prasanth Ganesan &mdash; Physics Educator</div>
+        <div class="text-[11px] text-slate-400">Free CBSE Class XI &amp; XII Simulations, Derivations &amp; Presentations</div>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-4">
+      <a href="/" class="hover:text-cyan-300">Simulations Lab</a>
+      <a href="/labs" class="hover:text-cyan-300">22 Lab Guides</a>
+      <a href="/formulas" class="hover:text-emerald-300">Formulas &amp; Derivations</a>
+      <a href="/presentations" class="hover:text-indigo-300">Presentations</a>
+      <a href="https://whatsapp.com/channel/0029Vb81ejl35fM0U1ujrP2y" target="_blank" rel="noopener noreferrer" class="text-emerald-400 hover:text-emerald-300 font-medium">WhatsApp Channel</a>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

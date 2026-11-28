@@ -3,11 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Physics Prasanth — Animated Physics Presentation Portal (Classes XI & XII)</title>
-  <meta name="description" content="Professional CBSE Class 11 and 12 Physics animated presentation teaching portal with step-by-step builds, interactive derivations, and teacher annotation tools.">
+  <title>Prasanth Physics — 332 CBSE Class 11 &amp; 12 Animated Physics Presentations &amp; Formula Notes</title>
+  <meta name="description" content="Browse 332 animated CBSE Class 11 and 12 Physics presentations with step-by-step derivations, KaTeX formula sheets, board exam marks weightage, and interactive annotation tools by Prasanth Ganesan.">
+  <meta name="keywords" content="CBSE Class 12 physics PPT, Class 11 physics presentations, physics board exam derivations, physics formula sheets, Prasanth Physics presentations, NEET physics notes">
+  <meta name="author" content="Prasanth Ganesan">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+  <link rel="canonical" href="https://physicsprasanth.vercel.app/presentations">
+  <link rel="icon" type="image/webp" href="/assets/prasanth-physics-logo.webp">
+  <link rel="apple-touch-icon" href="/assets/prasanth-physics-logo.webp">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#090d16">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Prasanth Physics">
+  <meta property="og:title" content="332 CBSE Class 11 &amp; 12 Physics Presentations &amp; Derivations | Prasanth Physics">
+  <meta property="og:description" content="Complete chapter-wise animated Physics presentations, formula sheets, and board derivation insights for Class XI &amp; XII students.">
+  <meta property="og:url" content="https://physicsprasanth.vercel.app/presentations">
+  <meta property="og:image" content="https://physicsprasanth.vercel.app/assets/og-presentations.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="670">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="332 Physics Presentations (Class XI &amp; XII) | Prasanth Physics">
+  <meta name="twitter:description" content="Animated step-by-step physics slides, formulas &amp; CBSE derivation insights.">
+  <meta name="twitter:image" content="https://physicsprasanth.vercel.app/assets/og-presentations.jpg">
   <meta name="google-adsense-account" content="ca-pub-6928817668817115">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6928817668817115"
        crossorigin="anonymous"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Prasanth Physics Presentations Portal (Classes XI & XII)",
+    "url": "https://physicsprasanth.vercel.app/presentations",
+    "description": "332 animated physics presentations covering all 30 CBSE Class 11 & Class 12 chapters with key formulas and board exam tips.",
+    "isAccessibleForFree": true,
+    "author": {
+      "@type": "Person",
+      "name": "Prasanth Ganesan"
+    }
+  }
+  </script>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -432,6 +466,11 @@
 
     <!-- Right Controls & Switch to Sims -->
     <div class="flex items-center gap-2.5">
+      <a href="/formulas" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-200 hover:text-white bg-emerald-900/45 hover:bg-emerald-800/65 rounded-lg border border-emerald-700/50 transition shadow-sm" title="Formulas & Top Board Derivations">
+        <i data-lucide="book-open" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span class="hidden md:inline">Formulas</span>
+      </a>
+
       <!-- Direct Link back to Simulations Lab -->
       <a href="/" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 rounded-lg border border-slate-700/60 transition shadow-sm" title="Open Interactive Simulations Lab">
         <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-cyan-400"></i>
@@ -799,9 +838,17 @@
                 <p class="text-slate-400 text-[11px]">Interact with projectiles, double pendulums, electromagnetic induction, optics, and wave motion.</p>
               </div>
             </div>
-            <a href="/" id="btnLaunchSimsCallout" class="shrink-0 px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-center transition">
-              Launch <span class="sim-count-number">22</span> Physics Labs &rarr;
-            </a>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <a href="/formulas" class="px-3 py-1.5 bg-emerald-700/80 hover:bg-emerald-600 text-white font-semibold rounded-lg text-center transition">
+                Formulas &amp; Derivations
+              </a>
+              <a href="/labs" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg border border-slate-700 text-center transition">
+                22 Lab Guides
+              </a>
+              <a href="/" id="btnLaunchSimsCallout" class="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-center transition">
+                Launch <span class="sim-count-number">22</span> Physics Labs &rarr;
+              </a>
+            </div>
           </div>
 
         </div>

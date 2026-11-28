@@ -14,6 +14,8 @@ const MIME = {
   '.css': 'text/css',
   '.js': 'application/javascript',
   '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json',
+  '.xml': 'application/xml; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
   '.ico': 'image/x-icon',
   '.jpg': 'image/jpeg',
@@ -26,7 +28,10 @@ const MIME = {
 const server = http.createServer((req, res) => {
   let reqPath = req.url.split('?')[0];
   if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
-  if (!path.extname(reqPath) && fs.existsSync(path.join(DIR, reqPath + '.html'))) {
+  const candidate = path.join(DIR, reqPath);
+  if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory() && fs.existsSync(path.join(candidate, 'index.html'))) {
+    reqPath = path.posix.join(reqPath.replace(/\/$/, ''), 'index.html');
+  } else if (!path.extname(reqPath) && fs.existsSync(path.join(DIR, reqPath + '.html'))) {
     reqPath = reqPath + '.html';
   }
   const filePath = path.join(DIR, reqPath);

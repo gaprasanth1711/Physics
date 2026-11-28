@@ -1,0 +1,17 @@
+{
+  "name": "Prasanth Physics — Interactive Simulations & Presentations",
+  "short_name": "Prasanth Physics",
+  "description": "Free interactive CBSE Class 11 & 12 physics simulations, formula sheets, top derivations, and 332 animated physics presentations by Prasanth Ganesan.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05070d",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "/assets/prasanth-physics-logo.webp",
+      "sizes": "960x1024",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}
