@@ -521,6 +521,22 @@ function adsenseHead() {
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}" crossorigin="anonymous"></script>`;
 }
 
+function adUnit1000() {
+  return `<div class="glass-card rounded-2xl p-3 border-slate-800/80 text-center">
+  <div class="text-[9px] font-mono uppercase tracking-widest text-slate-500 mb-1">Advertisement</div>
+  <!-- 1000 -->
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="${ADSENSE_CLIENT}"
+       data-ad-slot="5804625781"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>
+       (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+</div>`;
+}
+
 function sharedHeadShell({ title, description, keywords, canonical, ogImage, jsonLd }) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -715,6 +731,8 @@ ${siteHeader('labs')}
     </section>
   </div>
 
+  ${adUnit1000()}
+
   <section class="glass-card rounded-2xl p-6 space-y-4">
     <h2 class="text-lg font-bold text-white">Frequently Asked Conceptual &amp; Viva Questions</h2>
     <div class="space-y-4">
@@ -788,6 +806,8 @@ ${siteHeader('labs')}
       </div>
     </article>`).join('\n')}
   </div>
+
+  ${adUnit1000()}
 </main>
 ${siteFooter()}
 <script>
@@ -936,7 +956,9 @@ ${siteHeader('formulas')}
   </section>
 
   ${derivationsHtml}
+  ${adUnit1000()}
   ${chaptersHtml}
+  ${adUnit1000()}
 
   <section class="glass-card rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-emerald-500/30">
     <div>
