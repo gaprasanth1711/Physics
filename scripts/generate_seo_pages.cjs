@@ -82,8 +82,8 @@ const SIMS = [
   },
   {
     id: 'optics',
-    title: 'Wave & Ray Optics: Refraction & Snell Law Simulation',
-    shortName: 'Wave & Optics Refraction',
+    title: 'Refraction & Total Internal Reflection (TIR) Simulation',
+    shortName: 'Refraction & Total Internal Reflection',
     level: 'Class XII Physics',
     chapter: 'Ray Optics & Optical Instruments',
     chapterRef: '12-09',

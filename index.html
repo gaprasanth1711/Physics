@@ -522,8 +522,8 @@
           <button data-sim="optics" class="sim-nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs md:text-sm font-medium transition text-left text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent">
             <i data-lucide="sun" class="w-4 h-4 shrink-0 text-emerald-400"></i>
             <div>
-              <div class="font-semibold leading-snug">Wave & Optics</div>
-              <div class="text-[10px] text-slate-400 hidden lg:block">Refraction & Snell's Law</div>
+              <div class="font-semibold leading-snug">Refraction &amp; Total Internal Reflection</div>
+              <div class="text-[10px] text-slate-400 hidden lg:block">Snell's Law &amp; Critical Angle · XII</div>
             </div>
           </button>
 
@@ -2484,10 +2484,10 @@
     };
 
     /* ==========================================================
-       5. SIMULATION 4: OPTICS & WAVE REFRACTION (SNELL'S LAW)
+       5. SIMULATION 4: REFRACTION & TOTAL INTERNAL REFLECTION
        ========================================================== */
     const opticsSim = {
-      name: "Wave Optics & Snell's Law Refraction",
+      name: "Refraction & Total Internal Reflection · XII",
       // Refraction parameters
       n1: 1.0, // Medium 1 index (e.g., Air = 1.0)
       n2: 1.5, // Medium 2 index (e.g., Glass = 1.5, Water = 1.33)
@@ -2861,97 +2861,491 @@
     /* ==========================================================
        5c. GRADE-12 CBSE: CURRENT ELECTRICITY (DC circuit)
        ========================================================== */
+    const circuitRenderHelpers = {
+      BAND_COLORS: ['#0f172a', '#92400e', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#64748b', '#f8fafc'],
+
+      resistorBands(ohms) {
+        const val = Math.max(1, Math.round(ohms));
+        const s = String(val);
+        if (s.length === 1) {
+          return [this.BAND_COLORS[val], this.BAND_COLORS[0], '#fbbf24', '#fbbf24']; // e.g. 5 Ω -> X-Black-Gold(x0.1)-Gold
+        }
+        const d1 = parseInt(s[0], 10);
+        const d2 = parseInt(s[1], 10);
+        const exp = s.length - 2;
+        const mult = exp === 0 ? '#0f172a' : (this.BAND_COLORS[exp] || '#92400e');
+        return [this.BAND_COLORS[d1], this.BAND_COLORS[d2], mult, '#fbbf24'];
+      },
+
+      drawWire(x1, y1, x2, y2, color = '#38bdf8', width = 3) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        ctx.restore();
+      },
+
+      drawFlowPulses(x1, y1, x2, y2, currentAmps, phase, color = '#22d3ee', count = 4) {
+        if (currentAmps <= 0.02 || !state.showTrails) return;
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 12) return;
+        const ang = Math.atan2(dy, dx);
+        ctx.save();
+        for (let i = 0; i < count; i++) {
+          const t = ((phase + i / count) % 1 + 1) % 1;
+          const px = x1 + dx * t;
+          const py = y1 + dy * t;
+          // Bright moving charge pulse + directional chevron
+          ctx.fillStyle = color;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 7;
+          ctx.beginPath();
+          ctx.arc(px, py, 3.1, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          if (state.showVectors) {
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.moveTo(px - 4 * Math.cos(ang - 0.55), py - 4 * Math.sin(ang - 0.55));
+            ctx.lineTo(px + 2 * Math.cos(ang), py + 2 * Math.sin(ang));
+            ctx.lineTo(px - 4 * Math.cos(ang + 0.55), py - 4 * Math.sin(ang + 0.55));
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      },
+
+      drawBattery(x, y, volts, vertical = true) {
+        ctx.save();
+        ctx.translate(x, y);
+        if (!vertical) ctx.rotate(-Math.PI / 2);
+        // Clear wire gap behind symbol
+        ctx.fillStyle = '#05070d';
+        ctx.fillRect(-18, -22, 36, 44);
+
+        // Cell 1 (+ top, - mid) and Cell 2
+        // Top long thin plate (+)
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2.6;
+        ctx.beginPath(); ctx.moveTo(-16, -15); ctx.lineTo(16, -15); ctx.stroke();
+        // Short thick plate (-)
+        ctx.strokeStyle = '#f87171';
+        ctx.lineWidth = 4.6;
+        ctx.beginPath(); ctx.moveTo(-8, -5); ctx.lineTo(8, -5); ctx.stroke();
+        // Dotted cell separator
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([2, 3]);
+        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, 6); ctx.stroke();
+        ctx.setLineDash([]);
+        // Second cell pair
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2.6;
+        ctx.beginPath(); ctx.moveTo(-16, 7); ctx.lineTo(16, 7); ctx.stroke();
+        ctx.strokeStyle = '#f87171';
+        ctx.lineWidth = 4.6;
+        ctx.beginPath(); ctx.moveTo(-8, 17); ctx.lineTo(8, 17); ctx.stroke();
+
+        // Polarity tags
+        ctx.font = 'bold 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('+', 22, -14);
+        ctx.fillStyle = '#f87171';
+        ctx.fillText('−', 22, 20);
+        ctx.restore();
+
+        // Voltage badge
+        ctx.save();
+        ctx.font = 'bold 11px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#fbbf24';
+        ctx.textAlign = vertical ? 'right' : 'center';
+        ctx.fillText(`${volts.toFixed(1)} V`, vertical ? x - 22 : x, vertical ? y + 4 : y + 36);
+        ctx.restore();
+      },
+
+      drawResistor(x, y, width, ohms, powerW, style, topLabel, dropText) {
+        const half = width / 2;
+        const heat = Math.min(1, powerW / 32);
+        ctx.save();
+        // Cut wire behind resistor
+        ctx.fillStyle = '#05070d';
+        ctx.fillRect(x - half - 2, y - 16, width + 4, 32);
+
+        // Subtle thermal aura when heating up under load
+        if (heat > 0.03) {
+          const aura = ctx.createRadialGradient(x, y, 4, x, y, width * 0.62);
+          aura.addColorStop(0, `rgba(249, 115, 22, ${0.08 + heat * 0.30})`);
+          aura.addColorStop(1, 'rgba(249, 115, 22, 0)');
+          ctx.fillStyle = aura;
+          ctx.beginPath();
+          ctx.arc(x, y, width * 0.62, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (style === 'realistic') {
+          // Axial Ceramic / Carbon-Film Resistor body with 4 dynamic color bands
+          const bodyW = width - 16;
+          const bodyH = 22;
+          const x0 = x - bodyW / 2;
+          const y0 = y - bodyH / 2;
+          // Metal leads
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(x - half, y); ctx.lineTo(x0 + 2, y);
+          ctx.moveTo(x + half, y); ctx.lineTo(x0 + bodyW - 2, y);
+          ctx.stroke();
+
+          // Ceramic body gradient (dog-bone / cylindrical bevel feel)
+          const bg = ctx.createLinearGradient(0, y0, 0, y0 + bodyH);
+          bg.addColorStop(0, '#f3e7ce');
+          bg.addColorStop(0.35, '#d6c198');
+          bg.addColorStop(0.8, '#a68b5b');
+          bg.addColorStop(1, '#785f36');
+          ctx.fillStyle = bg;
+          ctx.strokeStyle = heat > 0.45 ? '#fb923c' : '#94a3b8';
+          ctx.lineWidth = 1.4;
+          ctx.fillRect(x0, y0, bodyW, bodyH);
+          ctx.strokeRect(x0, y0, bodyW, bodyH);
+
+          // 4 Resistor Color Bands matching actual ohms
+          const bands = this.resistorBands(ohms);
+          const bandOffsets = [0.18, 0.34, 0.52, 0.78];
+          bands.forEach((col, idx) => {
+            ctx.fillStyle = col;
+            ctx.fillRect(x0 + bodyW * bandOffsets[idx], y0 + 1, 5.5, bodyH - 2);
+          });
+
+          // Glossy highlight strip
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+          ctx.fillRect(x0 + 2, y0 + 2, bodyW - 4, 4);
+        } else {
+          // Crisp IEEE / CBSE Zig-Zag Resistor Symbol (6 sharp diagonal zig-zags)
+          const lead = 8;
+          const zigW = width - lead * 2;
+          const peaks = 6;
+          const amp = 11;
+          ctx.strokeStyle = heat > 0.35 ? '#fbbf24' : '#f8fafc';
+          ctx.lineWidth = 2.8;
+          ctx.lineJoin = 'round';
+          ctx.lineCap = 'round';
+          if (heat > 0.15) {
+            ctx.shadowColor = '#f97316';
+            ctx.shadowBlur = heat * 14;
+          }
+          ctx.beginPath();
+          ctx.moveTo(x - half, y);
+          ctx.lineTo(x - half + lead, y);
+          for (let i = 0; i < peaks; i++) {
+            const segX = x - half + lead + ((i + 0.5) / peaks) * zigW;
+            const segY = y + (i % 2 === 0 ? -amp : amp);
+            ctx.lineTo(segX, segY);
+          }
+          ctx.lineTo(x + half - lead, y);
+          ctx.lineTo(x + half, y);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Terminal solder nodes
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath(); ctx.arc(x - half, y, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(x + half, y, 3, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Crisp Component Labels
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 11px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(topLabel, x, y - 20);
+        if (dropText) {
+          ctx.font = '10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#fb923c';
+          ctx.fillText(dropText, x, y + 25);
+        }
+        ctx.restore();
+      },
+
+      drawMeter(x, y, letter, readingText, ratio, accent = '#22d3ee') {
+        ctx.save();
+        // Gauge Circle
+        ctx.fillStyle = '#090d16';
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Analog needle sweep inside dial (-135 deg to -45 deg)
+        const clamped = Math.max(0, Math.min(1, ratio));
+        const ang = (-Math.PI * 0.85) + clamped * (Math.PI * 0.70);
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(x, y + 5);
+        ctx.lineTo(x + Math.cos(ang) * 11, y + 5 + Math.sin(ang) * 11);
+        ctx.stroke();
+
+        ctx.font = 'bold 10px "JetBrains Mono", monospace';
+        ctx.fillStyle = accent;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(letter, x, y - 5);
+
+        if (readingText) {
+          ctx.font = 'bold 10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillText(readingText, x, y + 26);
+        }
+        ctx.restore();
+      },
+
+      drawSwitch(x, y, closed) {
+        ctx.save();
+        ctx.fillStyle = '#05070d';
+        ctx.fillRect(x - 18, y - 16, 36, 28);
+        // Contacts
+        ctx.fillStyle = '#e2e8f0';
+        ctx.beginPath(); ctx.arc(x - 14, y, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 14, y, 3.2, 0, Math.PI * 2); ctx.fill();
+        // Switch blade
+        ctx.strokeStyle = closed ? '#34d399' : '#fbbf24';
+        ctx.lineWidth = 2.6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x - 14, y);
+        if (closed) ctx.lineTo(x + 14, y);
+        else ctx.lineTo(x + 10, y - 15);
+        ctx.stroke();
+
+        ctx.font = 'bold 9.5px "JetBrains Mono", monospace';
+        ctx.fillStyle = closed ? '#34d399' : '#fbbf24';
+        ctx.textAlign = 'center';
+        ctx.fillText(closed ? 'K (ON)' : 'K (OPEN)', x, y + 17);
+        ctx.restore();
+      }
+    };
+
     const circuitSim = {
       name: "Current Electricity: DC Circuit Lab",
       V: 12, R1: 10, R2: 20, mode: 'series',
-      glow: 0,
+      resistorStyle: 'symbol', // 'symbol' | 'realistic'
+      phase: 0, phase1: 0, phase2: 0, glow: 0,
       init() { this.reset(); },
-      reset() { this.glow = 0; },
+      reset() { this.phase = 0; this.phase1 = 0; this.phase2 = 0; this.glow = 0; },
       req() { return this.mode === 'series' ? this.R1 + this.R2 : (this.R1 * this.R2) / Math.max(1, this.R1 + this.R2); },
       current() { return this.V / Math.max(0.5, this.req()); },
-      update(dt) { this.glow += ((this.current() * this.current() * this.req()) / 60 - this.glow) * Math.min(1, dt * 3); },
+      update(dt) {
+        const I = this.current();
+        this.phase = (this.phase + dt * (0.2 + Math.min(4.5, I) * 0.35)) % 1;
+        const I1 = this.mode === 'series' ? I : this.V / Math.max(0.5, this.R1);
+        const I2 = this.mode === 'series' ? I : this.V / Math.max(0.5, this.R2);
+        this.phase1 = (this.phase1 + dt * (0.2 + Math.min(4.5, I1) * 0.35)) % 1;
+        this.phase2 = (this.phase2 + dt * (0.2 + Math.min(4.5, I2) * 0.35)) % 1;
+        this.glow += ((I * I * this.req()) / 60 - this.glow) * Math.min(1, dt * 3);
+      },
       render() {
         const w = canvas.width / dpr, h = canvas.height / dpr;
-        const cx = w / 2, cy = h / 2, rw = Math.min(360, w * 0.6), rh = 130;
+        const isNarrow = w < 720;
+        const appW = isNarrow ? w : w * 0.58;
+        const appH = isNarrow ? h * 0.56 : h;
+        const cx = appW / 2, cy = appH / 2;
         const I = this.current();
-        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
-        ctx.strokeRect(cx - rw / 2, cy - rh / 2, rw, rh);
-        // battery (left edge)
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(cx - rw / 2 - 8, cy - 30, 16, 60);
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter';
-        ctx.fillText(`${this.V}V`, cx - rw / 2 - 14, cy + 48);
-        // resistors as glowing bulbs proportional to power share
-        const P1 = this.mode === 'series' ? I * I * this.R1 : (this.V * this.V) / Math.max(1, this.R1);
-        const P2 = this.mode === 'series' ? I * I * this.R2 : (this.V * this.V) / Math.max(1, this.R2);
-        const bulb = (x, y, P, label) => {
-          const b = Math.min(1, P / 40);
-          ctx.fillStyle = `rgba(245,158,11,${0.15 + b * 0.75})`;
-          ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 8 + b * 22;
-          ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill();
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = '#fff'; ctx.font = '11px JetBrains Mono';
-          ctx.fillText(label, x - 24, y + 36);
-        };
-        if (this.mode === 'series') {
-          bulb(cx - 60, cy - rh / 2, P1, `R1 ${this.R1}Ω`);
-          bulb(cx + 60, cy - rh / 2, P2, `R2 ${this.R2}Ω`);
-          ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
-          ctx.fillText('SERIES: R_eq = R1 + R2', cx - 90, cy + rh / 2 + 22);
+        const isSeries = this.mode === 'series';
+        const I1 = isSeries ? I : this.V / Math.max(0.5, this.R1);
+        const I2 = isSeries ? I : this.V / Math.max(0.5, this.R2);
+        const V1 = isSeries ? I * this.R1 : this.V;
+        const V2 = isSeries ? I * this.R2 : this.V;
+        const P1 = I1 * I1 * this.R1;
+        const P2 = I2 * I2 * this.R2;
+
+        const rw = Math.min(340, appW * 0.72);
+        const rh = Math.min(185, appH * 0.54);
+        const xL = cx - rw / 2, xR = cx + rw / 2;
+        const yT = cy - rh / 2, yB = cy + rh / 2;
+
+        if (isSeries) {
+          // High-potential segment (+ terminal up to R1), mid drop wire (R1 -> R2), return 0V wire
+          const r1x = cx - rw * 0.21;
+          const r2x = cx + rw * 0.21;
+          circuitRenderHelpers.drawWire(xL, cy, xL, yT, '#f59e0b', 3);
+          circuitRenderHelpers.drawWire(xL, yT, r1x, yT, '#f59e0b', 3);
+          circuitRenderHelpers.drawWire(r1x, yT, r2x, yT, '#38bdf8', 3);
+          circuitRenderHelpers.drawWire(r2x, yT, xR, yT, '#0ea5e9', 3);
+          circuitRenderHelpers.drawWire(xR, yT, xR, yB, '#0ea5e9', 3);
+          circuitRenderHelpers.drawWire(xR, yB, xL, yB, '#0284c7', 3);
+          circuitRenderHelpers.drawWire(xL, yB, xL, cy, '#0284c7', 3);
+
+          // Animated charge pulses along loop
+          circuitRenderHelpers.drawFlowPulses(xL, yT, xR, yT, I, this.phase, '#34d399', 5);
+          circuitRenderHelpers.drawFlowPulses(xR, yT, xR, yB, I, this.phase, '#22d3ee', 3);
+          circuitRenderHelpers.drawFlowPulses(xR, yB, xL, yB, I, this.phase, '#38bdf8', 5);
+          circuitRenderHelpers.drawFlowPulses(xL, yB, xL, yT, I, this.phase, '#fbbf24', 3);
+
+          // Components
+          circuitRenderHelpers.drawBattery(xL, cy, this.V, true);
+          circuitRenderHelpers.drawResistor(r1x, yT, 76, this.R1, P1, this.resistorStyle, `R₁ = ${this.R1} Ω`, `V₁ = ${V1.toFixed(2)} V`);
+          circuitRenderHelpers.drawResistor(r2x, yT, 76, this.R2, P2, this.resistorStyle, `R₂ = ${this.R2} Ω`, `V₂ = ${V2.toFixed(2)} V`);
+          circuitRenderHelpers.drawMeter(cx, yB, 'A', `I = ${I.toFixed(2)} A`, I / 6, '#34d399');
+
+          ctx.save();
+          ctx.font = '10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.fillText(`SERIES CIRCUIT: Same I = ${I.toFixed(2)} A everywhere · V₁ + V₂ = ${V1.toFixed(1)} + ${V2.toFixed(1)} = ${this.V.toFixed(1)} V`, cx, Math.min(appH - 18, yB + 48));
+          ctx.restore();
         } else {
-          bulb(cx - 60, cy - rh / 2, P1, `R1 ${this.R1}Ω`);
-          bulb(cx - 60, cy + rh / 2, P2, `R2 ${this.R2}Ω`);
-          ctx.strokeStyle = '#38bdf8';
-          ctx.beginPath(); ctx.moveTo(cx - 60, cy - rh / 2 + 20); ctx.lineTo(cx - 60, cy + rh / 2 - 20); ctx.stroke();
-          ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
-          ctx.fillText('PARALLEL: 1/Req = 1/R1 + 1/R2', cx - 110, cy + rh / 2 + 22);
+          // True Dual-Branch Parallel Circuit Topology
+          const jL = cx - rw * 0.24; // Split junction A
+          const jR = cx + rw * 0.34; // Recombine junction B
+          const yU = cy - rh * 0.44; // Upper R1 branch
+          const yM = cy + rh * 0.08; // Lower R2 branch
+          const yBusBot = cy + rh * 0.56;
+
+          // Main left & bottom bus carrying total current I = I1 + I2
+          circuitRenderHelpers.drawWire(xL, cy, xL, yU, '#f59e0b', 3.2);
+          circuitRenderHelpers.drawWire(xL, yU, jL, yU, '#f59e0b', 3.2);
+          circuitRenderHelpers.drawWire(jL, yU, jL, yM, '#f59e0b', 3);
+          // Upper R1 branch & Lower R2 branch
+          circuitRenderHelpers.drawWire(jL, yU, jR, yU, '#38bdf8', 2.8);
+          circuitRenderHelpers.drawWire(jL, yM, jR, yM, '#38bdf8', 2.8);
+          // Return bus
+          circuitRenderHelpers.drawWire(jR, yU, jR, yBusBot, '#0284c7', 3);
+          circuitRenderHelpers.drawWire(jR, yBusBot, xL, yBusBot, '#0284c7', 3.2);
+          circuitRenderHelpers.drawWire(xL, yBusBot, xL, cy, '#0284c7', 3.2);
+
+          // Main current pulses + independent branch speed pulses (shows I1 vs I2 split!)
+          circuitRenderHelpers.drawFlowPulses(xL, yU, jL, yU, I, this.phase, '#fbbf24', 2);
+          circuitRenderHelpers.drawFlowPulses(jL, yU, jR, yU, I1, this.phase1, '#34d399', 4);
+          circuitRenderHelpers.drawFlowPulses(jL, yM, jR, yM, I2, this.phase2, '#c084fc', 4);
+          circuitRenderHelpers.drawFlowPulses(jR, yBusBot, xL, yBusBot, I, this.phase, '#38bdf8', 5);
+          circuitRenderHelpers.drawFlowPulses(xL, yBusBot, xL, yU, I, this.phase, '#fbbf24', 3);
+
+          // Junction nodes
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath(); ctx.arc(jL, yU, 4.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(jR, yM, 4.5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(jR, yU, 4.5, 0, Math.PI * 2); ctx.fill();
+
+          const rMidX = (jL + jR) / 2;
+          circuitRenderHelpers.drawBattery(xL, cy + 12, this.V, true);
+          circuitRenderHelpers.drawResistor(rMidX + 18, yU, 78, this.R1, P1, this.resistorStyle, `R₁ = ${this.R1} Ω`, `I₁ = ${I1.toFixed(2)} A (V=${this.V}V)`);
+          circuitRenderHelpers.drawResistor(rMidX + 18, yM, 78, this.R2, P2, this.resistorStyle, `R₂ = ${this.R2} Ω`, `I₂ = ${I2.toFixed(2)} A (V=${this.V}V)`);
+          circuitRenderHelpers.drawMeter(jL + 30, yU, 'A', '', I1 / 5, '#34d399');
+          circuitRenderHelpers.drawMeter(jL + 30, yM, 'A', '', I2 / 5, '#c084fc');
+          circuitRenderHelpers.drawMeter(cx, yBusBot, 'A', `I_total = ${I.toFixed(2)} A`, I / 10, '#22d3ee');
+
+          ctx.save();
+          ctx.font = '10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.fillText(`PARALLEL: Same ${this.V}V across both · Current splits: I = I₁ + I₂ = ${I1.toFixed(2)} + ${I2.toFixed(2)} = ${I.toFixed(2)} A`, cx, Math.min(appH - 12, yBusBot + 44));
+          ctx.restore();
         }
-        // flowing charge dots
-        const t = performance.now() / 1000;
-        ctx.fillStyle = '#22d3ee';
-        for (let i = 0; i < 14; i++) {
-          const p = ((t * (0.4 + I * 0.35) + i / 14) % 1);
-          const per = rw * 2 + rh * 2;
-          let d = p * per, x, y;
-          if (d < rw) { x = cx - rw / 2 + d; y = cy - rh / 2; }
-          else if (d < rw + rh) { x = cx + rw / 2; y = cy - rh / 2 + (d - rw); }
-          else if (d < 2 * rw + rh) { x = cx + rw / 2 - (d - rw - rh); y = cy + rh / 2; }
-          else { x = cx - rw / 2; y = cy + rh / 2 - (d - 2 * rw - rh); }
-          ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+
+        // Right/Bottom Live Analytics Panel (Bar comparison + Equations)
+        const plotX = isNarrow ? 12 : w * 0.59;
+        const plotY = isNarrow ? h * 0.57 : 14;
+        const plotW = isNarrow ? w - 24 : w * 0.39;
+        const plotH = isNarrow ? h * 0.40 : h - 42;
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(plotX, plotY, plotW, plotH);
+        ctx.strokeRect(plotX, plotY, plotW, plotH);
+
+        ctx.font = 'bold 11px "Inter", sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${isSeries ? 'Series' : 'Parallel'} Circuit Breakdown (Req = ${this.req().toFixed(2)} Ω)`, plotX + 14, plotY + 22);
+
+        const barW = Math.max(80, plotW - 36);
+        const maxP = Math.max(10, P1 + P2);
+        const drawBarRow = (yOff, label, valTxt, frac, col) => {
+          ctx.font = '10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#e2e8f0';
+          ctx.textAlign = 'left';
+          ctx.fillText(label, plotX + 16, yOff);
+          ctx.textAlign = 'right';
+          ctx.fillStyle = col;
+          ctx.fillText(valTxt, plotX + plotW - 16, yOff);
+          ctx.fillStyle = 'rgba(30, 41, 59, 0.9)';
+          ctx.fillRect(plotX + 16, yOff + 6, barW, 8);
+          ctx.fillStyle = col;
+          ctx.fillRect(plotX + 16, yOff + 6, barW * Math.min(1, Math.max(0.02, frac)), 8);
+        };
+
+        const rowGap = plotH > 220 ? 44 : 34;
+        drawBarRow(plotY + 48, `R₁ (${this.R1} Ω)`, `${I1.toFixed(2)}A · ${V1.toFixed(1)}V · ${P1.toFixed(1)}W`, P1 / maxP, '#34d399');
+        drawBarRow(plotY + 48 + rowGap, `R₂ (${this.R2} Ω)`, `${I2.toFixed(2)}A · ${V2.toFixed(1)}V · ${P2.toFixed(1)}W`, P2 / maxP, '#c084fc');
+        drawBarRow(plotY + 48 + rowGap * 2, `Total Equivalent`, `${I.toFixed(2)}A · ${this.V}V · ${(this.V * I).toFixed(1)}W`, 1, '#38bdf8');
+
+        const eqY = plotY + 48 + rowGap * 3 + 6;
+        if (plotY + plotH - eqY > 38) {
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.72)';
+          ctx.fillRect(plotX + 12, eqY, plotW - 24, plotY + plotH - eqY - 12);
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+          ctx.strokeRect(plotX + 12, eqY, plotW - 24, plotY + plotH - eqY - 12);
+          ctx.font = 'bold 10px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#fbbf24';
+          ctx.textAlign = 'left';
+          ctx.fillText(isSeries ? 'Req = R₁ + R₂  |  I same, V splits' : '1/Req = 1/R₁ + 1/R₂  |  V same, I splits', plotX + 20, eqY + 17);
+          ctx.font = '10px "Inter", sans-serif';
+          ctx.fillStyle = '#cbd5e1';
+          if (plotY + plotH - eqY > 54) {
+            ctx.fillText(isSeries ? 'Higher R takes larger voltage drop V = I·R.' : 'Lower R draws faster branch current I = V/R.', plotX + 20, eqY + 35);
+          }
         }
+        ctx.restore();
       },
       getMetrics() {
         const I = this.current();
         return [
           { label: "EMF V", val: `${this.V} V` },
-          { label: "R_eq", val: `${this.req().toFixed(1)} Ω (${this.mode})` },
-          { label: "Current I=V/R", val: `${I.toFixed(2)} A` },
-          { label: "Power P=VI", val: `${(this.V * I).toFixed(1)} W` },
-          { label: "CBSE", val: "Ch-3 Ohm + combo" }
+          { label: "R_eq", val: `${this.req().toFixed(2)} Ω (${this.mode})` },
+          { label: "Total Current", val: `${I.toFixed(2)} A` },
+          { label: "Total Power", val: `${(this.V * I).toFixed(1)} W` },
+          { label: "Resistor View", val: this.resistorStyle === 'symbol' ? 'Zig-Zag Symbol' : 'Color Bands' }
         ];
       },
       presets: {
-        "12V Series Demo": { V: 12, R1: 10, R2: 20, mode: 'series' },
-        "Parallel Bright": { V: 9, R1: 10, R2: 10, mode: 'parallel' },
-        "High Resistance": { V: 12, R1: 47, R2: 33, mode: 'series' }
+        "12V Series Symbol": { V: 12, R1: 10, R2: 20, mode: 'series', resistorStyle: 'symbol' },
+        "Parallel Current Split": { V: 12, R1: 10, R2: 30, mode: 'parallel', resistorStyle: 'symbol' },
+        "Color-Band Carbon Resistors": { V: 12, R1: 22, R2: 47, mode: 'series', resistorStyle: 'realistic' }
       },
       buildControls() {
         return `
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>Battery V</span><span id="valCV" class="font-mono text-cyan-400">${this.V}V</span></div>
-            <input type="range" id="ctrlCV" min="1.5" max="24" step="0.5" value="${this.V}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>R1 Ω</span><span id="valR1" class="font-mono text-cyan-400">${this.R1}</span></div>
-            <input type="range" id="ctrlR1" min="2" max="100" value="${this.R1}" class="w-full"></div>
-            <div><div class="flex justify-between mb-1 text-slate-300"><span>R2 Ω</span><span id="valR2" class="font-mono text-cyan-400">${this.R2}</span></div>
-            <input type="range" id="ctrlR2" min="2" max="100" value="${this.R2}" class="w-full"></div>
-            <div class="flex items-end"><button id="ctrlMode" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-lg border border-slate-700 transition">Mode: ${this.mode.toUpperCase()}</button></div>
+          <div class="space-y-2 text-xs">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
+              <div><div class="flex justify-between mb-1 text-slate-300"><span>Battery V</span><span id="valCV" class="font-mono text-cyan-400">${this.V}V</span></div>
+              <input type="range" id="ctrlCV" min="1.5" max="24" step="0.5" value="${this.V}" class="w-full"></div>
+              <div><div class="flex justify-between mb-1 text-slate-300"><span>R1 (Ω)</span><span id="valR1" class="font-mono text-emerald-400">${this.R1} Ω</span></div>
+              <input type="range" id="ctrlR1" min="2" max="100" value="${this.R1}" class="w-full"></div>
+              <div><div class="flex justify-between mb-1 text-slate-300"><span>R2 (Ω)</span><span id="valR2" class="font-mono text-purple-400">${this.R2} Ω</span></div>
+              <input type="range" id="ctrlR2" min="2" max="100" value="${this.R2}" class="w-full"></div>
+              <div><button id="ctrlMode" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold rounded-lg border border-slate-700 transition">Mode: ${this.mode.toUpperCase()}</button></div>
+              <div><button id="ctrlResStyle" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold rounded-lg border border-slate-700 transition">View: ${this.resistorStyle === 'symbol' ? 'Zig-Zag Symbol' : 'Color Bands'}</button></div>
+            </div>
           </div>`;
       },
       bindControls() {
         document.getElementById('ctrlCV')?.addEventListener('input', (e) => { this.V = parseFloat(e.target.value); document.getElementById('valCV').textContent = `${this.V}V`; });
-        document.getElementById('ctrlR1')?.addEventListener('input', (e) => { this.R1 = parseFloat(e.target.value); document.getElementById('valR1').textContent = this.R1; });
-        document.getElementById('ctrlR2')?.addEventListener('input', (e) => { this.R2 = parseFloat(e.target.value); document.getElementById('valR2').textContent = this.R2; });
+        document.getElementById('ctrlR1')?.addEventListener('input', (e) => { this.R1 = parseFloat(e.target.value); document.getElementById('valR1').textContent = `${this.R1} Ω`; });
+        document.getElementById('ctrlR2')?.addEventListener('input', (e) => { this.R2 = parseFloat(e.target.value); document.getElementById('valR2').textContent = `${this.R2} Ω`; });
         document.getElementById('ctrlMode')?.addEventListener('click', (e) => { this.mode = this.mode === 'series' ? 'parallel' : 'series'; e.target.textContent = `Mode: ${this.mode.toUpperCase()}`; });
+        document.getElementById('ctrlResStyle')?.addEventListener('click', (e) => {
+          this.resistorStyle = this.resistorStyle === 'symbol' ? 'realistic' : 'symbol';
+          e.target.textContent = `View: ${this.resistorStyle === 'symbol' ? 'Zig-Zag Symbol' : 'Color Bands'}`;
+        });
       }
     };
 
@@ -6146,66 +6540,170 @@ const waveSim = {
 const ohmsSim = {
   name: "Ohm's Law Simple · XII",
   V: 12, R: 10,
+  resistorStyle: 'symbol', // 'symbol' | 'realistic'
+  switchClosed: true,
   phase: 0, glow: 0,
+  _switchRect: null,
   init() { this.reset(); },
   reset() { this.phase = 0; this.glow = 0; },
-  current() { return this.V / Math.max(0.5, this.R); },
+  current() { return this.switchClosed ? (this.V / Math.max(0.5, this.R)) : 0; },
   power() { return this.V * this.current(); },
   update(dt) {
     const I = this.current();
-    this.phase = (this.phase + dt * (0.25 + I * 0.3)) % 1;
-    this.glow += (Math.min(1, this.power() / 60) - this.glow) * Math.min(1, dt * 3);
+    if (I > 0.01) {
+      this.phase = (this.phase + dt * (0.2 + Math.min(5.0, I) * 0.35)) % 1;
+    }
+    this.glow += (Math.min(1, this.power() / 45) - this.glow) * Math.min(1, dt * 3);
   },
   render() {
     const w = canvas.width / dpr, h = canvas.height / dpr;
-    const cx = w / 2, cy = h / 2, rw = Math.min(360, w * 0.6), rh = 130;
+    const isNarrow = w < 720;
+    const appW = isNarrow ? w : w * 0.58;
+    const appH = isNarrow ? h * 0.56 : h;
+    const cx = appW / 2, cy = appH / 2 + 10;
+    const rw = Math.min(310, appW * 0.68);
+    const rh = Math.min(155, appH * 0.44);
+    const xL = cx - rw / 2, xR = cx + rw / 2;
+    const yT = cy - rh / 2, yB = cy + rh / 2;
     const I = this.current();
-    // wires: single rectangular loop
-    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3;
-    ctx.strokeRect(cx - rw / 2, cy - rh / 2, rw, rh);
-    // battery on left edge
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(cx - rw / 2 - 8, cy - 30, 16, 60);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 11px Inter';
-    ctx.fillText(`${this.V}V`, cx - rw / 2 - 16, cy + 48);
-    ctx.fillStyle = '#94a3b8'; ctx.font = '10px JetBrains Mono';
-    ctx.fillText('+', cx - rw / 2 - 4, cy - 34);
-    // single resistor-bulb on top edge, brightness = power
-    const b = this.glow;
-    const bx = cx, by = cy - rh / 2;
-    ctx.fillStyle = `rgba(245,158,11,${0.15 + b * 0.75})`;
-    ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 8 + b * 22;
-    ctx.beginPath(); ctx.arc(bx, by, 20, 0, Math.PI * 2); ctx.fill();
+    const P = this.power();
+
+    // Potential-graded wires (High potential before R -> Return 0V after R)
+    const highCol = this.switchClosed ? '#f59e0b' : '#475569';
+    const lowCol = this.switchClosed ? '#0ea5e9' : '#475569';
+    circuitRenderHelpers.drawWire(xL, cy, xL, yT, highCol, 3.2);
+    circuitRenderHelpers.drawWire(xL, yT, cx, yT, highCol, 3.2);
+    circuitRenderHelpers.drawWire(cx, yT, xR, yT, lowCol, 3.2);
+    circuitRenderHelpers.drawWire(xR, yT, xR, yB, lowCol, 3.2);
+    circuitRenderHelpers.drawWire(xR, yB, xL, yB, lowCol, 3.2);
+    circuitRenderHelpers.drawWire(xL, yB, xL, cy, lowCol, 3.2);
+
+    // Parallel Voltmeter Branch bridged cleanly above Resistor R
+    const vTapL = cx - 64, vTapR = cx + 64, vY = yT - 52;
+    circuitRenderHelpers.drawWire(vTapL, yT, vTapL, vY, '#94a3b8', 1.8);
+    circuitRenderHelpers.drawWire(vTapL, vY, vTapR, vY, '#94a3b8', 1.8);
+    circuitRenderHelpers.drawWire(vTapR, vY, vTapR, yT, '#94a3b8', 1.8);
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath(); ctx.arc(vTapL, yT, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(vTapR, yT, 3.5, 0, Math.PI * 2); ctx.fill();
+    circuitRenderHelpers.drawMeter(cx, vY, 'V', `V = ${this.switchClosed ? this.V.toFixed(1) : '0.0'} V`, this.switchClosed ? this.V / 24 : 0, '#fbbf24');
+
+    // Animated directional current pulses
+    circuitRenderHelpers.drawFlowPulses(xL, yT, xR, yT, I, this.phase, '#34d399', 5);
+    circuitRenderHelpers.drawFlowPulses(xR, yT, xR, yB, I, this.phase, '#22d3ee', 3);
+    circuitRenderHelpers.drawFlowPulses(xR, yB, xL, yB, I, this.phase, '#38bdf8', 5);
+    circuitRenderHelpers.drawFlowPulses(xL, yB, xL, yT, I, this.phase, '#fbbf24', 3);
+
+    // Circuit Symbols & Components
+    circuitRenderHelpers.drawBattery(xL, cy, this.V, true);
+    circuitRenderHelpers.drawResistor(cx, yT, 94, this.R, P, this.resistorStyle, `R = ${this.R} Ω`, `P = I²R = ${P.toFixed(1)} W`);
+    circuitRenderHelpers.drawMeter(xR, cy, 'A', `I = ${I.toFixed(2)} A`, I / 6, '#34d399');
+
+    // Interactive Plug Key / Switch K on bottom wire
+    const swX = cx - rw * 0.16, swY = yB;
+    circuitRenderHelpers.drawSwitch(swX, swY, this.switchClosed);
+    this._switchRect = { x: swX - 28, y: swY - 24, w: 56, h: 48 };
+
+    // Conventional current direction vector arrow (right bottom wire)
+    if (state.showVectors && I > 0.01) {
+      const ax = cx + rw * 0.22, ay = yB + 18;
+      ctx.save();
+      ctx.strokeStyle = '#34d399'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(ax + 24, ay); ctx.lineTo(ax - 24, ay); ctx.stroke();
+      ctx.fillStyle = '#34d399';
+      ctx.beginPath(); ctx.moveTo(ax - 24, ay); ctx.lineTo(ax - 15, ay - 4.5); ctx.lineTo(ax - 15, ay + 4.5); ctx.fill();
+      ctx.font = 'bold 10px "JetBrains Mono", monospace';
+      ctx.fillText(`I = ${I.toFixed(2)} A`, ax - 14, ay + 14);
+      ctx.restore();
+    }
+
+    // Bottom readout caption
+    ctx.save();
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.switchClosed ? `OHM'S LAW: V = I·R → ${this.V.toFixed(1)} = ${I.toFixed(2)} × ${this.R}` : `SWITCH OPEN (K): Circuit broken, I = 0.00 A (Click Switch K to close)`, cx, Math.min(appH - 12, yB + 46));
+    ctx.restore();
+
+    // Right / Bottom Live I-V Characteristic Graph
+    const plotX = isNarrow ? 12 : w * 0.59;
+    const plotY = isNarrow ? h * 0.57 : 14;
+    const plotW = isNarrow ? w - 24 : w * 0.39;
+    const plotH = isNarrow ? h * 0.40 : h - 42;
+    ctx.save();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+    ctx.lineWidth = 1.2;
+    ctx.fillRect(plotX, plotY, plotW, plotH);
+    ctx.strokeRect(plotX, plotY, plotW, plotH);
+
+    const padL = 42, padR = 16, padT = 36, padB = plotH > 220 ? 86 : 54;
+    const gW = Math.max(80, plotW - padL - padR);
+    const gH = Math.max(60, plotH - padT - padB);
+    const gx0 = plotX + padL;
+    const gy0 = plotY + padT + gH;
+
+    ctx.font = 'bold 11px "Inter", sans-serif';
+    ctx.fillStyle = '#38bdf8';
+    ctx.textAlign = 'left';
+    ctx.fillText("Ohmic I–V Characteristic (Slope = 1/R)", plotX + 14, plotY + 21);
+
+    // Axes
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.55)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(gx0, plotY + padT); ctx.lineTo(gx0, gy0); ctx.lineTo(gx0 + gW, gy0); ctx.stroke();
+
+    const maxV = 24;
+    const maxI = Math.max(3, Math.ceil((maxV / this.R) * 1.15));
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText('0V', gx0, gy0 + 12);
+    ctx.fillText('12V', gx0 + gW / 2, gy0 + 12);
+    ctx.fillText('24V', gx0 + gW - 6, gy0 + 12);
+    ctx.textAlign = 'right';
+    ctx.fillText(`${maxI}A`, gx0 - 5, plotY + padT + 4);
+    ctx.fillText('0', gx0 - 5, gy0);
+
+    // Linear Ohmic Line I = V / R
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(gx0, gy0);
+    const endI = Math.min(maxI, maxV / this.R);
+    const endV = endI * this.R;
+    ctx.lineTo(gx0 + (endV / maxV) * gW, gy0 - (endI / maxI) * gH);
+    ctx.stroke();
+
+    // Live operating point (V, I)
+    const ptX = gx0 + ((this.switchClosed ? this.V : 0) / maxV) * gW;
+    const ptY = gy0 - (I / maxI) * gH;
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(ptX, gy0); ctx.lineTo(ptX, ptY); ctx.lineTo(gx0, ptY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#fbbf24';
+    ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 10;
+    ctx.beginPath(); ctx.arc(ptX, ptY, 5, 0, Math.PI * 2); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.fillStyle = '#fff'; ctx.font = '11px JetBrains Mono';
-    ctx.fillText(`R ${this.R}Ω`, bx - 26, by + 38);
-    // live I = V/R readout under the loop
-    ctx.fillStyle = '#94a3b8'; ctx.font = '11px JetBrains Mono';
-    ctx.fillText(`SINGLE LOOP: I = V / R = ${I.toFixed(2)} A`, cx - 118, cy + rh / 2 + 22);
-    // current direction arrow (toggleable vector overlay)
-    if (state.showVectors) {
-      ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2;
-      const ax = cx + rw / 2 - 70, ay = cy + rh / 2;
-      ctx.beginPath(); ctx.moveTo(ax - 24, ay); ctx.lineTo(ax + 24, ay); ctx.stroke();
-      ctx.fillStyle = '#22c55e';
-      ctx.beginPath(); ctx.moveTo(ax + 24, ay); ctx.lineTo(ax + 14, ay - 5); ctx.lineTo(ax + 14, ay + 5); ctx.fill();
-      ctx.font = '10px JetBrains Mono';
-      ctx.fillText('I', ax - 2, ay - 10);
+
+    // Formula box underneath graph
+    const cardY = gy0 + 22;
+    const cardH = Math.max(40, plotY + plotH - cardY - 10);
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.72)';
+    ctx.fillRect(plotX + 12, cardY, plotW - 24, cardH);
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.35)';
+    ctx.strokeRect(plotX + 12, cardY, plotW - 24, cardH);
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#34d399';
+    ctx.fillText(`Conductance G = 1/R = ${(1 / this.R).toFixed(3)} S`, plotX + 20, cardY + 15);
+    if (cardH > 46) {
+      ctx.font = '10px "Inter", sans-serif';
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillText(`Power dissipated in R: P = V·I = ${P.toFixed(2)} W`, plotX + 20, cardY + 32);
     }
-    // flowing charge dots along the loop perimeter, speed ∝ I
-    if (state.showTrails) {
-      ctx.fillStyle = '#22d3ee';
-      for (let i = 0; i < 10; i++) {
-        const p = (this.phase + i / 10) % 1;
-        const per = rw * 2 + rh * 2;
-        let d = p * per, x, y;
-        if (d < rw) { x = cx - rw / 2 + d; y = cy - rh / 2; }
-        else if (d < rw + rh) { x = cx + rw / 2; y = cy - rh / 2 + (d - rw); }
-        else if (d < 2 * rw + rh) { x = cx + rw / 2 - (d - rw - rh); y = cy + rh / 2; }
-        else { x = cx - rw / 2; y = cy + rh / 2 - (d - 2 * rw - rh); }
-        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-      }
-    }
+    ctx.restore();
   },
   getMetrics() {
     const I = this.current();
@@ -6214,27 +6712,50 @@ const ohmsSim = {
       { label: "Resistance R", val: `${this.R} Ω` },
       { label: "Current I=V/R", val: `${I.toFixed(2)} A` },
       { label: "Power P=VI", val: `${this.power().toFixed(1)} W` },
-      { label: "Formula", val: "V = IR" },
-      { label: "CBSE", val: "Ch-3 single loop" }
+      { label: "Switch Key K", val: this.switchClosed ? "CLOSED (ON)" : "OPEN (OFF)" },
+      { label: "Resistor View", val: this.resistorStyle === 'symbol' ? "Zig-Zag Symbol" : "Color Bands" }
     ];
   },
   presets: {
-    "Torch Cell 1.5V": { V: 1.5, R: 10 },
-    "Lab 12V": { V: 12, R: 10 },
-    "High-R Dim": { V: 12, R: 47 }
+    "Lab 12V Symbol": { V: 12, R: 10, resistorStyle: 'symbol', switchClosed: true },
+    "Color-Band Carbon Resistor": { V: 12, R: 22, resistorStyle: 'realistic', switchClosed: true },
+    "High-R Low Current": { V: 12, R: 47, resistorStyle: 'symbol', switchClosed: true }
   },
   buildControls() {
     return `
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end text-xs">
         <div><div class="flex justify-between mb-1 text-slate-300"><span>Battery V</span><span id="valOhmsV" class="font-mono text-cyan-400">${this.V}V</span></div>
         <input type="range" id="ctrlOhmsV" min="1.5" max="24" step="0.5" value="${this.V}" class="w-full"></div>
-        <div><div class="flex justify-between mb-1 text-slate-300"><span>Resistance Ω</span><span id="valOhmsR" class="font-mono text-cyan-400">${this.R}</span></div>
+        <div><div class="flex justify-between mb-1 text-slate-300"><span>Resistance R (Ω)</span><span id="valOhmsR" class="font-mono text-amber-400">${this.R} Ω</span></div>
         <input type="range" id="ctrlOhmsR" min="2" max="50" value="${this.R}" class="w-full"></div>
+        <div><button id="ctrlOhmsSwitch" class="w-full py-2 font-semibold rounded-lg border transition ${this.switchClosed ? 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40' : 'bg-amber-950/70 text-amber-300 border-amber-500/40'}">Key K: ${this.switchClosed ? 'CLOSED (ON)' : 'OPEN (OFF)'}</button></div>
+        <div><button id="ctrlOhmsStyle" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold rounded-lg border border-slate-700 transition">View: ${this.resistorStyle === 'symbol' ? 'Zig-Zag Symbol' : 'Color Bands'}</button></div>
       </div>`;
   },
   bindControls() {
     document.getElementById('ctrlOhmsV')?.addEventListener('input', (e) => { this.V = parseFloat(e.target.value); document.getElementById('valOhmsV').textContent = `${this.V}V`; });
-    document.getElementById('ctrlOhmsR')?.addEventListener('input', (e) => { this.R = parseFloat(e.target.value); document.getElementById('valOhmsR').textContent = this.R; });
+    document.getElementById('ctrlOhmsR')?.addEventListener('input', (e) => { this.R = parseFloat(e.target.value); document.getElementById('valOhmsR').textContent = `${this.R} Ω`; });
+    document.getElementById('ctrlOhmsSwitch')?.addEventListener('click', (e) => {
+      this.switchClosed = !this.switchClosed;
+      e.target.textContent = `Key K: ${this.switchClosed ? 'CLOSED (ON)' : 'OPEN (OFF)'}`;
+      e.target.className = `w-full py-2 font-semibold rounded-lg border transition ${this.switchClosed ? 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40' : 'bg-amber-950/70 text-amber-300 border-amber-500/40'}`;
+    });
+    document.getElementById('ctrlOhmsStyle')?.addEventListener('click', (e) => {
+      this.resistorStyle = this.resistorStyle === 'symbol' ? 'realistic' : 'symbol';
+      e.target.textContent = `View: ${this.resistorStyle === 'symbol' ? 'Zig-Zag Symbol' : 'Color Bands'}`;
+    });
+  },
+  onMouseDown(x, y) {
+    const r = this._switchRect;
+    if (r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) {
+      this.switchClosed = !this.switchClosed;
+      const btn = document.getElementById('ctrlOhmsSwitch');
+      if (btn) {
+        btn.textContent = `Key K: ${this.switchClosed ? 'CLOSED (ON)' : 'OPEN (OFF)'}`;
+        btn.className = `w-full py-2 font-semibold rounded-lg border transition ${this.switchClosed ? 'bg-emerald-950/70 text-emerald-300 border-emerald-500/40' : 'bg-amber-950/70 text-amber-300 border-amber-500/40'}`;
+      }
+      showToast(this.switchClosed ? 'Plug Key K closed — circuit ON' : 'Plug Key K opened — I = 0 A', 'info');
+    }
   }
 };
 
@@ -10649,7 +11170,7 @@ const rutherfordSim = {
       } else if (simKey === 'wave') {
         hudHintText.textContent = "Change tension or mode; nodes stay fixed while antinodes swing.";
       } else if (simKey === 'ohms') {
-        hudHintText.textContent = "Slide voltage and resistance — bulb brightness follows power P = VI.";
+        hudHintText.textContent = "CBSE XII Ohm's Law: Toggle Zig-Zag Symbol vs Color-Band Resistor, click Switch K, and watch I = V/R & live I–V graph!";
       } else if (simKey === 'circular') {
         hudHintText.textContent = "CBSE XI Circular Motion: Switch Cyclist / Level / Banked road; test safe speeds and skidding.";
       } else if (simKey === 'galv') {
